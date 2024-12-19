@@ -242,13 +242,12 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 							</svg>
 						</div>	
 						<span class="nav-text">Dashboard</span>
-						</a>
-						<ul aria-expanded="false">
-							
-						
-						</ul>
-					</li>	
-				</ul>
+            </a>
+            <ul aria-expanded="false">
+                <li><a href="/conductores/index">Conductores</a></li>
+            </ul>
+        </li>    
+    </ul>
 
 				<div class="copyright">
 					<p>Capasu © <span class="current-year">2024</span> All Rights Reserved</p>
@@ -317,3 +316,11 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 
 
 
+<style>
+.deznav .metismenu  {
+    text-align: center !important; /* Centra el texto horizontalmente */
+    justify-content: center !important; /* Centra el contenido horizontalmente */
+    align-items: center !important; /* Centra el contenido verticalmente */
+}
+
+</style>

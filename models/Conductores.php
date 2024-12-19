@@ -18,8 +18,8 @@ use Yii;
  * @property string|null $calle
  * @property int|null $num_ext
  * @property string|null $num_int
- * @property int|null $cp
- * @property int|null $telefono
+ * @property string|null $cp
+ * @property string|null $telefono
  * @property string|null $email
  * @property string|null $tipo_sangre
  * @property string|null $fecha_nacimiento
@@ -45,13 +45,15 @@ class Conductores extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['num_ext', 'cp', 'telefono'], 'integer'],
+            [['num_ext'], 'integer'],
             [['fecha_nacimiento'], 'safe'],
-            [['nombres', 'apellido_p', 'apellido_m', 'estado', 'colonia', 'calle', 'email', 'nombres_contacto', 'apellido_p_contacto', 'apellido_m_contacto', 'parentesco', 'telefono_contacto'], 'string', 'max' => 55],
-            [['no_licencia', 'municipio', 'tipo_sangre'], 'string', 'max' => 45],
-            [['num_int'], 'string', 'max' => 10],
+            [['nombres', 'apellido_p', 'apellido_m', 'estado', 'colonia', 'calle', 'email', 'nombres_contacto', 'apellido_p_contacto', 'apellido_m_contacto', 'parentesco', 'telefono_contacto'], 'string', 'max' => 55, 'skipOnEmpty' => true],
+            [['no_licencia', 'municipio', 'tipo_sangre'], 'string', 'max' => 45, 'skipOnEmpty' => true],
+            [['num_int', 'telefono'], 'string', 'max' => 10, 'skipOnEmpty' => true],
+            [['cp'], 'string', 'max' => 5, 'skipOnEmpty' => true],
         ];
     }
+    
 
     /**
      * {@inheritdoc}

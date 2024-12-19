@@ -11,6 +11,22 @@ $config = [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
     ],
+    'modules' => [
+        // ... otros módulos ...
+        'dynagrid' => [
+            'class' => '\kartik\dynagrid\Module',
+            // configuración opcional del módulo
+            'dbSettings' => [
+                'tableName' => 'dynagrid',
+            ],
+            'maxPageSize' => 200, // tamaño máximo de página
+            'defaultPageSize' => 20, // tamaño de página por defecto
+        ],
+        'gridview' => [
+            'class' => '\kartik\grid\Module',
+            // configuración opcional del módulo
+        ],
+    ],
     'components' => [
         
         'request' => [

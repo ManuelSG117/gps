@@ -15,9 +15,10 @@ $this->title = 'Gpslocations';
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA73efm01Xa11C5aXzXBGFbWUjMtkad5HE"></script>
 <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="/vendor/pickadate/themes/default.css">
 <link rel="stylesheet" href="/vendor/pickadate/themes/default.date.css">
+<link rel="stylesheet" href="/vendor/toastr/css/toastr.min.css">
+
 <div class="main-content">
     <button class="floating-button" id="floatingButton" onclick="toggleButtonContainer()">+</button>
     <div class="sidebar"><h4>GPS</h4>
@@ -46,13 +47,78 @@ $this->title = 'Gpslocations';
     
     <br>
     <div id="map"></div>
-    <div id="loadingScreen" class="loading-screen" style="display: none;">
-        <div class="spinner"></div>
+    <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinners">
+        <div class="spinners"></div>
+        <p>Cargando ruta...</p>
     </div>
 </div>
 
 
+</div>
+
+
 <style>
+/* Contenedor superpuesto para bloquear interacciones */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.5); /* Fondo semitransparente */
+    z-index: 1000; /* Asegurar que esté encima de todo */
+    display: none; /* Oculto por defecto */
+    pointer-events: none; /* Bloquea clics */
+}
+
+/* Habilitar el bloqueo cuando se muestra el spinner */
+.loading-overlay.active {
+    display: block;
+    pointer-events: all; /* Bloquea clics mientras está activo */
+}
+
+/* Spinner de carga */
+.loading-spinners {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1001; /* Encima del overlay */
+    background: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.spinners {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #000;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-spinnes p {
+    margin-top: 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+
 
 .gps-search {
         width: 330px; /* Ajusta el ancho según tus necesidades */
@@ -102,7 +168,21 @@ $this->title = 'Gpslocations';
         width: 100%;
         height: 100%;
     }
+    
 </style>  
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    toastr.info('This is an info toast', 'Info', {
+        positionClass: 'toast-top-right',
+        closeButton: true
+    });
+    toastr.warning('This is a warning toast', 'Warning', {
+        positionClass: 'toast-top-right',
+        closeButton: true
+    });
+});
+</script>
      <!-- Required vendors -->
      <script src="/vendor/global/global.min.js"></script>
 	<script src="/vendor/bootstrap-datepicker-master/js/bootstrap-datepicker.min.js"></script>
@@ -114,6 +194,9 @@ $this->title = 'Gpslocations';
 
     <!-- Pickdate -->
     <script src="/js/plugins-init/pickadate-init.js"></script>
-   <script src="/js/custom.min.js"></script>
-	<script src="/js/deznav-init.js"></script>
-	
+
+    <script src="/vendor/toastr/js/toastr.min.js"></script>
+
+    <!-- All init script -->
+    <script src="/js/plugins-init/toastr-init.js"></script>
+

@@ -184,7 +184,7 @@ Toastr
         ),
         $("#toastr-info-top-right").on("click", function () {
                 toastr.info("This Is info Message", "Top Right", {
-                    positionClass: "toast-top-right",
+                    positionClass: "toast-custom-top-right", // Cambiar la clase de posición
                     timeOut: 5e3,
                     closeButton: !0,
                     debug: !1,

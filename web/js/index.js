@@ -2,8 +2,8 @@
     let markers = [];
     let routePath;
     let routeCoordinates = [];
-    let recentLocationsInterval; // Variable para almacenar el identificador del intervalo
-
+    let recentLocationsInterval; 
+    let lastKnownLocations = {};
 
 function toggleSelectAll(selectAllCheckbox) {
     const checkboxes = document.querySelectorAll('.gps-item input[type="checkbox"]');
@@ -73,19 +73,117 @@ function toggleSelectAll(selectAllCheckbox) {
 function initMap() {
     map = L.map('map').setView([19.4202403, -102.0686549], 15);
 
-    // Agregar la capa de Google Maps
     const googleLayer = L.gridLayer.googleMutant({
-        type: 'roadmap' // Valores válidos: 'roadmap', 'satellite', 'terrain', 'hybrid'
+        type: 'roadmap' 
     });
     map.addLayer(googleLayer);
+
+    const trafficMutant = L.gridLayer.googleMutant({
+        type: 'roadmap'
+    });
+    trafficMutant.addGoogleLayer("TrafficLayer");
+    map.addLayer(trafficMutant);
 
     loadGpsOptions();
     loadRecentLocations();
 
-    // Almacenar el identificador del intervalo
-    recentLocationsInterval = setInterval(loadRecentLocations, 10000); // Refrescar cada 10 segundos
+    recentLocationsInterval = setInterval(loadRecentLocations, 10000); 
 }
 
+async function loadRecentLocations() { 
+    try {
+        const response = await fetch('get-locations-time');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        // Marcadores que se deben mantener actualizados
+        const updatedPhoneNumbers = new Set();
+
+        data.forEach(location => {
+            updatedPhoneNumbers.add(location.phoneNumber);
+
+            const lastLocation = lastKnownLocations[location.phoneNumber];
+            if (!lastLocation || 
+                lastLocation.latitude !== location.latitude || 
+                lastLocation.longitude !== location.longitude) {
+
+                console.log(`Actualizando marcador para ${location.phoneNumber}: nueva posición [${location.latitude}, ${location.longitude}].`);
+
+                // Si la ubicación es diferente, actualizamos el marcador
+                if (markers[location.phoneNumber]) {
+                    map.removeLayer(markers[location.phoneNumber]);
+                }
+
+                const marker = createMarker(location);
+                markers[location.phoneNumber] = marker;
+
+                lastKnownLocations[location.phoneNumber] = {
+                    latitude: location.latitude,
+                    longitude: location.longitude
+                };
+            } else {
+                console.log(`El marcador para ${location.phoneNumber} no ha cambiado de posición.`);
+
+                // Cambiar el ícono a inactivo si no ha cambiado de posición
+                const marker = markers[location.phoneNumber];
+                if (marker) {
+                    marker.setIcon(L.icon({
+                        iconUrl: 'https://img.icons8.com/?size=100&id=p9Dtg5w9YDAv&format=png&color=000000',
+                        iconSize: [30, 30],
+                        iconAnchor: [20, 20],
+                        popupAnchor: [0, -20]
+                    }));
+                } else {
+                    console.warn(`El marcador para ${location.phoneNumber} no se encontró al intentar cambiar el ícono.`);
+                }
+            }
+        });
+
+        // Identificar y modificar marcadores inactivos
+        Object.keys(markers).forEach(phoneNumber => {
+            if (!updatedPhoneNumbers.has(phoneNumber)) {
+                const marker = markers[phoneNumber];
+                if (marker) {
+                    console.log(`Cambiando ícono a inactivo para el marcador de ${phoneNumber} (no recibido en la respuesta).`);
+                    marker.setIcon(L.icon({
+                        iconUrl: 'https://img.icons8.com/?size=100&id=p9Dtg5w9YDAv&format=png&color=000000',
+                        iconSize: [30, 30],
+                        iconAnchor: [20, 20],
+                        popupAnchor: [0, -20]
+                    }));
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching recent locations:', error);
+    }
+}
+
+function createMarker(location) {
+    const marker = L.marker([location.latitude, location.longitude], {
+        icon: L.icon({
+            iconUrl: 'https://img.icons8.com/?size=100&id=UfftIT7em2K0&format=png&color=000000',
+            iconSize: [30, 30],
+            iconAnchor: [20, 20],
+            popupAnchor: [0, -20]
+        })
+    }).addTo(map);
+
+    if (location.direction) {
+        marker.setRotationAngle(location.direction);
+    }
+
+    marker.bindTooltip(location.userName, { permanent: true, direction: 'top', className: 'custom-tooltip' }).openTooltip();
+
+    marker.on('click', () => {
+        handleMarkerClick(marker, location);
+    });
+
+    return marker;
+}
 
 function loadGpsOptions() {
     fetch('get-gps-options')
@@ -151,46 +249,24 @@ function filterGpsList() {
     });
 }
 
-function loadRecentLocations() {
-    fetch('get-locations-time')
-        .then(response => response.json())
-        .then(data => {
-            // Eliminar todos los marcadores existentes
-            Object.values(markers).forEach(marker => map.removeLayer(marker));
-            markers = {};
 
-            data.forEach(location => {
-                // Crear un marcador con la imagen de una flecha
-                const marker = L.marker([location.latitude, location.longitude], {
-                    icon: L.icon({
-                        iconUrl: 'https://img.icons8.com/?size=100&id=UfftIT7em2K0&format=png&color=000000',  // URL de la imagen de la flecha
-                        iconSize: [30, 30],
-                        iconAnchor: [20, 20],  // Ajusta el ancla al centro de la imagen
-                        popupAnchor: [0, -20]  // Ajusta el ancla para los popups
-                    })
-                }).addTo(map);
+function clearMarkers() {
+    Object.values(markers).forEach(marker => map.removeLayer(marker));
+    markers = {};
+}
 
-                // Si tienes dirección, puedes usarla para rotar la flecha (en grados)
-                if (location.direction) {
-                    marker.setRotationAngle(location.direction);
-                }
 
-                marker.bindTooltip(location.userName, { permanent: true, direction: 'top',className: 'custom-tooltip'}).openTooltip();
-
-                marker.on('click', () => {
-                    getAddress(location.latitude, location.longitude).then(address => {
-                        marker.bindPopup(`
-                            <b>Ubicación:</b> <a href="https://www.google.com/maps?q=${location.latitude},${location.longitude}" target="_blank">${location.latitude}, ${location.longitude}</a><br>
-                            <b>Dirección:</b> ${address}<br>
-                            <b>Velocidad:</b> ${location.speed} km/h
-                        `, { offset: [0, -40] }).openPopup();
-                    });
-                });
-
-                markers[location.phoneNumber] = marker;
-            });
-        })
-        .catch(error => console.error('Error fetching recent locations:', error));
+async function handleMarkerClick(marker, location) {
+    try {
+        const address = await getAddress(location.latitude, location.longitude);
+        marker.bindPopup(`
+            <b>Ubicación:</b> <a href="https://www.google.com/maps?q=${location.latitude},${location.longitude}" target="_blank">${location.latitude}, ${location.longitude}</a><br>
+            <b>Dirección:</b> ${address}<br>
+            <b>Velocidad:</b> ${location.speed} km/h
+        `, { offset: [0, -40] }).openPopup();
+    } catch (error) {
+        console.error('Error fetching address:', error);
+    }
 }
 
 
@@ -203,48 +279,51 @@ function toggleMarker(phoneNumber) {
             map.removeLayer(markers[phoneNumber]);
         }
     }
-
-function loadRoute() {
-    const gpsSelector = document.getElementById('gpsSelector');
-    const phoneNumber = gpsSelector.value;
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-
-    if (!phoneNumber) {
-        alert('Por favor, selecciona un GPS.');
-        return;
-    }
-
-    // Detener la actualización periódica de ubicaciones recientes
-    if (recentLocationsInterval) {
-        clearInterval(recentLocationsInterval);
-        recentLocationsInterval = null; // Evitar llamadas múltiples a clearInterval
-        console.log('Intervalo de actualizaciones detenido.');
-    }
-
-    const formattedStartDate = startDate ? new Date(startDate).toISOString().slice(0, 19).replace('T', ' ') : '';
-    const formattedEndDate = endDate ? new Date(endDate).toISOString().slice(0, 19).replace('T', ' ') : '';
-
-    let url = `get-route?phoneNumber=${phoneNumber}`;
-    if (formattedStartDate) {
-        url += `&startDate=${formattedStartDate}`;
-    }
-    if (formattedEndDate) {
-        url += `&endDate=${formattedEndDate}`;
-    }
-
-    document.getElementById('loadingScreen').style.display = 'block'; // Mostrar pantalla de carga
-
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('loadingScreen').style.display = 'none'; // Ocultar pantalla de carga
-
+    async function loadRoute() {
+        const gpsSelector = document.getElementById('gpsSelector');
+        const phoneNumber = gpsSelector.value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+    
+        if (!phoneNumber) {
+            alert('Por favor, selecciona un GPS.');
+            return;
+        }
+    
+        // Mostrar el overlay y el spinner de carga
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        loadingOverlay.classList.add('active');
+    
+        // Detener la actualización periódica de ubicaciones recientes
+        if (recentLocationsInterval) {
+            clearInterval(recentLocationsInterval);
+            recentLocationsInterval = null; // Evitar llamadas múltiples a clearInterval
+            console.log('Intervalo de actualizaciones detenido.');
+        }
+    
+        const formattedStartDate = startDate ? new Date(startDate).toISOString().slice(0, 19).replace('T', ' ') : '';
+        const formattedEndDate = endDate ? new Date(endDate).toISOString().slice(0, 19).replace('T', ' ') : '';
+    
+        let url = `get-route?phoneNumber=${phoneNumber}`;
+        if (formattedStartDate) {
+            url += `&startDate=${formattedStartDate}`;
+        }
+        if (formattedEndDate) {
+            url += `&endDate=${formattedEndDate}`;
+        }
+    
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+    
             if (data.length === 0) {
                 alert('No se encontraron datos para la ruta seleccionada.');
                 return;
             }
-
+    
             // Eliminar todos los marcadores existentes, excepto el seleccionado
             Object.keys(markers).forEach(key => {
                 if (key !== phoneNumber && markers[key]) {
@@ -252,13 +331,13 @@ function loadRoute() {
                     delete markers[key]; // Eliminar del objeto `markers`
                 }
             });
-
+    
             // Limpiar la ruta previa
             if (routePath) {
                 map.removeLayer(routePath);
             }
             routeCoordinates = [];
-
+    
             // Actualizar las coordenadas de la ruta
             routeCoordinates = data.map(location => [
                 parseFloat(location.latitude),
@@ -266,17 +345,17 @@ function loadRoute() {
                 location.speed, // Esto es para el cálculo de la dirección (si se quiere)
                 location.direction // Utiliza `location.direction` si está disponible
             ]);
-
+    
             // Dibujar la nueva ruta
             routePath = L.polyline(routeCoordinates.map(coord => [coord[0], coord[1]]), { color: 'red' }).addTo(map);
             map.fitBounds(routePath.getBounds());
-
+    
             // Crear o actualizar el marcador para el GPS seleccionado
             const selectedOption = gpsSelector.options[gpsSelector.selectedIndex];
             const userName = selectedOption.text;
-
+    
             const startPoint = routeCoordinates[0];
-
+    
             if (markers[phoneNumber]) {
                 // Si el marcador ya existe, actualizar su posición y rotación
                 markers[phoneNumber].setLatLng([startPoint[0], startPoint[1]]);
@@ -292,91 +371,91 @@ function loadRoute() {
                         popupAnchor: [0, -20] // Ajustar el popup
                     })
                 }).addTo(map);
-
+    
                 // Actualizar la rotación si la dirección está disponible
                 const rotationAngle = routeCoordinates[0][3] ? routeCoordinates[0][3] : 0;
                 markers[phoneNumber].setRotationAngle(rotationAngle);
             }
-
+    
             // Añadir un tooltip al marcador
-            markers[phoneNumber].bindTooltip(userName, { permanent: true, direction: 'top' ,    className: 'custom-tooltip'}).openTooltip();
-
+            markers[phoneNumber].bindTooltip(userName, { permanent: true, direction: 'top', className: 'custom-tooltip' }).openTooltip();
+    
             console.log('Ruta cargada con éxito:', {
                 phoneNumber,
                 startDate: formattedStartDate,
                 endDate: formattedEndDate,
                 routeCoordinates
             });
-        })
-        .catch(error => {
-            document.getElementById('loadingScreen').style.display = 'none'; // Ocultar pantalla de carga
+        } catch (error) {
             console.error('Error fetching route:', error);
-        });
-}
-
-
-
-function startAnimation() {
-    if (!routeCoordinates || routeCoordinates.length === 0) {
-        console.error('No route loaded for animation.');
-        return;
+        } finally {
+           // Ocultar el overlay y el spinner de carga
+        loadingOverlay.classList.remove('active');
+        }
     }
-
-    // Seleccionar el primer marcador de la lista
-    const gpsSelector = document.getElementById('gpsSelector');
-    const phoneNumber = gpsSelector.value;
-    const marker = markers[phoneNumber];
-
-    if (!marker) {
-        console.error('No marker available for animation.');
-        return;
-    }
-
-    let index = 0;
-    const step = 0.01; // Ajusta este valor para cambiar la velocidad de movimiento
-    const numSteps = 200; // Número de pasos entre cada punto
-    const timePerStep = 10; // Tiempo en ms entre cada paso
-
-    function moveMarker() {
-        if (index >= routeCoordinates.length - 1) {
-            console.log('Animation completed.');
+    
+    
+    function startAnimation() {
+        if (!routeCoordinates || routeCoordinates.length === 0) {
+            console.error('No route loaded for animation.');
             return;
         }
-
-        const start = routeCoordinates[index];
-        const end = routeCoordinates[index + 1];
-        let stepIndex = 0;
-
-        function interpolate() {
-            if (stepIndex > numSteps) {
-                index++;
-                moveMarker();
+    
+        // Seleccionar el primer marcador de la lista
+        const gpsSelector = document.getElementById('gpsSelector');
+        const phoneNumber = gpsSelector.value;
+        const marker = markers[phoneNumber];
+    
+        if (!marker) {
+            console.error('No marker available for animation.');
+            return;
+        }
+    
+        let index = 0;
+        const step = 0.01; // Ajusta este valor para cambiar la velocidad de movimiento
+        const numSteps = 200; // Número de pasos entre cada punto
+        const timePerStep = 10; // Tiempo en ms entre cada paso
+    
+        function moveMarker() {
+            if (index >= routeCoordinates.length - 1) {
+                console.log('Animation completed.');
                 return;
             }
-
-            const lat = start[0] + (end[0] - start[0]) * (stepIndex / numSteps);
-            const lng = start[1] + (end[1] - start[1]) * (stepIndex / numSteps);
-            const position = [lat, lng];
-
-            marker.setLatLng(position);
-            map.panTo(position);
-
-            // Calcular la dirección entre dos puntos para rotar la flecha
-            const dx = end[1] - start[1];
-            const dy = end[0] - start[0];
-            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-            marker.setRotationAngle(angle);
-
-            stepIndex++;
-            setTimeout(interpolate, timePerStep);
+    
+            const start = routeCoordinates[index];
+            const end = routeCoordinates[index + 1];
+            let stepIndex = 0;
+    
+            function interpolate() {
+                if (stepIndex > numSteps) {
+                    index++;
+                    moveMarker();
+                    return;
+                }
+    
+                const lat = start[0] + (end[0] - start[0]) * (stepIndex / numSteps);
+                const lng = start[1] + (end[1] - start[1]) * (stepIndex / numSteps);
+                const position = [lat, lng];
+    
+                marker.setLatLng(position);
+                map.panTo(position);
+    
+                // Calcular la dirección entre dos puntos para rotar la flecha
+                const dx = end[1] - start[1];
+                const dy = end[0] - start[0];
+                const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                marker.setRotationAngle(angle);
+    
+                stepIndex++;
+                setTimeout(interpolate, timePerStep);
+            }
+    
+            interpolate();
         }
-
-        interpolate();
+    
+        console.log('Animation started.');
+        moveMarker();
     }
-
-    console.log('Animation started.');
-    moveMarker();
-}
 
 function getAddress(lat, lng) {
         return fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=AIzaSyA73efm01Xa11C5aXzXBGFbWUjMtkad5HE`)
