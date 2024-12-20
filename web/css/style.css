@@ -22606,6 +22606,7 @@ button {
   border: 0rem solid transparent;
   border-radius: 0.625rem;
   height: calc(100% - 25px);
+  width: 130% !important;
   border: 1px solid var(--border); }
   @media only screen and (max-width: 35.9375rem) {
     .card {
@@ -29976,8 +29977,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         height: 100vh;  /* Ocupa toda la altura de la ventana */
         z-index: 1;
         }
-    
-    
+  
         .minimal-button {
             background-color: #f0f0f0;
             border: 1px solid #ccc;
@@ -30019,11 +30019,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
             
         }
-    
-
-    
-    
-    
+  
         @keyframes button-press {
         0% {
             transform: scale(1);
@@ -30064,13 +30060,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         accent-color: #222b40; 
     }
     
-    
     .gps-titles span {
         flex: 1;
         text-align: center;
     }
-    
-    
     
     .gps-item {
         display: flex;
@@ -30156,8 +30149,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   .floating-button:hover {
       transform: rotate(90deg); /* Rotate the button on hover */
   }
-  
-  
+
   .button-container {
           display: none;
           position: fixed;

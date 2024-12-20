@@ -211,15 +211,32 @@ function loadGpsOptions() {
                         const button = document.createElement('button');
                         button.textContent = '...';
                         button.className = 'minimal-button';
-                        button.onclick = () => {
-                        
+                        button.onclick = (event) => {
+                            event.stopPropagation();
+                            toggleOptionsMenu(event.target);
                         };
+
+                        const optionsMenu = document.createElement('div');
+                        optionsMenu.className = 'options-menu';
+                        optionsMenu.style.display = 'none';
+
+                        const viewDetails = document.createElement('div');
+                        viewDetails.textContent = 'Ver detalles';
+                        viewDetails.onclick = () => viewDetailsHandler(gps.phoneNumber);
+
+                        const maintenance = document.createElement('div');
+                        maintenance.textContent = 'Mantenimientos';
+                        maintenance.onclick = () => maintenanceHandler(gps.phoneNumber);
+
+                        optionsMenu.appendChild(viewDetails);
+                        optionsMenu.appendChild(maintenance);
 
                         const div = document.createElement('div');
                         div.className = 'gps-item';
                         div.appendChild(checkbox);
                         div.appendChild(label);
                         div.appendChild(button);
+                        div.appendChild(optionsMenu);
 
                         gpsList.appendChild(div);
 
@@ -233,6 +250,22 @@ function loadGpsOptions() {
                 .catch(error => console.error('Error fetching locations:', error));
         })
         .catch(error => console.error('Error fetching GPS options:', error));
+}
+
+
+function toggleOptionsMenu(button) {
+    const optionsMenu = button.nextElementSibling;
+    optionsMenu.style.display = optionsMenu.style.display === 'none' ? 'block' : 'none';
+}
+
+function viewDetailsHandler(phoneNumber) {
+    // Lógica para ver detalles
+    console.log('Ver detalles de:', phoneNumber);
+}
+
+function maintenanceHandler(phoneNumber) {
+    // Lógica para mantenimientos
+    console.log('Mantenimientos de:', phoneNumber);
 }
 
 function filterGpsList() {

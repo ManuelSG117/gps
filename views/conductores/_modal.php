@@ -52,14 +52,14 @@ use yii\helpers\Html;
         <?= $form->field($model, 'estado', [
             'options' => ['class' => 'col-md-4 form-field-spacing']
         ])->dropDownList([], [
-            'prompt' => 'Selecciona el estado...',
+            'prompt' => '',
             'id' => 'estado-dropdown',
         ]) ?>
 
         <?= $form->field($model, 'municipio', [
             'options' => ['class' => 'col-md-4 form-field-spacing']
         ])->dropDownList([], [
-            'prompt' => 'Selecciona el municipio...',
+            'prompt' => '',
             'id' => 'municipio-dropdown',  
         ]) ?>
 
@@ -110,7 +110,7 @@ use yii\helpers\Html;
             'AB-' => 'AB-',
             'O+' => 'O+',
             'O-' => 'O-',
-        ], ['prompt' => 'Selecciona']) ?>
+        ], ['prompt' => '']) ?>
 
         <!-- Sección de Contacto de Emergencia -->
         <div class="col-12 mt-4 mb-3">
@@ -142,7 +142,7 @@ use yii\helpers\Html;
             'Hijo(a)' => 'Hijo(a)',
             'Amigo(a)' => 'Amigo(a)',
             'Otro' => 'Otro',
-        ], ['prompt' => 'Selecciona']) ?>
+        ], ['prompt' => '']) ?>
 
         <?= $form->field($model, 'telefono_contacto', [
                   'options' => ['class' => 'col-md-4 form-field-spacing']
@@ -198,7 +198,7 @@ use yii\helpers\Html;
             // Agregar la opción por defecto
             $estadoDropdown.append($('<option>', {
                 value: '',
-                text: 'Selecciona el estado...'
+                text: ''
             }));
 
             // Llenar el dropdown de estados

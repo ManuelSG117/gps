@@ -1,10 +1,12 @@
 <?php
 use yii\helpers\Html;
-use yii\grid\GridView;
+use kartik\grid\GridView;
 use yii\grid\ActionColumn;
 use yii\helpers\Url;
 use yii\web\View;
 use yii\widgets\Pjax;
+use yii\helpers\ArrayHelper;
+use app\models\Conductores;
 
 /** @var yii\web\View $this */
 /** @var app\models\ConductoresSearch $searchModel */
@@ -23,39 +25,80 @@ $this->params['breadcrumbs'][] = $this->title;
             'class' => 'btn btn-success',
             'data-bs-toggle' => 'modal',
             'data-bs-target' => '#exampleModalCenter',
+            'onclick' => 'clearForm()',
         ]) ?>
     </p>
 
-
     <?= GridView::widget([
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-            'nombres',
-            'apellido_p',
-            'apellido_m',
-            'no_licencia',
-            [
-                'class' => ActionColumn::className(),
-                'template' => '{view} {update} {delete}',
-                'buttons' => [
-                    'update' => function ($url, $model, $key) {
-                        return Html::button('Actualizar <span class="btn-icon-end"><i class="fa fa-heart"></i></span>', [
-                            'class' => 'btn btn-info ',
-                            'data-bs-toggle' => 'modal',
-                            'data-bs-target' => '#exampleModalCenter',
-                            'data-id' => $model->id,
-                            'onclick' => 'loadUpdateForm(' . $model->id . ')',
-                        ]);
-                    },
-                ],
-                'urlCreator' => function ($action, $model, $key, $index, $column) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
+    'dataProvider' => $dataProvider,
+    'filterModel' => $searchModel,
+    
+    'columns' => [
+        ['class' => 'yii\grid\SerialColumn'],
+        [
+            'attribute' => 'nombres',
+            'hAlign' => 'center',
+            'filterType' => GridView::FILTER_SELECT2,
+            'filter' => ArrayHelper::map(Conductores::find()->all(), 'nombres', 'nombres'),
+            'filterWidgetOptions' => [
+                'options' => ['placeholder' => 'Seleccionar nombre'],
+                'pluginOptions' => ['allowClear' => true],
+            ],
+            'filterInputOptions' => ['placeholder' => 'Nombre'],
+        ],
+        [
+            'attribute' => 'apellido_p',
+            'hAlign' => 'center',
+            'filterType' => GridView::FILTER_SELECT2,
+            'filter' => ArrayHelper::map(Conductores::find()->all(), 'apellido_p', 'apellido_p'),
+            'filterWidgetOptions' => [
+                'options' => ['placeholder' => 'Seleccionar apellido paterno'],
+                'pluginOptions' => ['allowClear' => true],
+            ],
+            'filterInputOptions' => ['placeholder' => 'Apellido Paterno'],
+        ],
+        [
+            'attribute' => 'apellido_m',
+            'hAlign' => 'center',
+            'filterType' => GridView::FILTER_SELECT2,
+            'filter' => ArrayHelper::map(Conductores::find()->all(), 'apellido_m', 'apellido_m'),
+            'filterWidgetOptions' => [
+                'options' => ['placeholder' => 'Seleccionar apellido materno'],
+                'pluginOptions' => ['allowClear' => true],
+            ],
+            'filterInputOptions' => ['placeholder' => 'Apellido Materno'],
+        ],
+        [
+            'attribute' => 'no_licencia',
+            'hAlign' => 'center',
+            'filterType' => GridView::FILTER_SELECT2,
+            'filter' => ArrayHelper::map(Conductores::find()->all(), 'no_licencia', 'no_licencia'),
+            'filterWidgetOptions' => [
+                'options' => ['placeholder' => 'Seleccionar número de licencia'],
+                'pluginOptions' => ['allowClear' => true],
+            ],
+            'filterInputOptions' => ['placeholder' => 'Número de Licencia'],
+        ],
+        [
+            'class' => ActionColumn::className(),
+            'template' => '{view} {update} {delete}',
+            'buttons' => [
+                'update' => function ($url, $model, $key) {
+                    return Html::button('Actualizar <span class="btn-icon-end"><i class="fa fa-heart"></i></span>', [
+                        'class' => 'btn btn-info ',
+                        'data-bs-toggle' => 'modal',
+                        'data-bs-target' => '#exampleModalCenter',
+                        'data-id' => $model->id,
+                        'onclick' => 'loadUpdateForm(' . $model->id . ')',
+                    ]);
                 },
             ],
+            'urlCreator' => function ($action, $model, $key, $index, $column) {
+                return Url::toRoute([$action, 'id' => $model->id]);
+            },
         ],
-    ]); ?>
+    ],
+]); ?>
 
 </div>
 
@@ -72,7 +115,12 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 <script>
-    
+function clearForm() {
+    $('#create-conductores-form').trigger('reset');
+    $('#create-conductores-form').attr('action', '<?= Url::to(['conductores/create']) ?>');
+}
+
+
 $('#create-conductores-form').on('beforeSubmit', function (e) {
     e.preventDefault();
 
@@ -83,13 +131,8 @@ $('#create-conductores-form').on('beforeSubmit', function (e) {
         data: form.serialize(),
         success: function (data) {
             if (data.success) {
-                // Recargar el grid usando PJAX
-                $.pjax.reload({container: '#grid-pjax-container'});
-
-                // Cerrar el modal
                 $('#exampleModalCenter').modal('hide');
             } else {
-                // Mostrar errores si existen
                 form.yiiActiveForm('updateMessages', data.errors, true);
             }
         },
@@ -97,23 +140,38 @@ $('#create-conductores-form').on('beforeSubmit', function (e) {
             alert('Hubo un error al guardar el conductor.');
         }
     });
-    return false; // Prevenir el envío normal del formulario
+    return false; 
 });
 
-</script>
-<script>
 function loadUpdateForm(id) {
     $.ajax({
         url: '<?= Url::to(['conductores/get-conductor']) ?>',
         type: 'GET',
         data: { id: id },
         success: function (data) {
-            $('#exampleModalCenter').find('input[name="Conductores[nombres]"]').val(data.nombres);
-            $('#exampleModalCenter').find('input[name="Conductores[apellido_p]"]').val(data.apellido_p);
-            $('#exampleModalCenter').find('input[name="Conductores[apellido_m]"]').val(data.apellido_m);
-            $('#exampleModalCenter').find('input[name="Conductores[no_licencia]"]').val(data.no_licencia);
-            // Set the form action to the update URL
-            $('#create-conductores-form').attr('action', '<?= Url::to(['conductores/update']) ?>' + '?id=' + id);
+            var form = $('#create-conductores-form');
+            form.trigger('reset'); // Limpiar el formulario antes de cargar los datos
+            form.find('input[name="Conductores[nombres]"]').val(data.nombres);
+            form.find('input[name="Conductores[apellido_p]"]').val(data.apellido_p);
+            form.find('input[name="Conductores[apellido_m]"]').val(data.apellido_m);
+            form.find('input[name="Conductores[fecha_nacimiento]"]').val(data.fecha_nacimiento);
+            form.find('input[name="Conductores[no_licencia]"]').val(data.no_licencia);
+            form.find('input[name="Conductores[cp]"]').val(data.cp);
+            form.find('select[name="Conductores[estado]"]').val(data.estado);
+            form.find('select[name="Conductores[municipio]"]').val(data.municipio);
+            form.find('input[name="Conductores[colonia]"]').val(data.colonia);
+            form.find('input[name="Conductores[calle]"]').val(data.calle);
+            form.find('input[name="Conductores[num_ext]"]').val(data.num_ext);
+            form.find('input[name="Conductores[num_int]"]').val(data.num_int);
+            form.find('input[name="Conductores[telefono]"]').val(data.telefono);
+            form.find('input[name="Conductores[email]"]').val(data.email);
+            form.find('select[name="Conductores[tipo_sangre]"]').val(data.tipo_sangre);
+            form.find('input[name="Conductores[nombres_contacto]"]').val(data.nombres_contacto);
+            form.find('input[name="Conductores[apellido_p_contacto]"]').val(data.apellido_p_contacto);
+            form.find('input[name="Conductores[apellido_m_contacto]"]').val(data.apellido_m_contacto);
+            form.find('select[name="Conductores[parentesco]"]').val(data.parentesco);
+            form.find('input[name="Conductores[telefono_contacto]"]').val(data.telefono_contacto);
+            form.attr('action', '<?= Url::to(['conductores/update']) ?>' + '?id=' + id);
         },
         error: function () {
             alert('Hubo un error al cargar los datos del conductor.');

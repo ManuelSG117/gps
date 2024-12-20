@@ -23,11 +23,15 @@ class AppAsset extends AssetBundle
         'css/style.css', 
     ];
     public $js = [
-        'js/custom.js',
-        'js/custom.min.js',
+     
         'js/deznav-init.js',
-        'js/highlight.min.js',
         'js/settings.js',
+
     ];
- 
+    
+    public $depends = [
+        'yii\web\YiiAsset',
+        'yii\bootstrap5\BootstrapAsset',
+    ];
+    
 }

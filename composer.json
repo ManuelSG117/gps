@@ -19,8 +19,11 @@
         "yiisoft/yii2-symfonymailer": "~2.0.3",
         "react/socket": "^1.16",
         "yiisoft/yii2-bootstrap5": "^2.0",
-        "kartik-v/yii2-dynagrid": "^1.5",
-        "twbs/bootstrap": "^5.3"
+        "kartik-v/yii2-dynagrid": "dev-master",
+        "twbs/bootstrap": "^5.3",
+        "yiisoft/yii2-httpclient": "^2.0",
+        "kartik-v/yii2-bootstrap5-dropdown": "@dev",
+        "kartik-v/yii2-grid": "^3.5"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",
