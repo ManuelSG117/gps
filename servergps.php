@@ -4,7 +4,9 @@
  
  $ip_address = "192.168.1.169"; 
  $port = "7331";
- 
+
+// echo "Starting server on $ip_address:$port\n";
+
 $server = stream_socket_server("tcp://$ip_address:$port", $errno, $errorMessage);
  
 if ($server === false) {
@@ -95,7 +97,47 @@ while (true) {
         }
 } // end while loop
  
+function haversine_distance($lat1, $lon1, $lat2, $lon2) {
+    $earth_radius = 6371000; // Radio de la Tierra en metros
+
+    $dLat = deg2rad($lat2 - $lat1);
+    $dLon = deg2rad($lon2 - $lon1);
+
+    $a = sin($dLat / 2) * sin($dLat / 2) +
+         cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+         sin($dLon / 2) * sin($dLon / 2);
+
+    $c = 2 * asin(sqrt($a));
+
+    return $earth_radius * $c;
+}
+
 function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_mph, $bearing) {
+    // Verificar si la latitud comienza con "0.0"
+    if (strpos($latitude, '0.0') === 0) {
+        echo "Latitud inválida, no se insertará en la base de datos.\n";
+        return;
+    }
+
+    // Obtener la última ubicación insertada
+    $stmt = $pdo->prepare('SELECT latitude, longitude FROM gpslocations ORDER BY GPSLocationID DESC LIMIT 1');
+    $stmt->execute();
+    $last_location = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($last_location) {
+        $last_latitude = $last_location['latitude'];
+        $last_longitude = $last_location['longitude'];
+
+        // Calcular la distancia entre la última ubicación y la nueva ubicación
+        $distance = haversine_distance($last_latitude, $last_longitude, $latitude, $longitude);
+    echo "Distancia: $distance\n";
+        // Verificar si la distancia es menor a 10 metros
+        if ($distance < 10) {
+            echo "Ubicación muy similar a la última insertada, no se insertará en la base de datos.\n";
+            return;
+        }
+    }
+exit();
     try {
         $stmt = $pdo->prepare('INSERT INTO gpslocations (
             latitude,
