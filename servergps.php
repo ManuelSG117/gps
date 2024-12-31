@@ -4,9 +4,6 @@
  
  $ip_address = "192.168.1.169"; 
  $port = "7331";
-
-// echo "Starting server on $ip_address:$port\n";
-
 $server = stream_socket_server("tcp://$ip_address:$port", $errno, $errorMessage);
  
 if ($server === false) {

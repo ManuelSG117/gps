@@ -215,16 +215,16 @@ function clearSearch() {
     filterGpsList();
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    toastr.info('This is an info toast', 'Info', {
-        positionClass: 'toast-top-right',
-        closeButton: true
-    });
-    toastr.warning('This is a warning toast', 'Warning', {
-        positionClass: 'toast-top-right',
-        closeButton: true
-    });
-});
+// document.addEventListener('DOMContentLoaded', function() {
+//     toastr.info('This is an info toast', 'Info', {
+//         positionClass: 'toast-top-right',
+//         closeButton: true
+//     });
+//     toastr.warning('This is a warning toast', 'Warning', {
+//         positionClass: 'toast-top-right',
+//         closeButton: true
+//     });
+// });
 </script>
 
 <!-- Required vendors -->

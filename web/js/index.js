@@ -4,6 +4,7 @@
     let routeCoordinates = [];
     let recentLocationsInterval; 
     let lastKnownLocations = {};
+    const addressCache = {};
 
 function toggleSelectAll(selectAllCheckbox) {
     const checkboxes = document.querySelectorAll('.gps-item input[type="checkbox"]');
@@ -237,7 +238,7 @@ function loadGpsOptions() {
                         div.appendChild(label);
                         div.appendChild(button);
                         div.appendChild(optionsMenu);
-
+!
                         gpsList.appendChild(div);
 
                         // Crear y agregar opciones al select
@@ -312,6 +313,11 @@ function toggleMarker(phoneNumber) {
             map.removeLayer(markers[phoneNumber]);
         }
     }
+    function minimizeButtonContainer() {
+        var container = document.getElementById('buttonContainer');
+        container.style.display = 'none';
+    }
+
     async function loadRoute() {
         const gpsSelector = document.getElementById('gpsSelector');
         const phoneNumber = gpsSelector.value;
@@ -330,7 +336,7 @@ function toggleMarker(phoneNumber) {
         // Detener la actualización periódica de ubicaciones recientes
         if (recentLocationsInterval) {
             clearInterval(recentLocationsInterval);
-            recentLocationsInterval = null; // Evitar llamadas múltiples a clearInterval
+            recentLocationsInterval = null;
             console.log('Intervalo de actualizaciones detenido.');
         }
     
@@ -356,7 +362,7 @@ function toggleMarker(phoneNumber) {
                 alert('No se encontraron datos para la ruta seleccionada.');
                 return;
             }
-    
+            
             // Eliminar todos los marcadores existentes, excepto el seleccionado
             Object.keys(markers).forEach(key => {
                 if (key !== phoneNumber && markers[key]) {
@@ -364,7 +370,7 @@ function toggleMarker(phoneNumber) {
                     delete markers[key]; // Eliminar del objeto `markers`
                 }
             });
-    
+            
             // Limpiar la ruta previa
             if (routePath) {
                 map.removeLayer(routePath);
@@ -375,57 +381,108 @@ function toggleMarker(phoneNumber) {
             routeCoordinates = data.map(location => [
                 parseFloat(location.latitude),
                 parseFloat(location.longitude),
-                location.speed, // Esto es para el cálculo de la dirección (si se quiere)
-                location.direction // Utiliza `location.direction` si está disponible
+                
             ]);
-    
             // Dibujar la nueva ruta
-            routePath = L.polyline(routeCoordinates.map(coord => [coord[0], coord[1]]), { color: 'red' }).addTo(map);
-            map.fitBounds(routePath.getBounds());
+            routePath = L.polyline(routeCoordinates, { color: '#454B54' }).addTo(map);
     
-            // Crear o actualizar el marcador para el GPS seleccionado
-            const selectedOption = gpsSelector.options[gpsSelector.selectedIndex];
-            const userName = selectedOption.text;
-    
-            const startPoint = routeCoordinates[0];
-    
-            if (markers[phoneNumber]) {
-                // Si el marcador ya existe, actualizar su posición y rotación
-                markers[phoneNumber].setLatLng([startPoint[0], startPoint[1]]);
-                const rotationAngle = routeCoordinates[0][3] ? routeCoordinates[0][3] : 0; // Usar `direction` para rotación
-                markers[phoneNumber].setRotationAngle(rotationAngle);
-            } else {
-                // Crear un nuevo marcador con la imagen de una flecha
-                markers[phoneNumber] = L.marker([startPoint[0], startPoint[1]], {
-                    icon: L.icon({
-                        iconUrl: 'https://img.icons8.com/?size=100&id=UfftIT7em2K0&format=png&color=000000', 
-                        iconSize: [40, 40], // Ajustar el tamaño de la flecha
-                        iconAnchor: [20, 20], // Centrar el ancla en la flecha
-                        popupAnchor: [0, -20] // Ajustar el popup
-                    })
-                }).addTo(map);
-    
-                // Actualizar la rotación si la dirección está disponible
-                const rotationAngle = routeCoordinates[0][3] ? routeCoordinates[0][3] : 0;
-                markers[phoneNumber].setRotationAngle(rotationAngle);
-            }
-    
-            // Añadir un tooltip al marcador
-            markers[phoneNumber].bindTooltip(userName, { permanent: true, direction: 'top', className: 'custom-tooltip' }).openTooltip();
-    
-            console.log('Ruta cargada con éxito:', {
-                phoneNumber,
-                startDate: formattedStartDate,
-                endDate: formattedEndDate,
-                routeCoordinates
-            });
-        } catch (error) {
-            console.error('Error fetching route:', error);
-        } finally {
-           // Ocultar el overlay y el spinner de carga
-        loadingOverlay.classList.remove('active');
+        // Crear o actualizar el marcador para el GPS seleccionado
+        const selectedOption = gpsSelector.options[gpsSelector.selectedIndex];
+        const userName = selectedOption.text;
+
+        const startPoint = routeCoordinates[0];
+        const endPoint = routeCoordinates[routeCoordinates.length - 1]; // Último punto
+
+        const startAddress = await getAddress(startPoint[0], startPoint[1]);
+        const endAddress = await getAddress(endPoint[0], endPoint[1]);
+            // Agregar marcador para el primer punto (inicio de la ruta)
+        const startMarker = L.marker([startPoint[0], startPoint[1]], {
+            icon: L.icon({
+                iconUrl: 'https://img.icons8.com/?size=100&id=13802&format=png&color=000000', // Ícono verde para el inicio
+                iconSize: [40, 40], // Ajustar el tamaño
+                iconAnchor: [20, 20], // Centrar el ícono
+                popupAnchor: [0, -20] // Ajustar el popup
+            })
+        }).addTo(map).bindPopup(`
+            <b>Primer punto de la ruta</b><br>
+            <b>Fecha:</b> ${data[0].lastUpdate}<br>
+            <b>Velocidad:</b> ${data[0].speed} km/h<br>
+            <b>Ubicación:</b> <a href="https://www.google.com/maps?q=${startPoint[0]},${startPoint[1]}" target="_blank">${startPoint[0]}, ${startPoint[1]}</a><br>
+        <b>Dirección:</b> ${startAddress}<br>`);        
+        startEndMarkers.push(startMarker); // Almacenar el marcador
+
+                // Calcular el tiempo transcurrido entre el primer y el último punto
+                const startTime = new Date(data[0].lastUpdate);
+                const endTime = new Date(data[data.length - 1].lastUpdate);
+                const timeDiff = endTime - startTime; // Diferencia en milisegundos
+                const timeDiffHours = Math.floor(timeDiff / 3600000); // Convertir a horas
+                const timeDiffMinutes = Math.floor((timeDiff % 3600000) / 60000); // Convertir el resto a minutos
+
+        // Agregar marcador para el último punto (fin de la ruta)
+        const endMarker = L.marker([endPoint[0], endPoint[1]], {
+            icon: L.icon({
+                iconUrl: 'https://img.icons8.com/?size=100&id=13796&format=png&color=000000', // Ícono rojo para el final
+                iconSize: [40, 40], // Ajustar el tamaño
+                iconAnchor: [20, 20], // Centrar el ícono
+                popupAnchor: [0, -20] // Ajustar el popup
+            })
+        }).addTo(map).bindPopup(`
+            <b>Último punto de la ruta</b><br>
+            <b>Fecha:</b> ${data[data.length - 1].lastUpdate}<br>
+            <b>Velocidad:</b> ${data[data.length - 1].speed} km/h<br>
+            <b>Ubicación:</b> <a href="https://www.google.com/maps?q=${endPoint[0]},${endPoint[1]}" target="_blank">${endPoint[0]}, ${endPoint[1]}</a><br>
+            <b>Dirección:</b> ${endAddress}<br>
+            <b>Tiempo transcurrido:</b> ${timeDiffHours} horas y ${timeDiffMinutes} minutos<br>`);
+            startEndMarkers.push(endMarker); // Almacenar el marcador
+
+
+        // Crear o actualizar el marcador para el GPS seleccionado
+        if (markers[phoneNumber]) {
+            // Si el marcador ya existe, actualizar su posición y rotación
+            markers[phoneNumber].setLatLng([startPoint[0], startPoint[1]]);
+            const rotationAngle = routeCoordinates[0][3] ? routeCoordinates[0][3] : 0; // Usar `direction` para rotación
+            markers[phoneNumber].setRotationAngle(rotationAngle);
+        } else {
+            // Crear un nuevo marcador con la imagen de una flecha
+            markers[phoneNumber] = L.marker([startPoint[0], startPoint[1]], {
+                icon: L.icon({
+                    iconUrl: 'https://img.icons8.com/?size=100&id=UfftIT7em2K0&format=png&color=000000', 
+                    iconSize: [40, 40], // Ajustar el tamaño de la flecha
+                    iconAnchor: [20, 20], // Centrar el ancla en la flecha
+                    popupAnchor: [0, -20] // Ajustar el popup
+                })
+            }).addTo(map);
+
+            // Actualizar la rotación si la dirección está disponible
+            const rotationAngle = routeCoordinates[0][3] ? routeCoordinates[0][3] : 0;
+            markers[phoneNumber].setRotationAngle(rotationAngle);
         }
+
+        // Añadir un tooltip al marcador
+        markers[phoneNumber].bindTooltip(userName, { permanent: true, direction: 'top', className: 'custom-tooltip' }).openTooltip();
+
+        // Realizar un zoom proporcional a toda la ruta con animación
+        const bounds = routePath.getBounds(); // Obtener los límites de la ruta
+        map.flyToBounds(bounds, { // Aplicar animación para mostrar toda la ruta
+            animate: true,
+            duration: 2, // Duración de la animación en segundos
+            padding: [20, 20] // Agregar margen al límite
+        });
+
+        console.log('Ruta cargada con éxito:', {
+            phoneNumber,
+            startDate: formattedStartDate,
+            endDate: formattedEndDate,
+            routeCoordinates
+        });
+        minimizeButtonContainer();
+    } catch (error) {
+        console.error('Error fetching route:', error);
+    } finally {
+        // Ocultar el overlay y el spinner de carga
+        loadingOverlay.classList.remove('active');
     }
+}
     
     
     function startAnimation() {
@@ -490,41 +547,76 @@ function toggleMarker(phoneNumber) {
         moveMarker();
     }
 
-function getAddress(lat, lng) {
-        return fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=AIzaSyA73efm01Xa11C5aXzXBGFbWUjMtkad5HE`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'OK' && data.results.length > 0) {
-                    return data.results[0].formatted_address;
-                } else {
-                    return 'Address not found';
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching address:', error);
-                return 'Error fetching address';
-            });
-    }
+    async function getAddress(lat, lng) {
+        const key = `${lat},${lng}`;
+        if (addressCache[key]) {
+            return addressCache[key];
+        }
+    
+        try {
+            const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=AIzaSyA73efm01Xa11C5aXzXBGFbWUjMtkad5HE`);
+            const data = await response.json();
+            if (data.status === 'OK' && data.results.length > 0) {
+                const address = data.results[0].formatted_address;
+                addressCache[key] = address; // Almacenar en la caché
+                return address;
+            } else {
+                return 'Address not found';
+            }
+        } catch (error) {
+            console.error('Error fetching address:', error);
+            return 'Error fetching address';
+        }
+    }   
 
+// Variable global para almacenar los marcadores del primer y último punto
+let startEndMarkers = [];
 
 function resetMap() {
-    // Eliminar la ruta si existe
+    // Limpiar el mapa
+    clearMarkers();
     if (routePath) {
         map.removeLayer(routePath);
+        routePath = null;
     }
 
-    // Eliminar todos los marcadores
-    Object.values(markers).forEach(marker => map.removeLayer(marker));
+    // Eliminar los marcadores del primer y último punto si existen
+    startEndMarkers.forEach(marker => {
+        map.removeLayer(marker); // Eliminar del mapa
+    });
+    startEndMarkers = []; // Limpiar el arreglo de marcadores
+
+    // Reiniciar las ubicaciones recientes y el estado
+    lastKnownLocations = {};
     markers = {};
+    routeCoordinates = [];
 
-    // Cargar ubicaciones recientes
-    loadRecentLocations();
-
-    // Reiniciar el intervalo de actualizaciones si no está activo
+    // Reiniciar el intervalo de actualizaciones si está detenido
     if (!recentLocationsInterval) {
         recentLocationsInterval = setInterval(loadRecentLocations, 10000);
-        console.log('Intervalo de actualizaciones reiniciado.');
     }
+
+    // Recargar las opciones de GPS y las ubicaciones recientes
+    document.getElementById('gpsList').innerHTML = ''; // Limpiar la lista de GPS
+    document.getElementById('gpsSelector').innerHTML = ''; // Limpiar el selector
+    const gpsSelector = document.getElementById('gpsSelector');
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+
+    if (gpsSelector) gpsSelector.value = ''; // Restablecer selector de GPS
+    if (startDate) startDate.value = ''; // Restablecer fecha de inicio
+    if (endDate) endDate.value = ''; // Restablecer fecha de fin
+    loadGpsOptions();
+
+    // Restablecer el mapa al zoom y coordenadas iniciales con animación más lenta
+    const initialCoordinates = [19.4202403, -102.0686549];
+    const initialZoom = 15;
+
+    map.options.zoomAnimation = true; // Asegurar que la animación de zoom esté habilitada
+    map.flyTo(initialCoordinates, initialZoom, { 
+        animate: true, 
+        duration: 2 // Duración de la animación en segundos 
+    });
 }
 
 function toggleButtonContainer() {

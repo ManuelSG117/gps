@@ -245,7 +245,7 @@ public function actionGetRoute($phoneNumber, $startDate = null, $endDate = null)
             'longitude' => $location->longitude,
             'lastUpdate' => date('Y-m-d H:i:s', strtotime($location->lastUpdate)),
             'speed' => $location->speed,
-        ];
+            'direction' => $location->direction,];
     }
 
     return $this->asJson($locations);
@@ -253,7 +253,71 @@ public function actionGetRoute($phoneNumber, $startDate = null, $endDate = null)
 
 
 
+public function actionGetDistances()
+{
+    $date = '2024-12-23';
+    $startDate = $date . ' 00:00:00';
+    $endDate = $date . ' 23:59:59';
 
+    $gpsLocations = Gpslocations::find()
+        ->where(['between', 'lastUpdate', $startDate, $endDate])
+        ->orderBy(['lastUpdate' => SORT_ASC])
+        ->all();
+
+    if (count($gpsLocations) < 2) {
+        return $this->asJson(['error' => 'Not enough data points']);
+    }
+
+    $maxDistance = 0;
+    $minDistance = PHP_INT_MAX;
+    $maxPoints = [];
+    $minPoints = [];
+
+    for ($i = 0; $i < count($gpsLocations) - 1; $i++) {
+        for ($j = $i + 1; $j < count($gpsLocations); $j++) {
+            $distance = $this->calculateDistance(
+                $gpsLocations[$i]->latitude,
+                $gpsLocations[$i]->longitude,
+                $gpsLocations[$j]->latitude,
+                $gpsLocations[$j]->longitude
+            );
+
+            if ($distance > $maxDistance) {
+                $maxDistance = $distance;
+                $maxPoints = [$gpsLocations[$i], $gpsLocations[$j]];
+            }
+
+            if ($distance < $minDistance) {
+                $minDistance = $distance;
+                $minPoints = [$gpsLocations[$i], $gpsLocations[$j]];
+            }
+        }
+    }
+
+    return $this->asJson([
+        'maxDistance' => $maxDistance,
+        'maxPoints' => $maxPoints,
+        'minDistance' => $minDistance,
+        'minPoints' => $minPoints,
+    ]);
+}
+
+private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+{
+    $earthRadius = 6371000; // Radius of the earth in meters
+
+    $dLat = deg2rad($lat2 - $lat1);
+    $dLon = deg2rad($lon2 - $lon1);
+
+    $a = sin($dLat / 2) * sin($dLat / 2) +
+        cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+        sin($dLon / 2) * sin($dLon / 2);
+
+    $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+    $distance = $earthRadius * $c; // Distance in meters
+
+    return $distance;
+}
 
     
     /**
