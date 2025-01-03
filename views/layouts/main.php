@@ -245,6 +245,8 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
             </a>
             <ul aria-expanded="false">
                 <li><a href="/conductores/index">Conductores</a></li>
+				<li><a href="/gpslocations/index">Ubicación en tiempo real</a></li>
+
             </ul>
         </li>    
     </ul>
@@ -324,3 +326,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 }
 
 </style>
+<script>
+
+	
+</script>

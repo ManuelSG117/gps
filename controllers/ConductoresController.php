@@ -19,7 +19,9 @@ class ConductoresController extends Controller
      * @inheritDoc
      */
 
-    public function behaviors()
+
+
+     public function behaviors()
     {
         return array_merge(
             parent::behaviors(),
@@ -36,7 +38,7 @@ class ConductoresController extends Controller
 
      public function actionGetEstados()
      {
-         $token = '8e31c000-9199-be10-eff1-04dd071e4c18';  // Tu token de prueba
+         $token = '8e31c000-9199-be10-eff1-04dd071e4c18';  
          $url = 'https://gaia.inegi.org.mx/wscatgeo/v2/mgee/';
          
          // Crear el cliente HTTP
@@ -80,39 +82,79 @@ class ConductoresController extends Controller
     public function actionCreate()
     {
         $model = new Conductores();
-
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['index']);
-            }
-        } else {
-            $model->loadDefaultValues();
+    
+        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'success' => true,
+                'message' => 'Conductor creado exitosamente.',
+                'conductor' => $model,
+            ];
         }
-
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+    
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return ['success' => false, 'message' => 'Error al crear el conductor.'];
     }
+    
     
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-
+    
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            // Retornar los datos del conductor y un indicador de éxito
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'success' => true,
+                'model' => $model,
+            ];
         }
-
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+    
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return [
+            'success' => false,
+            'error' => 'Hubo un error al actualizar los datos.',
+        ];
     }
+    
 
     public function actionGetConductor($id)
-{
-    $model = $this->findModel($id);
-    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-    return $model;
-}
+    {
+        $model = $this->findModel($id);
+        
+        // Preparar los datos iniciales
+        $initialValues = [
+            'nombres' => $model->nombres,
+            'apellido_p' => $model->apellido_p,
+            'apellido_m' => $model->apellido_m,
+            'fecha_nacimiento' => $model->fecha_nacimiento,
+            'no_licencia' => $model->no_licencia,
+            'cp' => $model->cp,
+            'estado' => $model->estado,
+            'municipio' => $model->municipio,
+            'colonia' => $model->colonia,
+            'calle' => $model->calle,
+            'num_ext' => $model->num_ext,
+            'num_int' => $model->num_int,
+            'telefono' => $model->telefono,
+            'email' => $model->email,
+            'tipo_sangre' => $model->tipo_sangre,
+            'nombres_contacto' => $model->nombres_contacto,
+            'apellido_p_contacto' => $model->apellido_p_contacto,
+            'apellido_m_contacto' => $model->apellido_m_contacto,
+            'parentesco' => $model->parentesco,
+            'telefono_contacto' => $model->telefono_contacto
+        ];
+        
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    
+        return [
+            'model' => $model,
+            'initialValues' => $initialValues
+        ];
+    }
+    
+    
     /**
      * Displays a single Conductores model.
      * @param int $id ID
@@ -154,10 +196,27 @@ class ConductoresController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
-
-        return $this->redirect(['index']);
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    
+        try {
+            $model = $this->findModel($id);
+            if (!$model) {
+                throw new \Exception('El registro no existe.');
+            }
+    
+            if ($model->delete()) {
+                Yii::debug('Registro eliminado correctamente: ' . $id, __METHOD__);
+                return ['success' => true, 'message' => 'El registro ha sido eliminado.'];
+            }
+    
+            throw new \Exception('No se pudo eliminar el registro.');
+        } catch (\Exception $e) {
+            Yii::error('Error al eliminar registro: ' . $e->getMessage(), __METHOD__);
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
+     
+    
 
     /**
      * Finds the Conductores model based on its primary key value.

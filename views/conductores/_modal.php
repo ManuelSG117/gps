@@ -6,15 +6,16 @@ use yii\helpers\Html;
 /** @var app\models\Conductores $model */
 /** @var yii\widgets\ActiveForm $form */
 ?>
-<link rel="stylesheet" href="/vendor/pickadate/themes/default.css">
-<link rel="stylesheet" href="/vendor/pickadate/themes/default.date.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
 <?php $form = ActiveForm::begin([
    'id' => 'create-conductores-form',
    'action' => ['conductores/create'], // Asegúrate de que la acción sea la correcta
    'method' => 'post',
    'enableClientValidation' => false, 
-   'options' => ['onsubmit' => 'submitForm(event)'], // Llama a la función JavaScript
 
 ]); ?>
 
@@ -34,8 +35,8 @@ use yii\helpers\Html;
         ])->textInput(['maxlength' => true]) ?>
         
         <?= $form->field($model, 'fecha_nacimiento', [
-         'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput(['class' => 'datepicker-default form-control', 'id' => 'fecha_nacimiento']) ?>
+            'options' => ['class' => 'col-md-4 form-field-spacing']
+        ])->textInput(['id' => 'fecha_nacimiento']) ?>
                 
         <?= $form->field($model, 'no_licencia', [
             'options' => ['class' => 'col-md-4 form-field-spacing']
@@ -80,7 +81,7 @@ use yii\helpers\Html;
             'options' => ['class' => 'col-md-4 form-field-spacing']
         ])->textInput(['maxlength' => true]) ?>
 
-<?= $form->field($model, 'telefono', [
+        <?= $form->field($model, 'telefono', [
             'options' => ['class' => 'col-md-4 form-field-spacing']
         ])->textInput([
             'maxlength' => 10, 
@@ -159,7 +160,7 @@ use yii\helpers\Html;
 
 <div class="modal-footer">
     <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
-    <?= Html::submitButton('Guardar', ['class' => 'btn btn-primary']) ?>
+    <button type="button" class="btn btn-primary" onclick="submitForm()">Guardar</button>
 </div>
 
 <?php ActiveForm::end(); ?>
@@ -176,79 +177,124 @@ use yii\helpers\Html;
     <script src="/vendor/global/global.min.js"></script>
 	<script src="/vendor/bootstrap-datepicker-master/js/bootstrap-datepicker.min.js"></script>
     
-    <!-- pickdate -->
-    <script src="/vendor/pickadate/picker.js"></script>
-    <script src="/vendor/pickadate/picker.time.js"></script>
-    <script src="/vendor/pickadate/picker.date.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializa Flatpickr con localización en español
+        flatpickr("#fecha_nacimiento", {
+            dateFormat: "Y-m-d", // Formato de fecha
+            maxDate: "today",   // No permite seleccionar fechas futuras
+            locale: "es",       // Cambia al idioma español
+            onChange: function(selectedDates, dateStr, instance) {
+                // Calcula la edad a partir de la fecha seleccionada
+                var birthDate = new Date(dateStr);
+                var today = new Date();
+                var age = today.getFullYear() - birthDate.getFullYear();
+                var m = today.getMonth() - birthDate.getMonth();
+                
+                // Ajusta la edad si el cumpleaños aún no ha pasado este año
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
 
-    <!-- Pickdate -->
-    <script src="/js/plugins-init/pickadate-init.js"></script>
+                // Verifica si la edad es mayor o igual a 18
+                if (age < 18) {
+                    alert("La fecha seleccionada debe ser de una persona mayor de 18 años.");
+                    instance.clear(); // Limpia el campo si la edad es menor a 18
+                }
+            }
+        });
+    });
+</script>
 
     <script>
-    $(document).ready(function () {
-    // Cargar los estados en el primer dropdown
+   // Cargar los estados en el primer dropdown
+$.ajax({
+    url: '<?= \yii\helpers\Url::to(['conductores/get-estados']) ?>',
+    method: 'GET',
+    success: function (data) {
+        var $estadoDropdown = $('#estado-dropdown');
+        // Limpiar cualquier opción previa
+        $estadoDropdown.empty();
+
+        // Agregar la opción por defecto
+        $estadoDropdown.append($('<option>', {
+            value: '',
+            text: ''
+        }));
+
+        // Crear un objeto para almacenar los estados y sus códigos
+        var estados = {};
+
+        // Llenar el dropdown de estados
+        $.each(data.datos, function (index, estado) {
+            // Guardar tanto el nombre como el código (cvegeo)
+            estados[estado.cvegeo] = estado.nomgeo;
+
+            // Agregar el estado al dropdown (guardar nombre como valor)
+            $estadoDropdown.append($('<option>', {
+                value: estado.nomgeo,  // Guardamos el nombre del estado como value
+                'data-cvegeo': estado.cvegeo, // Guardamos el cvegeo como un atributo data-cvegeo
+                text: estado.nomgeo    // Mostramos el nombre del estado en el dropdown
+            }));
+        });
+
+        // Al seleccionar un estado, almacenar tanto el nombre como el código
+        $('#estado-dropdown').change(function () {
+            var estadoSeleccionado = $(this).find(':selected');
+            var nombreEstado = estadoSeleccionado.val(); // El nombre del estado
+            var cvegeoEstado = estadoSeleccionado.data('cvegeo'); // El cvegeo desde el atributo data-cvegeo
+            cargarMunicipios(cvegeoEstado, nombreEstado); // Pasa el cvegeo y el nombre
+        });
+    },
+    error: function () {
+        alert('Hubo un error al cargar los estados.');
+    }
+});
+
+
+    // Función para cargar los municipios
+    function cargarMunicipios(cvegeoEstado, nombreEstado) {
     $.ajax({
-        url: '<?= \yii\helpers\Url::to(['conductores/get-estados']) ?>',
+        url: 'https://gaia.inegi.org.mx/wscatgeo/v2/mgem/' + cvegeoEstado,  // Usamos el código del estado
         method: 'GET',
         success: function (data) {
-            var $estadoDropdown = $('#estado-dropdown');
-            // Limpiar cualquier opción previa
-            $estadoDropdown.empty();
-
-            // Agregar la opción por defecto
-            $estadoDropdown.append($('<option>', {
+            var $municipioDropdown = $('#municipio-dropdown');
+            $municipioDropdown.empty();  // Limpiar cualquier opción previa
+            $municipioDropdown.append($('<option>', {
                 value: '',
-                text: ''
+                text: 'Selecciona el municipio...'
             }));
 
-            // Llenar el dropdown de estados
-            $.each(data.datos, function (index, estado) {
-                $estadoDropdown.append($('<option>', {
-                    value: estado.cvegeo,  // El valor será el código del estado
-                    text: estado.nomgeo    // El texto será el nombre del estado
+            // Crear un objeto para almacenar los municipios y sus códigos
+            var municipios = {};
+
+            // Llenar el dropdown de municipios
+            $.each(data.datos, function (index, municipio) {
+                municipios[municipio.cvegeo] = municipio.nomgeo;
+
+                // Agregar el municipio al dropdown (guardar nombre como value)
+                $municipioDropdown.append($('<option>', {
+                    value: municipio.nomgeo,  // Guardamos el nombre del municipio como value
+                    'data-cvegeo': municipio.cvegeo, // Guardamos el cvegeo como un atributo data-cvegeo
+                    text: municipio.nomgeo    // Mostramos el nombre del municipio en el dropdown
                 }));
+            });
+
+            // Al seleccionar un municipio, almacenar tanto el nombre como el código
+            $('#municipio-dropdown').change(function () {
+                var municipioSeleccionado = $(this).find(':selected');
+                var nombreMunicipio = municipioSeleccionado.val(); // El nombre del municipio
+                var cvegeoMunicipio = municipioSeleccionado.data('cvegeo'); // El cvegeo del municipio
+                // Almacenar o utilizar los valores según sea necesario
+                console.log("Estado:", nombreEstado, cvegeoEstado); // El nombre y código del estado
+                console.log("Municipio:", nombreMunicipio, cvegeoMunicipio); // El nombre y código del municipio
             });
         },
         error: function () {
-            alert('Hubo un error al cargar los estados.');
+            alert('Hubo un error al cargar los municipios.');
         }
     });
+}
 
-    // Cuando se seleccione un estado, cargar los municipios correspondientes
-    $('#estado-dropdown').change(function () {
-        var estadoSeleccionado = $(this).val();
-        if (estadoSeleccionado) {
-            var cvegeo = estadoSeleccionado;  // El valor seleccionado es el código del estado
-            cargarMunicipios(cvegeo);
-        }
-    });
-
-    // Función para cargar los municipios
-    function cargarMunicipios(cvegeo) {
-        $.ajax({
-            url: 'https://gaia.inegi.org.mx/wscatgeo/v2/mgem/' + cvegeo,  // Usamos el código del estado
-            method: 'GET',
-            success: function (data) {
-                var $municipioDropdown = $('#municipio-dropdown');
-                $municipioDropdown.empty();  // Limpiar cualquier opción previa
-                $municipioDropdown.append($('<option>', {
-                    value: '',
-                    text: 'Selecciona el municipio...'
-                }));
-
-                // Llenar el dropdown de municipios con los datos recibidos
-                $.each(data.datos, function (index, municipio) {
-                    $municipioDropdown.append($('<option>', {
-                        value: municipio.cvegeo,  // El código del municipio
-                        text: municipio.nomgeo    // El nombre del municipio
-                    }));
-                });
-            },
-            error: function () {
-                alert('Hubo un error al cargar los municipios.');
-            }
-        });
-    }
-});
 
 </script>

@@ -29967,6 +29967,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         z-index: 2;
         padding: 20px;
         overflow-y: auto;
+        transition: all 0.3s ease-in-out; /* Aumenta la duración aquí */
+
     }
     
      #map {

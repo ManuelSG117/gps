@@ -94,22 +94,24 @@ while (true) {
         }
 } // end while loop
  
-function haversine_distance($lat1, $lon1, $lat2, $lon2) {
-    $earth_radius = 6371000; // Radio de la Tierra en metros
+function haversine_distance($lat1, $lon1, $lat2, $lon2)
+{
+    $earthRadius = 6371000; // Radius of the earth in meters
 
     $dLat = deg2rad($lat2 - $lat1);
     $dLon = deg2rad($lon2 - $lon1);
 
     $a = sin($dLat / 2) * sin($dLat / 2) +
-         cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-         sin($dLon / 2) * sin($dLon / 2);
+        cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+        sin($dLon / 2) * sin($dLon / 2);
 
-    $c = 2 * asin(sqrt($a));
+    $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+    $distance = $earthRadius * $c; // Distance in meters
 
-    return $earth_radius * $c;
+    return $distance;
 }
 
-function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_mph, $bearing) {
+function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_mph, $bearing, $userName = null, $sessionID = null, $locationMethod = null, $accuracy = null, $extraInfo = null, $eventType = null) {
     // Verificar si la latitud comienza con "0.0"
     if (strpos($latitude, '0.0') === 0) {
         echo "Latitud inválida, no se insertará en la base de datos.\n";
@@ -127,15 +129,25 @@ function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, 
 
         // Calcular la distancia entre la última ubicación y la nueva ubicación
         $distance = haversine_distance($last_latitude, $last_longitude, $latitude, $longitude);
-    echo "Distancia: $distance\n";
+        echo "Distancia: $distance\n";
+
         // Verificar si la distancia es menor a 10 metros
         if ($distance < 10) {
             echo "Ubicación muy similar a la última insertada, no se insertará en la base de datos.\n";
             return;
         }
     }
-exit();
+
     try {
+        // Asignar valores predeterminados si no se reciben
+        $userName = $userName ?? "tk103";
+        $sessionID = $sessionID ?? "1";
+        $locationMethod = $locationMethod ?? "";
+        $accuracy = $accuracy ?? "0";
+        $extraInfo = $extraInfo ?? "";
+        $eventType = $eventType ?? "tk103";
+
+        // Preparar la consulta para insertar
         $stmt = $pdo->prepare('INSERT INTO gpslocations (
             latitude,
             longitude,
@@ -170,16 +182,16 @@ exit();
             ':latitude' => $latitude,
             ':longitude' => $longitude,
             ':phoneNumber' => $imei,
-            ':userName' => "tk103",
-            ':sessionID' => "1",
+            ':userName' => $userName,
+            ':sessionID' => $sessionID,
             ':speed' => $speed_in_mph,
             ':direction' => $bearing,
             ':distance' => "0", // Si deseas calcular distancia, deberás agregar lógica adicional.
             ':gpsTime' => $gps_time,
-            ':locationMethod' => "",
-            ':accuracy' => "0",
-            ':extraInfo' => "",
-            ':eventType' => "tk103",
+            ':locationMethod' => $locationMethod,
+            ':accuracy' => $accuracy,
+            ':extraInfo' => $extraInfo,
+            ':eventType' => $eventType,
         ];
 
         $stmt->execute($params);
@@ -189,6 +201,7 @@ exit();
         echo "Error al insertar en la base de datos: " . $e->getMessage() . "\n";
     }
 }
+
 
  
 function nmea_to_mysql_time($date_time){

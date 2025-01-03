@@ -21,7 +21,8 @@ $this->title = 'Gpslocations';
 
 <div class="main-content">
     <button class="floating-button" id="floatingButton" onclick="toggleButtonContainer()">+</button>
-    <div class="sidebar"><h4>GPS</h4>
+    <div class="sidebar" id="sidebar">   <button class="minimize-sidebar" onclick="toggleSidebar()">-</button>
+        <h4>GPS</h4>
         <div class="search-container">
             <input type="text" id="gpsSearch" class="minimal-input gps-search" placeholder="Buscar" onkeyup="filterGpsList()">
             <span class="clear-search" onclick="clearSearch()">×</span>
@@ -49,6 +50,8 @@ $this->title = 'Gpslocations';
     </div>
     <br>
     <div id="map"></div>
+    <button class="circular-button" id="maximizeButton" onclick="toggleSidebar()" style="display: none;">☰</button>
+
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinners">
             <div class="spinners"></div>
@@ -58,6 +61,82 @@ $this->title = 'Gpslocations';
 </div>
 
 <style>
+ /* Barra lateral minimizada */
+.sidebar.minimized {
+    width: 50px; /* Reducir el tamaño */
+    height: 50px; /* Convertir a botón circular */
+    border-radius: 50%; /* Hacerla circular */
+    top: 152px; /* Ajustar posición */
+    left: 33px; /* Ajustar posición */
+    overflow: hidden; /* Ocultar contenido */
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: none;
+}
+
+/* Contenido de la barra lateral oculto en estado minimizado */
+.sidebar.minimized h4,
+.sidebar.minimized .minimize-sidebar {
+    display: none;
+}
+
+/* Botón circular para maximizar */
+.circular-button {
+    position: fixed;
+    top: 165px;
+    left: 45;
+    z-index: 1003;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #222b40;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease-in-out; /* Aumenta la duración aquí */
+}
+
+.circular-button:hover {
+    background-color: #3b4a69;
+    transform: scale(1.1);
+}
+.minimize-sidebar {
+    position: absolute;
+    top: 20px; /* Ajusta la posición vertical */
+    left: 295px; /* Ajusta la posición horizontal */
+    background-color:rgb(152, 158, 173); /* Color de fondo */
+    color: white; /* Color del texto */
+    border: none;
+    border-radius: 50%; /* Hace el botón redondeado */
+    width: 20px; /* Tamaño del botón */
+    height: 20px; /* Tamaño del botón */
+    font-size: 18px; /* Tamaño del icono */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer; /* Cambia el cursor al pasar sobre el botón */
+    transition: all 0.3s ease-in-out; /* Añade una transición suave */
+    z-index: 100; /* Asegura que esté por encima de otros elementos */
+}
+
+.minimize-sidebar:hover {
+    background-color: #3b4a69; /* Cambia el color de fondo al pasar el ratón */
+    transform: scale(1.1); /* Efecto de aumentar el tamaño */
+}
+
+.minimize-sidebar:focus {
+    outline: none; /* Quita el borde de enfoque por defecto */
+}
+
+.minimize-sidebar:active {
+    transform: scale(0.95); /* Efecto al presionar el botón */
+}
+
 /* Contenedor superpuesto para bloquear interacciones */
 .loading-overlay {
     position: fixed;
@@ -214,6 +293,22 @@ function clearSearch() {
     document.getElementById('gpsSearch').value = '';
     filterGpsList();
 }
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const maximizeButton = document.getElementById('maximizeButton');
+
+    if (sidebar.classList.contains('minimized')) {
+        // Maximizar la barra lateral
+        sidebar.classList.remove('minimized');
+        maximizeButton.style.display = 'none';
+    } else {
+        // Minimizar la barra lateral
+        sidebar.classList.add('minimized');
+        maximizeButton.style.display = 'flex'; // Mostrar botón circular
+    }
+}
+
+
 
 // document.addEventListener('DOMContentLoaded', function() {
 //     toastr.info('This is an info toast', 'Info', {
