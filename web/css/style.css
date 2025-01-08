@@ -30172,3 +30172,23 @@ input[type="date"]::-webkit-calendar-picker-indicator {
         top: 50px !important; /* Ajusta el valor según sea necesario */
         right: 12px !important;
     }
+    @keyframes blink {
+      0% {
+          border: 2px solid transparent;
+      }
+      50% {
+          border: 2px solid #3A9B94;
+      }
+      100% {
+          border: 2px solid transparent;
+      }
+  }
+  
+  .blink-border {
+      animation: blink 1.5s ease-in-out 0s 2; /* Parpadeo dos veces en 3 segundos */
+      border-width: 2px;
+      border-style: solid;
+  }
+  
+
+  

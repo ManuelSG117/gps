@@ -78,23 +78,33 @@ class ConductoresController extends Controller
             'model' => $model, // Pasa el modelo a la vista
         ]);
     }
-    
     public function actionCreate()
     {
         $model = new Conductores();
-    
+        
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    
+            // Asegúrate de incluir todos los atributos, especialmente el ID
+            $model->refresh();  // Recarga el modelo para obtener el ID si es necesario
+    
             return [
                 'success' => true,
                 'message' => 'Conductor creado exitosamente.',
-                'conductor' => $model,
+                'conductor' => [
+                    'id' => $model->id,  
+                    'nombres' => $model->nombres,
+                    'apellido_p' => $model->apellido_p,
+                    'apellido_m' => $model->apellido_m,
+                ],
             ];
         }
     
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return ['success' => false, 'message' => 'Error al crear el conductor.'];
     }
+    
+    
     
     
     public function actionUpdate($id)

@@ -138,27 +138,6 @@ function clearForm() {
 }
 
 
-$('#create-conductores-form').on('beforeSubmit', function (e) {
-    e.preventDefault();
-
-    var form = $(this);
-    $.ajax({
-        url: form.attr('action'),
-        type: form.attr('method'),
-        data: form.serialize(),
-        success: function (data) {
-            if (data.success) {
-                $('#exampleModalCenter').modal('hide');
-            } else {
-                form.yiiActiveForm('updateMessages', data.errors, true);
-            }
-        },
-        error: function () {
-            alert('Hubo un error al guardar el conductor.');
-        }
-    });
-    return false; 
-});
 // Función para cargar los datos en modo de visualización (ver)
 function loadViewForm(id) {
     $.ajax({
@@ -348,11 +327,12 @@ $('#create-conductores-form').on('submit', function (e) {
         $('#exampleModalCenter').modal('hide');
     }
 });
-
 function submitForm() {
     var form = $('#create-conductores-form');
+    var action = $('#exampleModalCenter').data('action'); // Obtén la acción del modal
     var initialValues = form.data('initial-values') || {};
 
+    console.log('Form Action:', action);
     console.log('Initial Values:', initialValues);
 
     var hasChanges = false;
@@ -369,7 +349,7 @@ function submitForm() {
 
         // Limpiar el nombre para comparación
         name = name.replace('Conductores[', '').replace(']', '');
-        
+
         var currentValue = $(this).val().trim();  // Eliminar espacios en blanco
         var initialValue = initialValues[name];
 
@@ -399,54 +379,70 @@ function submitForm() {
         }
     });
 
-    if (hasChanges) {
-        console.log('Changes detected, submitting form...');
-        
+    if (hasChanges || action === 'create') {
+        console.log('Changes detected or creating new conductor, submitting form...');
+
         // Primero, simula el clic en el botón de cierre del modal
         $('#exampleModalCenter .btn-danger').click();  // Cierra el modal
-        
+
         // Enviar los datos con AJAX sin recargar la página
         $.ajax({
             url: form.attr('action'),
             type: 'POST',
             data: form.serialize(),
             success: function (response) {
+                console.log('AJAX Success Response:', response);
                 var data = response;
                 if (data.success) {
-                    console.log("Modelo actualizado:", data.model); // Asegúrate de que el modelo contiene un ID
-                    updateTableRow(data.model);
+                    if (action === 'update') {
+                        console.log("Modelo actualizado:", data.model); // Asegúrate de que el modelo contiene un ID
+                        updateTableRow(data.model);
 
-                    // Mostrar SweetAlert de éxito
-                    Swal.fire({
-                title: '¡Éxito!',
-                text: 'Datos del conductor actualizados correctamente.',
-                icon: 'success',
-                confirmButtonText: 'Cerrar'
-            }).then(function () {
-                // Este código se ejecutará cuando el SweetAlert se cierre
-                var row = $('tr[data-id="' + data.model.id + '"]');
+                        // Mostrar SweetAlert de éxito
+                        Swal.fire({
+                            title: '¡Éxito!',
+                            text: 'Datos del conductor actualizados correctamente.',
+                            icon: 'success',
+                            confirmButtonText: 'Cerrar'
+                        }).then(function () {
+                            // Este código se ejecutará cuando el SweetAlert se cierre
+                            var row = $('tr[data-id="' + data.model.id + '"]');
 
-                if (row.length > 0) {
-                    // Agregar la clase de parpadeo
-                    row.addClass('blink-border');
+                            if (row.length > 0) {
+                                // Agregar la clase de parpadeo
+                                row.addClass('blink-border');
 
-                    // Eliminar la clase de parpadeo después de 2 segundos
-                    setTimeout(function() {
-                        row.removeClass('blink-border');
-                    }, 3000);
-                }
-            });
+                                // Eliminar la clase de parpadeo después de 2 segundos
+                                setTimeout(function() {
+                                    row.removeClass('blink-border');
+                                }, 3000);
+                            }
+                        });
+                    } else {
+                        // Crear nueva fila en la tabla
+                        var newRow = createTableRow(data.model);  // Crea la fila para el nuevo conductor
+                        $('#conductor-table tbody').append(newRow);  // Añadir la fila debajo
+
+                        Swal.fire({
+                            title: '¡Éxito!',
+                            text: 'Conductor creado exitosamente.',
+                            icon: 'success',
+                            confirmButtonText: 'Cerrar'
+                        });
+                    }
                 } else {
-                    // Mostrar un error si la actualización falla
+                    // Mostrar un error si la actualización o creación falla
+                    console.log('AJAX Error Response:', data);
                     Swal.fire({
                         title: 'Error',
-                        text: 'Hubo un error al actualizar los datos del conductor.',
+                        text: 'Hubo un error al procesar la solicitud.',
                         icon: 'error',
                         confirmButtonText: 'Cerrar'
                     });
                 }
             },
-            error: function () {
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log('AJAX Error:', textStatus, errorThrown);
                 Swal.fire({
                     title: 'Error',
                     text: 'Hubo un error al procesar la solicitud.',
@@ -457,13 +453,13 @@ function submitForm() {
         });
     } else {
         console.log('No changes detected, closing modal and showing SweetAlert...');
-        
+
         // Primero, simula el clic en el botón de cierre del modal
         $('#exampleModalCenter .btn-danger').click();  // Cierra el modal
-        
+
         // Luego, muestra el SweetAlert con el nombre del conductor
         Swal.fire({
-            title: '¡No se actualizó !',
+            title: '¡No se actualizó!',
             text: 'No se realizaron cambios en los datos de ' + nombreConductor + '.',
             icon: 'info',
             showCancelButton: false,
@@ -473,6 +469,28 @@ function submitForm() {
         });
     }
 }
+// Asigna la acción al modal cuando se abre
+$('#exampleModalCenter').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget); // Botón que abrió el modal
+    var action = button.data('action'); // Extrae la información de acción
+    console.log('Modal action:', action);
+    $(this).data('action', action); // Almacena la acción en el modal
+});
+// Función para crear una nueva fila en la tabla
+function createTableRow(conductor) {
+    return `<tr data-id="${conductor.id}">
+                <td>${conductor.nombres}</td>
+                <td>${conductor.apellido_p}</td>
+                <td>${conductor.apellido_m}</td>
+                <td>
+                    <button class="btn btn-info">Ver</button>
+                    <button class="btn btn-primary">Editar</button>
+                    <button class="btn btn-danger">Eliminar</button>
+                </td>
+            </tr>`;
+}
+
+
 
 function updateTableRow(model) {
     // Buscar la fila con el atributo 'data-id' igual al 'id' del modelo

@@ -10,7 +10,8 @@ use yii\bootstrap5\Nav;
 use yii\bootstrap5\NavBar;
 use yii\helpers\Url;
 use app\assets\AppAsset;
-
+use yii\widgets\PjaxAsset; // Asegúrate de incluir esta línea
+PjaxAsset::register($this);
 AppAsset::register($this);
 $this->registerCssFile('@web/css/style.css', [ 'depends' => [\app\assets\AppAsset::className()]]);
 
@@ -25,10 +26,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 
 
 ?>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Luego tu script -->
-    <script src="/js/custom.js"></script>
-
+  
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
 <html lang="<?= Yii::$app->language ?>">
@@ -48,7 +46,11 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
     <?php $this->registerCsrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
     <?php $this->head() ?>
-    
+   
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="/js/custom.js"></script>
+
+
 <?php $this->beginBody() ?>
 </head>
 
