@@ -10,8 +10,6 @@ use yii\bootstrap5\Nav;
 use yii\bootstrap5\NavBar;
 use yii\helpers\Url;
 use app\assets\AppAsset;
-use yii\widgets\PjaxAsset; // Asegúrate de incluir esta línea
-PjaxAsset::register($this);
 AppAsset::register($this);
 $this->registerCssFile('@web/css/style.css', [ 'depends' => [\app\assets\AppAsset::className()]]);
 
@@ -299,13 +297,8 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 
 
     <!-- Required vendors -->
-    <script src="/vendor/global/global.min.js"></script>
 	<script src="/vendor/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
-	<script src="/js/dashboard/cms.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/metismenu"></script>
-<script src="/assets/13b27738/yii.gridView.js"></script>
-<script src="/assets/13b27738/yii.js"></script>
-<script src="/assets/13b27738/yii.activeForm.js"></script>
 
 	<script>
 		jQuery(document).ready(function(){

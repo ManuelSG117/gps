@@ -132,10 +132,10 @@ function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, 
         echo "Distancia: $distance\n";
 
         // Verificar si la distancia es menor a 10 metros
-        if ($distance < 10) {
-            echo "Ubicación muy similar a la última insertada, no se insertará en la base de datos.\n";
-            return;
-        }
+        // if ($distance < 10) {
+        //     echo "Ubicación muy similar a la última insertada, no se insertará en la base de datos.\n";
+        //     return;
+        // }
     }
 
     try {

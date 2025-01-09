@@ -1,6 +1,7 @@
 <?php
 use yii\widgets\ActiveForm;
 use yii\helpers\Html;
+use yii\widgets\Pjax;
 
 /** @var yii\web\View $this */
 /** @var app\models\Conductores $model */
@@ -11,11 +12,13 @@ use yii\helpers\Html;
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
+<?php Pjax::begin(['id' => 'create-conductores-pjax', 'enablePushState' => false]); ?>
 <?php $form = ActiveForm::begin([
    'id' => 'create-conductores-form',
-   'action' => ['conductores/create'], // Asegúrate de que la acción sea la correcta
+   'action' => ['conductores/create'], 
    'method' => 'post',
    'enableClientValidation' => false, 
+   'options' => ['data-pjax' => true], 
 
 ]); ?>
 
@@ -160,11 +163,12 @@ use yii\helpers\Html;
 
 <div class="modal-footer">
     <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
-    <button type="button" class="btn btn-primary" onclick="submitForm()">Guardar</button>
-</div>
+    <?= Html::submitButton('Guardar', ['class' => 'btn btn-primary', 'id' => 'btn-guardar']) ?>
+    </div>
 
 <?php ActiveForm::end(); ?>
 
+<?php Pjax::end(); ?>
 
 
 <style>

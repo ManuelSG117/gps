@@ -78,92 +78,73 @@ class ConductoresController extends Controller
             'model' => $model, // Pasa el modelo a la vista
         ]);
     }
+
     public function actionCreate()
     {
         $model = new Conductores();
-        
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+    
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post()) && $model->save()) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-    
-            // Asegúrate de incluir todos los atributos, especialmente el ID
-            $model->refresh();  // Recarga el modelo para obtener el ID si es necesario
-    
-            return [
-                'success' => true,
-                'message' => 'Conductor creado exitosamente.',
-                'conductor' => [
-                    'id' => $model->id,  
-                    'nombres' => $model->nombres,
-                    'apellido_p' => $model->apellido_p,
-                    'apellido_m' => $model->apellido_m,
-                ],
-            ];
+            return ['success' => true, 'message' => 'Conductor creado exitosamente.'];
         }
     
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        return ['success' => false, 'message' => 'Error al crear el conductor.'];
+        return $this->renderAjax('_modal', ['model' => $model]);
     }
-    
-    
     
     
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
     
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            // Retornar los datos del conductor y un indicador de éxito
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             return [
                 'success' => true,
-                'model' => $model,
+                'message' => 'Conductor actualizado correctamente.',
             ];
         }
     
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        return [
-            'success' => false,
-            'error' => 'Hubo un error al actualizar los datos.',
-        ];
-    }
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'success' => true,
+                'data' => $model->attributes,
+            ];
+        }
     
-
-    public function actionGetConductor($id)
-    {
-        $model = $this->findModel($id);
-        
-        // Preparar los datos iniciales
-        $initialValues = [
-            'nombres' => $model->nombres,
-            'apellido_p' => $model->apellido_p,
-            'apellido_m' => $model->apellido_m,
-            'fecha_nacimiento' => $model->fecha_nacimiento,
-            'no_licencia' => $model->no_licencia,
-            'cp' => $model->cp,
-            'estado' => $model->estado,
-            'municipio' => $model->municipio,
-            'colonia' => $model->colonia,
-            'calle' => $model->calle,
-            'num_ext' => $model->num_ext,
-            'num_int' => $model->num_int,
-            'telefono' => $model->telefono,
-            'email' => $model->email,
-            'tipo_sangre' => $model->tipo_sangre,
-            'nombres_contacto' => $model->nombres_contacto,
-            'apellido_p_contacto' => $model->apellido_p_contacto,
-            'apellido_m_contacto' => $model->apellido_m_contacto,
-            'parentesco' => $model->parentesco,
-            'telefono_contacto' => $model->telefono_contacto
-        ];
-        
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-    
-        return [
+        return $this->render('update', [
             'model' => $model,
-            'initialValues' => $initialValues
-        ];
+        ]);
     }
     
+    public function actionView($id)
+     {
+         $model = $this->findModel($id);
+     
+         if (Yii::$app->request->isAjax) {
+             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+             return [
+                 'success' => true,
+                 'data' => $model->attributes,
+             ];
+         }
+     
+         return $this->render('view', [
+             'model' => $model,
+         ]);
+     }
+     
+     public function actionDelete($id)
+     {
+         if (Yii::$app->request->isAjax) {
+             $this->findModel($id)->delete();
+             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+             return ['success' => true, 'message' => 'El conductor ha sido eliminado exitosamente.'];
+         }
+     
+         $this->findModel($id)->delete();
+         return $this->redirect(['index']);
+     }
     
     /**
      * Displays a single Conductores model.
@@ -178,16 +159,7 @@ class ConductoresController extends Controller
      * @return string|\yii\web\Response
      */
     
-
-
-    public function actionView($id)
-    {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
-    }
-
-
+  
     /**
      * Updates an existing Conductores model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -204,28 +176,7 @@ class ConductoresController extends Controller
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDelete($id)
-    {
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-    
-        try {
-            $model = $this->findModel($id);
-            if (!$model) {
-                throw new \Exception('El registro no existe.');
-            }
-    
-            if ($model->delete()) {
-                Yii::debug('Registro eliminado correctamente: ' . $id, __METHOD__);
-                return ['success' => true, 'message' => 'El registro ha sido eliminado.'];
-            }
-    
-            throw new \Exception('No se pudo eliminar el registro.');
-        } catch (\Exception $e) {
-            Yii::error('Error al eliminar registro: ' . $e->getMessage(), __METHOD__);
-            return ['success' => false, 'message' => $e->getMessage()];
-        }
-    }
-     
+   
     
 
     /**
