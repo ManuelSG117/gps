@@ -36,7 +36,6 @@ $this->registerJsFile('@web/js/conductores.js',['depends' => [\yii\web\JqueryAss
         ]) ?>
     </p>
         
-    <div class="table-responsive active-projects style-1 ItemsCheckboxSec shorting">
 
     <?php Pjax::begin(['id' => 'conductores-grid', 'timeout' => 10000]); ?>
     <?= GridView::widget([
@@ -44,6 +43,7 @@ $this->registerJsFile('@web/js/conductores.js',['depends' => [\yii\web\JqueryAss
     'filterModel' => $searchModel,
     'responsive' => true,  // Hacer la tabla responsive
     'hover' => true,  // Efecto hover sobre las filas
+    
     'rowOptions' => function ($model, $index, $widget, $grid) {
         return ['data-id' => $model->id];
     },
@@ -116,7 +116,6 @@ $this->registerJsFile('@web/js/conductores.js',['depends' => [\yii\web\JqueryAss
     <?php Pjax::end(); ?>
 
 </div>
-</div>
 
 <!-- Modal -->
 <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
@@ -184,3 +183,5 @@ $this->registerJsFile('@web/js/conductores.js',['depends' => [\yii\web\JqueryAss
 
 <script src="/vendor/sweetalert2/sweetalert2.min.js"></script>
 <!-- <script src="/js/plugins-init/sweetalert.init.js"></script> -->
+
+

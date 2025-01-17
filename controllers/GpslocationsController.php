@@ -41,6 +41,23 @@ class GpslocationsController extends Controller
      *
      * @return string
      */
+
+     // ...existing code...
+
+public function actionGeocerca()
+{
+    return $this->render('geocerca');
+}
+
+public function actionSaveGeofence()
+{
+    $request = Yii::$app->request;
+    $geofenceData = $request->post('geofenceData');
+
+    return $this->asJson(['status' => 'success']);
+}
+
+
     public function actionIndex()
     {
         $searchModel = new GpslocationsSearch();
@@ -65,66 +82,6 @@ class GpslocationsController extends Controller
 
 
     public $enableCsrfValidation = false; // Deshabilitar CSRF para las solicitudes entrantes
-
-    public function actionReceiveDatas()
-    {
-        $request = Yii::$app->request;
-
-      
-        // Obtener los parámetros enviados a través de GET
-        $latitude = $request->get('latitude');
-        $longitude = $request->get('longitude');
-        $speed = $request->get('speed');
-        $direction = $request->get('direction');
-        $gpsTime = $request->get('gpsTime');
-        $phoneNumber = $request->get('phoneNumber');
-        $userName = $request->get('userName');
-        $sessionID = $request->get('sessionID');
-        $locationMethod = $request->get('locationMethod');
-        $accuracy = $request->get('accuracy');
-        $extraInfo = $request->get('extraInfo');
-        $eventType = $request->get('eventType');
-
-        // Verificar que los parámetros obligatorios estén presentes
-        if (!$latitude || !$longitude || !$gpsTime || !$phoneNumber || !$userName) {
-            throw new BadRequestHttpException('Faltan parámetros obligatorios.');
-        }
-
-        // Crear y guardar los datos en la base de datos
-        $gpsLocation = new Gpslocations();  // Usando el modelo Gpslocations
-        $gpsLocation->latitude = $latitude;
-        $gpsLocation->longitude = $longitude;
-        $gpsLocation->speed = $speed;
-        $gpsLocation->direction = $direction;
-        $gpsLocation->gpsTime = $gpsTime;
-        $gpsLocation->phoneNumber = $phoneNumber;
-        $gpsLocation->userName = $userName;
-        $gpsLocation->sessionID = $sessionID;
-        $gpsLocation->locationMethod = $locationMethod;
-        $gpsLocation->accuracy = $accuracy;
-        $gpsLocation->extraInfo = $extraInfo;
-        $gpsLocation->eventType = $eventType;
-
-        // Si 'lastUpdate' es un timestamp, puedes configurarlo automáticamente
-        $gpsLocation->lastUpdate = date('Y-m-d H:i:s');
-
-        // Intentar guardar el modelo
-        if ($gpsLocation->save()) {
-            // Responder con una respuesta JSON exitosa
-            return $this->asJson([
-                'status' => 'success',
-                'message' => 'Data received and saved successfully',
-                'data' => $gpsLocation
-            ]);
-        } else {
-            // Si hay errores, imprimimos los errores de validación
-            return $this->asJson([
-                'status' => 'error',
-                'message' => 'Failed to save data',
-                'errors' => $gpsLocation->errors  // Imprime los errores de validación
-            ]);
-        }
-    }
     
     public function actionGetLocations()
     {
@@ -239,72 +196,34 @@ public function actionGetRoute($phoneNumber, $startDate = null, $endDate = null)
     }
 
     $locations = [];
-    foreach ($gpsLocations as $location) {
+    $totalDistance = 0;
+
+    for ($i = 0; $i < count($gpsLocations); $i++) {
+        $location = $gpsLocations[$i];
         $locations[] = [
             'latitude' => $location->latitude,
             'longitude' => $location->longitude,
             'lastUpdate' => date('Y-m-d H:i:s', strtotime($location->lastUpdate)),
             'speed' => $location->speed,
-            'direction' => $location->direction,];
-    }
+            'direction' => $location->direction,
+        ];
 
-    return $this->asJson($locations);
-}
-
-
-
-public function actionGetDistances()
-{
-    $date = '2024-12-23';
-    $startDate = $date . ' 00:00:00';
-    $endDate = $date . ' 23:59:59';
-
-    $gpsLocations = Gpslocations::find()
-        ->where(['between', 'lastUpdate', $startDate, $endDate])
-        ->orderBy(['lastUpdate' => SORT_ASC])
-        ->all();
-
-    if (count($gpsLocations) < 2) {
-        return $this->asJson(['error' => 'Not enough data points']);
-    }
-
-    $maxDistance = 0;
-    $minDistance = PHP_INT_MAX;
-    $maxPoints = [];
-    $minPoints = [];
-
-    for ($i = 0; $i < count($gpsLocations) - 1; $i++) {
-        for ($j = $i + 1; $j < count($gpsLocations); $j++) {
-            $distance = $this->calculateDistance(
-                $gpsLocations[$i]->latitude,
-                $gpsLocations[$i]->longitude,
-                $gpsLocations[$j]->latitude,
-                $gpsLocations[$j]->longitude
+        // Calcular la distancia entre puntos consecutivos
+        if ($i > 0) {
+            $prevLocation = $gpsLocations[$i - 1];
+            $totalDistance += $this->calculateDistance(
+                $prevLocation->latitude, $prevLocation->longitude,
+                $location->latitude, $location->longitude
             );
-
-            if ($distance > $maxDistance) {
-                $maxDistance = $distance;
-                $maxPoints = [$gpsLocations[$i], $gpsLocations[$j]];
-            }
-
-            if ($distance < $minDistance) {
-                $minDistance = $distance;
-                $minPoints = [$gpsLocations[$i], $gpsLocations[$j]];
-            }
         }
     }
 
-    return $this->asJson([
-        'maxDistance' => $maxDistance,
-        'maxPoints' => $maxPoints,
-        'minDistance' => $minDistance,
-        'minPoints' => $minPoints,
-    ]);
+    return $this->asJson(['locations' => $locations, 'totalDistance' => $totalDistance]);
 }
 
 private function calculateDistance($lat1, $lon1, $lat2, $lon2)
 {
-    $earthRadius = 6371000; // Radius of the earth in meters
+    $earthRadius = 6371; // Radio de la Tierra en km
 
     $dLat = deg2rad($lat2 - $lat1);
     $dLon = deg2rad($lon2 - $lon1);
@@ -314,12 +233,63 @@ private function calculateDistance($lat1, $lon1, $lat2, $lon2)
         sin($dLon / 2) * sin($dLon / 2);
 
     $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-    $distance = $earthRadius * $c; // Distance in meters
+    $distance = $earthRadius * $c;
 
-    return $distance;
+    return $distance; // Retorna la distancia en km
 }
 
-    
+
+
+
+// public function actionGetDistances()
+// {
+//     $date = '2024-12-23';
+//     $startDate = $date . ' 00:00:00';
+//     $endDate = $date . ' 23:59:59';
+
+//     $gpsLocations = Gpslocations::find()
+//         ->where(['between', 'lastUpdate', $startDate, $endDate])
+//         ->orderBy(['lastUpdate' => SORT_ASC])
+//         ->all();
+
+//     if (count($gpsLocations) < 2) {
+//         return $this->asJson(['error' => 'Not enough data points']);
+//     }
+
+//     $maxDistance = 0;
+//     $minDistance = PHP_INT_MAX;
+//     $maxPoints = [];
+//     $minPoints = [];
+
+//     for ($i = 0; $i < count($gpsLocations) - 1; $i++) {
+//         for ($j = $i + 1; $j < count($gpsLocations); $j++) {
+//             $distance = $this->calculateDistance(
+//                 $gpsLocations[$i]->latitude,
+//                 $gpsLocations[$i]->longitude,
+//                 $gpsLocations[$j]->latitude,
+//                 $gpsLocations[$j]->longitude
+//             );
+
+//             if ($distance > $maxDistance) {
+//                 $maxDistance = $distance;
+//                 $maxPoints = [$gpsLocations[$i], $gpsLocations[$j]];
+//             }
+
+//             if ($distance < $minDistance) {
+//                 $minDistance = $distance;
+//                 $minPoints = [$gpsLocations[$i], $gpsLocations[$j]];
+//             }
+//         }
+//     }
+
+//     return $this->asJson([
+//         'maxDistance' => $maxDistance,
+//         'maxPoints' => $maxPoints,
+//         'minDistance' => $minDistance,
+//         'minPoints' => $minPoints,
+//     ]);
+// }
+   
     /**
      * Displays a single Gpslocations model.
      * @param int $GPSLocationID Gps Location ID

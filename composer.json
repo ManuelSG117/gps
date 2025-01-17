@@ -23,7 +23,8 @@
         "twbs/bootstrap": "^5.3",
         "yiisoft/yii2-httpclient": "^2.0",
         "kartik-v/yii2-bootstrap5-dropdown": "@dev",
-        "kartik-v/yii2-grid": "^3.5"
+        "kartik-v/yii2-grid": "^3.5",
+        "phpoffice/phpspreadsheet": "^1.12"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",

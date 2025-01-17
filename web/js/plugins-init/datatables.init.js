@@ -61,12 +61,12 @@ let dataSet = [
 		'dom': 'ZBfrltip',
 		buttons: [
             
-			{ extend: 'excel', text: '<i class="fa-solid fa-file-excel"></i> Export Report',
+			{ extend: 'excel', text: '<i class="fa-solid fa-file-excel"></i> Exportar Reporte',
               className: 'btn btn-sm border-0'
 			}
         ],
 		searching: false,
-		pageLength:5,
+		pageLength:10,
 		select: false,            
         lengthChange:false ,
 		language: {
