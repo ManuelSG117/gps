@@ -96,7 +96,7 @@ use yii\helpers\Url;
     <div class="card-body p-0">
         <div class="table-responsive active-projects">
             <div class="tbl-caption">
-                <h4 class="heading mb-0">Active GPS Locations</h4>
+                <h4 class="heading mb-0">GPS Locations</h4>
             </div>
             <table id="projects-tbl" class="table">
                 <thead>

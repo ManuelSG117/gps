@@ -30403,4 +30403,22 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background-color: #f0f0f0;
 }
 
-  
+.pause-button {
+  width: 40px;
+  height: 40px;
+  margin: 10px;
+  border: none;
+  background-color: #f0f0f0;
+  float: right;
+  border-radius: 5px;
+  transition: transform 0.5s ease-in-out;
+  margin-right: 150px;
+}
+
+.pause-button:hover {
+  transform: rotate(360deg);
+}
+
+.hidden {
+  display: none;
+}

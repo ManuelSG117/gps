@@ -75,54 +75,97 @@ class GpsreportController extends Controller
     public function actionDownloadReport($filter = 'today', $startDate = null, $endDate = null, $includeChart = true)
     {
         $query = GpsLocations::find();
-    
+        $period = '';
+
         // Filtrar datos según el filtro seleccionado
         switch ($filter) {
             case 'today':
                 if ($startDate && $endDate) {
                     $query->where(['between', 'DATE(lastUpdate)', $startDate, $endDate]);
+                    $period = $startDate . ' - ' . $endDate;
+                } else {
+                    $today = date('Y-m-d');
+                    $query->where(['DATE(lastUpdate)' => $today]);
+                    $period = $today;
                 }
                 break;
             case 'yesterday':
-                $query->where(['DATE(lastUpdate)' => date('Y-m-d', strtotime('-1 day'))]);
+                $yesterday = date('Y-m-d', strtotime('-1 day'));
+                $query->where(['DATE(lastUpdate)' => $yesterday]);
+                $period = $yesterday;
                 break;
             case 'current_week':
-                $query->where(['>=', 'DATE(lastUpdate)', date('Y-m-d', strtotime('monday this week'))]);
+                $startOfWeek = date('Y-m-d', strtotime('monday this week'));
+                $endOfWeek = date('Y-m-d', strtotime('sunday this week'));
+                $query->where(['between', 'DATE(lastUpdate)', $startOfWeek, $endOfWeek]);
+                $period = $startOfWeek . ' - ' . $endOfWeek;
                 break;
             case 'last_week':
-                $query->where(['between', 'DATE(lastUpdate)', date('Y-m-d', strtotime('monday last week')), date('Y-m-d', strtotime('sunday last week'))]);
+                $startOfLastWeek = date('Y-m-d', strtotime('monday last week'));
+                $endOfLastWeek = date('Y-m-d', strtotime('sunday last week'));
+                $query->where(['between', 'DATE(lastUpdate)', $startOfLastWeek, $endOfLastWeek]);
+                $period = $startOfLastWeek . ' - ' . $endOfLastWeek;
                 break;
             case 'current_month':
-                $query->where(['>=', 'DATE(lastUpdate)', date('Y-m-01')]);
+                $startOfMonth = date('Y-m-01');
+                $endOfMonth = date('Y-m-t');
+                $query->where(['between', 'DATE(lastUpdate)', $startOfMonth, $endOfMonth]);
+                $period = $startOfMonth . ' - ' . $endOfMonth;
                 break;
             case 'last_month':
-                $query->where(['between', 'DATE(lastUpdate)', date('Y-m-d', strtotime('first day of last month')), date('Y-m-d', strtotime('last day of last month'))]);
+                $startOfLastMonth = date('Y-m-d', strtotime('first day of last month'));
+                $endOfLastMonth = date('Y-m-d', strtotime('last day of last month'));
+                $query->where(['between', 'DATE(lastUpdate)', $startOfLastMonth, $endOfLastMonth]);
+                $period = $startOfLastMonth . ' - ' . $endOfLastMonth;
                 break;
             case 'custom':
                 if ($startDate && $endDate) {
                     $query->where(['between', 'DATE(lastUpdate)', $startDate, $endDate]);
+                    $period = $startDate . ' - ' . $endDate;
+                } else {
+                    $period = 'Personalizado';
                 }
                 break;
             default:
                 return $this->redirect(['index']);
         }
-    
-    
+
         $locations = $query->all();
     
         // Crear un archivo Excel
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
     
-        // Definir encabezados
-        $sheet->setCellValue('A1', 'Latitud');
-        $sheet->setCellValue('B1', 'Longitud');
-        $sheet->setCellValue('C1', 'Fecha');
-        $sheet->setCellValue('D1', 'Velocidad');
-        $sheet->setCellValue('E1', 'Dirección'); // Nueva columna para el enlace a Google Maps
+        // Agregar título y subtítulo
+        $sheet->setCellValue('A1', 'Reporte');
+        $sheet->setCellValue('A2', 'Periodo: ' . $period);
+        $sheet->mergeCells('A1:E1');
+        $sheet->mergeCells('A2:E2');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(12);
     
+        // Definir encabezados
+        $sheet->setCellValue('A3', 'Latitud');
+        $sheet->setCellValue('B3', 'Longitud');
+        $sheet->setCellValue('C3', 'Fecha');
+        $sheet->setCellValue('D3', 'Velocidad');
+        $sheet->setCellValue('E3', 'Dirección'); // Nueva columna para el enlace a Google Maps
+    
+        // Aplicar estilo a los encabezados
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'color' => ['argb' => 'FFFFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FF116DA5'],
+            ],
+        ];
+        $sheet->getStyle('A3:E3')->applyFromArray($headerStyle);
+
         // Agregar los datos al archivo Excel
-        $row = 2;
+        $row = 4;
         $dailySpeeds = [];
         foreach ($locations as $location) {
             $sheet->setCellValue('A' . $row, $location->latitude);
@@ -133,10 +176,21 @@ class GpsreportController extends Controller
             $mapLink = 'https://www.google.com/maps?q=' . $location->latitude . ',' . $location->longitude;
             // Usar las coordenadas como texto del hipervínculo
             $locationText = $location->latitude . ', ' . $location->longitude;
-    
+        
             // Crear un hipervínculo en la celda de Excel con las coordenadas
             $sheet->setCellValue('E' . $row, '=HYPERLINK("' . $mapLink . '", "' . $locationText . '")');
-    
+        
+            // Aplicar estilo de hipervínculo
+            $sheet->getStyle('E' . $row)->applyFromArray([
+                'font' => [
+                    'color' => ['argb' => 'FF0000FF'],
+                    'underline' => 'single'
+                ]
+            ]);
+            
+            // Establecer el tooltip del hipervínculo (revisar su funcionamiento en Excel)
+            $sheet->getCell('E' . $row)->getHyperlink()->setTooltip('Abrir en Maps');
+
             // Calcular la velocidad media por día, omitiendo velocidades de 0
             if ($location->speed > 0) {
                 $date = (new \DateTime($location->lastUpdate))->format('Y-m-d');
@@ -146,14 +200,15 @@ class GpsreportController extends Controller
                 $dailySpeeds[$date]['totalSpeed'] += $location->speed;
                 $dailySpeeds[$date]['count']++;
             }
-    
+        
             $row++;
         }
-    
+        
         // Agregar los datos de velocidad media por día a la hoja de cálculo
-        $sheet->setCellValue('G1', 'Fecha Velocidad Media');
-        $sheet->setCellValue('H1', 'Velocidad Media');
-        $row = 2;
+        $sheet->setCellValue('G3', 'Fecha Velocidad Media');
+        $sheet->setCellValue('H3', 'Velocidad Media');
+        $sheet->getStyle('G3:H3')->applyFromArray($headerStyle);
+        $row = 4;
         foreach ($dailySpeeds as $date => $data) {
             $averageSpeed = $data['totalSpeed'] / $data['count'];
             $sheet->setCellValue('G' . $row, $date);
@@ -161,16 +216,21 @@ class GpsreportController extends Controller
             $row++;
         }
     
+                // Ajustar el ancho de las columnas automáticamente
+        foreach (range('A', 'H') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+
         if ($includeChart) {
             // Crear una serie de datos para la gráfica
             $dataSeriesLabels = [
-                new DataSeriesValues('String', 'Worksheet!$H$1', null, 1), // Etiqueta de la serie
+                new DataSeriesValues('String', 'Worksheet!$H$3', null, 1), // Etiqueta de la serie
             ];
             $xAxisTickValues = [
-                new DataSeriesValues('String', 'Worksheet!$G$2:$G$' . ($row - 1), null, 4), // Valores del eje X (Fechas)
+                new DataSeriesValues('String', 'Worksheet!$G$4:$G$' . ($row - 1), null, 4), // Valores del eje X (Fechas)
             ];
             $dataSeriesValues = [
-                new DataSeriesValues('Number', 'Worksheet!$H$2:$H$' . ($row - 1), null, 4), // Valores del eje Y (Velocidades Medias)
+                new DataSeriesValues('Number', 'Worksheet!$H$4:$H$' . ($row - 1), null, 4), // Valores del eje Y (Velocidades Medias)
             ];
     
             // Crear la serie de datos

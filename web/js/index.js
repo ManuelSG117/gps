@@ -7,7 +7,13 @@
     const addressCache = {};
     const lastUpdateTime = {}; 
     let startEndMarkers = [];
-
+    let isPaused = false;
+    let currentTimeout = null;
+    let index = 0;
+    const numSteps = 200;
+    const timePerStep = 10;
+    let marker = null; // Variable global para almacenar el marcador en uso
+    
 function toggleSelectAll(selectAllCheckbox) {
     const checkboxes = document.querySelectorAll('.gps-item input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
@@ -509,13 +515,14 @@ function toggleMarker(phoneNumber) {
                 routeCoordinates,
                 totalDistance: totalDistance.toFixed(2) + ' km'
             });
-            minimizeButtonContainer();
         } catch (error) {
             console.error('Error fetching route:', error);
         } finally {
             // Ocultar el overlay y el spinner de carga
             loadingOverlay.classList.remove('active');
         }
+        document.getElementById('startRouteButton').classList.remove('hidden');
+
     }
     
     // Función auxiliar para calcular la distancia entre dos puntos (fórmula Haversine)
@@ -542,60 +549,87 @@ function toggleMarker(phoneNumber) {
             return;
         }
     
-        // Seleccionar el primer marcador de la lista
         const gpsSelector = document.getElementById('gpsSelector');
         const phoneNumber = gpsSelector.value;
-        const marker = markers[phoneNumber];
+        marker = markers[phoneNumber];
     
         if (!marker) {
             console.error('No marker available for animation.');
             return;
         }
     
-        let index = 0;
-        const step = 0.01; // Ajusta este valor para cambiar la velocidad de movimiento
-        const numSteps = 200; // Número de pasos entre cada punto
-        const timePerStep = 10; // Tiempo en ms entre cada paso
+        // Reiniciar la animación
+        index = 0; 
+        isPaused = false;
     
-        function moveMarker() {
-            if (index >= routeCoordinates.length - 1) {
-                console.log('Animation completed.');
+        // Mostrar el botón de Play/Pause
+        document.getElementById('pauseResumeButton').classList.remove('hidden');
+    
+        
+        minimizeButtonContainer();
+
+        // Iniciar la animación
+        moveMarker();
+    }
+    
+  // La función de pausa/reanudación
+function toggleAnimation() {
+    isPaused = !isPaused;
+    const btn = document.getElementById("pauseResumeButton");
+    const icon = document.getElementById("playPauseIcon");
+
+    if (isPaused) {
+        icon.classList.remove("fa-play");
+        icon.classList.add("fa-pause");
+    } else {
+        icon.classList.remove("fa-pause");
+        icon.classList.add("fa-play");
+    }
+
+    if (!isPaused) {
+        moveMarker(); // Reanudar animación desde el último punto
+    }
+}
+    
+    
+    function moveMarker() {
+        if (isPaused || index >= routeCoordinates.length - 1) {
+            return;
+        }
+    
+        const start = routeCoordinates[index];
+        const end = routeCoordinates[index + 1];
+        let stepIndex = 0;
+    
+        function interpolate() {
+            if (isPaused) {
+                return; // Detiene la animación si está en pausa
+            }
+            if (stepIndex > numSteps) {
+                index++;
+                moveMarker();
                 return;
             }
     
-            const start = routeCoordinates[index];
-            const end = routeCoordinates[index + 1];
-            let stepIndex = 0;
+            const lat = start[0] + (end[0] - start[0]) * (stepIndex / numSteps);
+            const lng = start[1] + (end[1] - start[1]) * (stepIndex / numSteps);
+            const position = [lat, lng];
     
-            function interpolate() {
-                if (stepIndex > numSteps) {
-                    index++;
-                    moveMarker();
-                    return;
-                }
-    
-                const lat = start[0] + (end[0] - start[0]) * (stepIndex / numSteps);
-                const lng = start[1] + (end[1] - start[1]) * (stepIndex / numSteps);
-                const position = [lat, lng];
-    
+            if (marker) {
                 marker.setLatLng(position);
                 map.panTo(position);
     
-                // Calcular la dirección entre dos puntos para rotar la flecha
                 const dx = end[1] - start[1];
                 const dy = end[0] - start[0];
                 const angle = Math.atan2(dy, dx) * (180 / Math.PI);
                 marker.setRotationAngle(angle);
-    
-                stepIndex++;
-                setTimeout(interpolate, timePerStep);
             }
     
-            interpolate();
+            stepIndex++;
+            currentTimeout = setTimeout(interpolate, timePerStep);
         }
     
-        console.log('Animation started.');
-        moveMarker();
+        interpolate();
     }
 
     async function getAddress(lat, lng) {
@@ -666,6 +700,9 @@ function resetMap() {
         animate: true, 
         duration: 2 // Duración de la animación en segundos 
     });
+     // Ocultar los botones de "Iniciar Ruta" y "Play/Pause" después de resetear el mapa
+     document.getElementById('startRouteButton').classList.add('hidden');
+     document.getElementById('pauseResumeButton').classList.add('hidden');
 }
 
 function toggleButtonContainer() {

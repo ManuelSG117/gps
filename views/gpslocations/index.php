@@ -43,10 +43,14 @@ $this->title = 'Gpslocations';
         <input name="datepicker" class="datepicker-default form-control" id="endDate">
         <select id="gpsSelector" class="minimal-select large-select"></select>
         <button class="minimal-button small-button" onclick="loadRoute()">Cargar Ruta</button>
-        <button class="minimal-button small-button" onclick="startAnimation()">Iniciar Ruta</button>
+        <button id="startRouteButton" class="minimal-button small-button hidden" onclick="startAnimation()">Iniciar Ruta</button>
         <button class="reset-button" onclick="resetMap()">
             <img src="https://img.icons8.com/?size=100&id=VG3PB5IAD9Oy&format=png&color=000000" alt="Reset" style="width: 20px; height: 20px;">
         </button>
+        <button id="pauseResumeButton" class="pause-button hidden" onclick="toggleAnimation()">
+        <i id="playPauseIcon" class="fas fa-play"></i>
+    </button>
+    
     </div>
     <br>
     <div id="map"></div>
