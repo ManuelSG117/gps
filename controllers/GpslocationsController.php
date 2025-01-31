@@ -180,11 +180,13 @@ public function actionGetRoute($phoneNumber, $startDate = null, $endDate = null)
         ->orderBy(['lastUpdate' => SORT_ASC]);
 
     if ($startDate) {
-        $query->andWhere(['>=', 'lastUpdate', $startDate]);
+        $startDateTime = $startDate . ' 00:00:00';
+        $query->andWhere(['>=', 'lastUpdate', $startDateTime]);
     }
 
     if ($endDate) {
-        $query->andWhere(['<=', 'lastUpdate', $endDate]);
+        $endDateTime = $endDate . ' 23:59:59';
+        $query->andWhere(['<=', 'lastUpdate', $endDateTime]);
     }
 
     Yii::info($query->createCommand()->getRawSql(), __METHOD__); // Log the SQL query

@@ -68,10 +68,10 @@ while (true) {
                 $latitude = degree_to_decimal($tk103_data[7], $tk103_data[8]);				
                 $longitude = degree_to_decimal($tk103_data[9], $tk103_data[10]);
                 $speed_in_knots = $tk103_data[11];
-                $speed_in_kmh = 1.852 * $speed_in_knots; // Convert speed to km/h
+                $speed_in_kmh = 1.852 * $speed_in_knots; 
                 $bearing = $tk103_data[12];			
  
-                insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_mph, $bearing);
+                insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_kmh, $bearing);
  
                 if ($alarm == "help me") {
                     $response = "**,imei:" + $imei + ",E;";
@@ -111,7 +111,7 @@ function haversine_distance($lat1, $lon1, $lat2, $lon2)
     return $distance;
 }
 
-function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_mph, $bearing, $userName = null, $sessionID = null, $locationMethod = null, $accuracy = null, $extraInfo = null, $eventType = null) {
+function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_kmh, $bearing, $userName = null, $sessionID = null, $locationMethod = null, $accuracy = null, $extraInfo = null, $eventType = null) {
     // Verificar si la latitud comienza con "0.0"
     if (strpos($latitude, '0.0') === 0) {
         echo "Latitud inválida, no se insertará en la base de datos.\n";
@@ -184,9 +184,9 @@ function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, 
             ':phoneNumber' => $imei,
             ':userName' => $userName,
             ':sessionID' => $sessionID,
-            ':speed' => $speed_in_mph,
+            ':speed' => $speed_in_kmh, 
             ':direction' => $bearing,
-            ':distance' => "0", // Si deseas calcular distancia, deberás agregar lógica adicional.
+            ':distance' => "0", 
             ':gpsTime' => $gps_time,
             ':locationMethod' => $locationMethod,
             ':accuracy' => $accuracy,

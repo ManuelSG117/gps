@@ -10,9 +10,13 @@
     let isPaused = false;
     let currentTimeout = null;
     let index = 0;
-    const numSteps = 200;
-    const timePerStep = 10;
+    let numSteps = 200; //numero de pasos por tiempo
+    let timePerStep = 25;//paso por tiempo 
     let marker = null; // Variable global para almacenar el marcador en uso
+    let speedMultiplier = 1; // Velocidad inicial (1x)
+    let passedRoutePath;
+    let remainingRoutePath;
+
     
 function toggleSelectAll(selectAllCheckbox) {
     const checkboxes = document.querySelectorAll('.gps-item input[type="checkbox"]');
@@ -117,14 +121,14 @@ async function loadRecentLocations() {
             const currentTime = Date.now();
 
             // Log para ver cómo cambia el lastUpdateTime
-            console.log(`lastUpdateTime[${location.phoneNumber}]: `, lastUpdateTime[location.phoneNumber]);
+          //  console.log(`lastUpdateTime[${location.phoneNumber}]: `, lastUpdateTime[location.phoneNumber]);
 
             // Si hay un cambio de ubicación, actualizamos el marcador y la hora de actualización
             if (!lastLocation || 
                 lastLocation.latitude !== location.latitude || 
                 lastLocation.longitude !== location.longitude) {
 
-                console.log(`Actualizando marcador para ${location.phoneNumber}: nueva posición [${location.latitude}, ${location.longitude}].`);
+             //   console.log(`Actualizando marcador para ${location.phoneNumber}: nueva posición [${location.latitude}, ${location.longitude}].`);
 
                 if (markers[location.phoneNumber]) {
                     map.removeLayer(markers[location.phoneNumber]);
@@ -140,10 +144,10 @@ async function loadRecentLocations() {
 
                 // Actualiza la última hora de actualización solo cuando haya un cambio de posición
                 lastUpdateTime[location.phoneNumber] = currentTime;
-                console.log(`lastUpdateTime actualizado para ${location.phoneNumber}: `, lastUpdateTime[location.phoneNumber]);
+              //  console.log(`lastUpdateTime actualizado para ${location.phoneNumber}: `, lastUpdateTime[location.phoneNumber]);
 
             } else {
-                console.log(`El marcador para ${location.phoneNumber} no ha cambiado de posición.`);
+               // console.log(`El marcador para ${location.phoneNumber} no ha cambiado de posición.`);
             }
         });
 
@@ -155,11 +159,11 @@ async function loadRecentLocations() {
 
             if (lastUpdated) {
                 const timeElapsed = currentTime - lastUpdated;
-                console.log(`Tiempo transcurrido desde la última actualización de ${phoneNumber}: ${timeElapsed / 1000} segundos`);
+                //console.log(`Tiempo transcurrido desde la última actualización de ${phoneNumber}: ${timeElapsed / 1000} segundos`);
 
                 if (timeElapsed > 2 * 60 * 1000) { // 2 minutos en milisegundos
                     if (marker) {
-                        console.log(`Cambiando ícono a inactivo para el marcador de ${phoneNumber} (no recibido en la respuesta desde hace más de 2 minutos).`);
+                  //      console.log(`Cambiando ícono a inactivo para el marcador de ${phoneNumber} (no recibido en la respuesta desde hace más de 2 minutos).`);
                         marker.setIcon(L.icon({
                             iconUrl: 'https://img.icons8.com/?size=100&id=p9Dtg5w9YDAv&format=png&color=000000',
                             iconSize: [30, 30],
@@ -169,12 +173,12 @@ async function loadRecentLocations() {
                     }
                 }
             } else {
-                console.log(`No se ha encontrado el tiempo de última actualización para ${phoneNumber}.`);
+            //    console.log(`No se ha encontrado el tiempo de última actualización para ${phoneNumber}.`);
             }
         });
 
     } catch (error) {
-        console.error('Error fetching recent locations:', error);
+   //     console.error('Error fetching recent locations:', error);
     }
 }
 
@@ -277,12 +281,12 @@ function toggleOptionsMenu(button) {
 
 function viewDetailsHandler(phoneNumber) {
     // Lógica para ver detalles
-    console.log('Ver detalles de:', phoneNumber);
+  // console.log('Ver detalles de:', phoneNumber);
 }
 
 function maintenanceHandler(phoneNumber) {
     // Lógica para mantenimientos
-    console.log('Mantenimientos de:', phoneNumber);
+  //  console.log('Mantenimientos de:', phoneNumber);
 }
 
 function filterGpsList() {
@@ -316,7 +320,7 @@ async function handleMarkerClick(marker, location) {
         `, { offset: [0, -40] }).openPopup();
 
     } catch (error) {
-        console.error('Error fetching address:', error);
+      //  console.error('Error fetching address:', error);
     }
 }
 
@@ -324,14 +328,14 @@ async function showAddress(lat, lon, linkElement) {
     try {
         // Obtener dirección usando las coordenadas
         const address = await getAddress(lat, lon);
-        console.log(`Dirección obtenida: ${address}`);
+//console.log(`Dirección obtenida: ${address}`);
         
         // Reemplazar el enlace con la dirección obtenida
         linkElement.innerHTML = address;
-        console.log(`Dirección mostrada: ${address}`);
+   //     console.log(`Dirección mostrada: ${address}`);
         
     } catch (error) {
-        console.error('Error fetching address in showAddress:', error);
+    //    console.error('Error fetching address in showAddress:', error);
     }
 }
 
@@ -350,17 +354,57 @@ function toggleMarker(phoneNumber) {
         container.style.display = 'none';
     }
 
+  
+    
+    // Función auxiliar para calcular la distancia entre dos puntos (fórmula Haversine)
+    function calculateDistance(coord1, coord2) {
+        const R = 6371; // Radio de la Tierra en kilómetros
+        const lat1 = coord1[0] * (Math.PI / 180);
+        const lat2 = coord2[0] * (Math.PI / 180);
+        const deltaLat = (coord2[0] - coord1[0]) * (Math.PI / 180);
+        const deltaLon = (coord2[1] - coord1[1]) * (Math.PI / 180);
+    
+        const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                  Math.cos(lat1) * Math.cos(lat2) *
+                  Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+    
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distancia en kilómetros
+    }
+
+    
+    let lastSelectedGPS = null; // Variable para almacenar la última selección
+
     async function loadRoute() {
         const gpsSelector = document.getElementById('gpsSelector');
         const phoneNumber = gpsSelector.value;
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
     
-        if (!phoneNumber) {
-            alert('Por favor, selecciona un GPS.');
+        // Validar que se haya seleccionado un GPS y la fecha de inicio
+        if (!phoneNumber || !startDate) {
+            Swal.fire({
+                icon: 'warning',
+                title: '¡Faltan datos!',
+                text: 'Por favor, selecciona un dispositivo y por lo menos la fecha de inicio para cargar la ruta.',
+                confirmButtonText: 'Aceptar'
+            });
             return;
         }
     
+        // Validar que se haya cambiado la selección de GPS
+        if (phoneNumber === lastSelectedGPS) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Selección ya cargada',
+                text: 'Debes seleccionar un dispositivo diferente para cargar una nueva ruta.',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+    
+        // Actualizar la última selección
+        lastSelectedGPS = phoneNumber;
         // Mostrar el overlay y el spinner de carga
         const loadingOverlay = document.getElementById('loadingOverlay');
         loadingOverlay.classList.add('active');
@@ -369,12 +413,20 @@ function toggleMarker(phoneNumber) {
         if (recentLocationsInterval) {
             clearInterval(recentLocationsInterval);
             recentLocationsInterval = null;
-            console.log('Intervalo de actualizaciones detenido.');
+         //   console.log('Intervalo de actualizaciones detenido.');
         }
     
-        const formattedStartDate = startDate ? new Date(startDate).toISOString().slice(0, 19).replace('T', ' ') : '';
-        const formattedEndDate = endDate ? new Date(endDate).toISOString().slice(0, 19).replace('T', ' ') : '';
+        const formatDate = (date, time) => {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day} ${time}`;
+        };
     
+        const formattedStartDate = startDate ? formatDate(startDate, '00:00:00') : '';
+        const formattedEndDate = endDate ? formatDate(endDate, '23:59:59') : '';
+        
         let url = `get-route?phoneNumber=${phoneNumber}`;
         if (formattedStartDate) {
             url += `&startDate=${formattedStartDate}`;
@@ -391,8 +443,12 @@ function toggleMarker(phoneNumber) {
             const data = await response.json();
     
             if (!Array.isArray(data.locations) || data.locations.length === 0) {
-                alert('No se encontraron datos para la ruta seleccionada.');
-                return;
+                Swal.fire({
+                    icon: 'warning',
+                    title: '¡Sin ruta!',
+                    text: 'No se encontraron ruta para este dispositivo en esta fecha .',
+                    confirmButtonText: 'Aceptar'
+                });                return;
             }
     
             // Eliminar todos los marcadores existentes, excepto el seleccionado
@@ -414,7 +470,23 @@ function toggleMarker(phoneNumber) {
                 parseFloat(location.latitude),
                 parseFloat(location.longitude),
             ]);
+            const passedCoordinates = routeCoordinates.slice(0, index); // Coordenadas de la parte recorrida
+            const remainingCoordinates = routeCoordinates.slice(index); // Coordenadas de la parte no recorrida
     
+            // Dibujar la parte recorrida con un color diferente
+            if (passedRoutePath) {
+                map.removeLayer(passedRoutePath);
+                passedRoutePath = null; // Eliminar la ruta recorrida
+            }
+            passedRoutePath = L.polyline(passedCoordinates, { color: '#28a745' }).addTo(map); // Color verde para la parte recorrida
+
+            // Dibujar la parte restante de la ruta
+            if (remainingRoutePath) {
+                map.removeLayer(remainingRoutePath);
+                remainingRoutePath = null; // Eliminar la ruta restante
+            }
+            remainingRoutePath = L.polyline(remainingCoordinates, { color: '#454B54' }).addTo(map); // Color gris para la parte no recorrida
+
             // Calcular la distancia total recorrida
             let totalDistance = 0;
             for (let i = 1; i < routeCoordinates.length; i++) {
@@ -508,15 +580,15 @@ function toggleMarker(phoneNumber) {
                 padding: [20, 20] // Agregar margen al límite
             });
     
-            console.log('Ruta cargada con éxito:', {
-                phoneNumber,
-                startDate: formattedStartDate,
-                endDate: formattedEndDate,
-                routeCoordinates,
-                totalDistance: totalDistance.toFixed(2) + ' km'
-            });
+            // console.log('Ruta cargada con éxito:', {
+            //     phoneNumber,
+            //     startDate: formattedStartDate,
+            //     endDate: formattedEndDate,
+            //     routeCoordinates,
+            //     totalDistance: totalDistance.toFixed(2) + ' km'
+            // });
         } catch (error) {
-            console.error('Error fetching route:', error);
+          //  console.error('Error fetching route:', error);
         } finally {
             // Ocultar el overlay y el spinner de carga
             loadingOverlay.classList.remove('active');
@@ -525,27 +597,30 @@ function toggleMarker(phoneNumber) {
 
     }
     
-    // Función auxiliar para calcular la distancia entre dos puntos (fórmula Haversine)
-    function calculateDistance(coord1, coord2) {
-        const R = 6371; // Radio de la Tierra en kilómetros
-        const lat1 = coord1[0] * (Math.PI / 180);
-        const lat2 = coord2[0] * (Math.PI / 180);
-        const deltaLat = (coord2[0] - coord1[0]) * (Math.PI / 180);
-        const deltaLon = (coord2[1] - coord1[1]) * (Math.PI / 180);
+
+    function changeSpeed() {
+        // Obtener la nueva velocidad seleccionada
+        const speedControl = document.getElementById('speedControl');
+        speedMultiplier = parseFloat(speedControl.value);
     
-        const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-                  Math.cos(lat1) * Math.cos(lat2) *
-                  Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+        // Ajustar el tiempo por paso para hacer la animación más rápida
+        timePerStep = 10 / speedMultiplier;  // Reducir el tiempo por paso para mayor velocidad
     
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c; // Distancia en kilómetros
+        // Reducir ligeramente el número de pasos
+        numSteps = Math.max(100, 200 / speedMultiplier);  // Reducir numSteps ligeramente según la velocidad
+    
+        // Si la animación ya está corriendo, ajustamos la velocidad en tiempo real
+        if (isAnimating) {
+            // Actualizamos los valores y reiniciamos la animación
+            clearTimeout(currentTimeout);  // Limpiar el timeout actual
+            moveMarker();  // Llamar de nuevo a moveMarker con la nueva velocidad
+        }
     }
-    
     
     
     function startAnimation() {
         if (!routeCoordinates || routeCoordinates.length === 0) {
-            console.error('No route loaded for animation.');
+            //console.error('No route loaded for animation.');
             return;
         }
     
@@ -554,43 +629,34 @@ function toggleMarker(phoneNumber) {
         marker = markers[phoneNumber];
     
         if (!marker) {
-            console.error('No marker available for animation.');
+          //  console.error('No marker available for animation.');
             return;
         }
     
         // Reiniciar la animación
-        index = 0; 
+        index = 0;
         isPaused = false;
-    
+        isAnimating = true;  // Marcar que la animación ha comenzado
+        
+        // Eliminar cualquier ruta previa antes de comenzar la animación
+        if (passedRoutePath) {
+            map.removeLayer(passedRoutePath);
+            passedRoutePath = null;
+        }
+        if (remainingRoutePath) {
+            map.removeLayer(remainingRoutePath);
+            remainingRoutePath = null;
+        }
+
         // Mostrar el botón de Play/Pause
         document.getElementById('pauseResumeButton').classList.remove('hidden');
-    
-        
-        minimizeButtonContainer();
+        document.getElementById('speedControl').classList.remove('hidden');
 
+        minimizeButtonContainer();
+    
         // Iniciar la animación
         moveMarker();
     }
-    
-  // La función de pausa/reanudación
-function toggleAnimation() {
-    isPaused = !isPaused;
-    const btn = document.getElementById("pauseResumeButton");
-    const icon = document.getElementById("playPauseIcon");
-
-    if (isPaused) {
-        icon.classList.remove("fa-play");
-        icon.classList.add("fa-pause");
-    } else {
-        icon.classList.remove("fa-pause");
-        icon.classList.add("fa-play");
-    }
-
-    if (!isPaused) {
-        moveMarker(); // Reanudar animación desde el último punto
-    }
-}
-    
     
     function moveMarker() {
         if (isPaused || index >= routeCoordinates.length - 1) {
@@ -615,23 +681,57 @@ function toggleAnimation() {
             const lng = start[1] + (end[1] - start[1]) * (stepIndex / numSteps);
             const position = [lat, lng];
     
-            if (marker) {
-                marker.setLatLng(position);
-                map.panTo(position);
+            marker.setLatLng(position);
+            map.panTo(position);
     
-                const dx = end[1] - start[1];
-                const dy = end[0] - start[0];
-                const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-                marker.setRotationAngle(angle);
+            // Actualizar las rutas recorrida y no recorrida
+            const passedCoordinates = routeCoordinates.slice(0, index + 1); // Actualizar la parte recorrida
+            const remainingCoordinates = routeCoordinates.slice(index + 1); // Actualizar la parte no recorrida
+    
+            if (passedRoutePath) {
+                map.removeLayer(passedRoutePath);
             }
+            passedRoutePath = L.polyline(passedCoordinates, { color: 'red' }).addTo(map); // Color verde
+    
+            if (remainingRoutePath) {
+                map.removeLayer(remainingRoutePath);
+            }
+            remainingRoutePath = L.polyline(remainingCoordinates, { color: '#454B54' }).addTo(map); // Color gris
+    
+            const dx = end[1] - start[1];
+            const dy = end[0] - start[0];
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            marker.setRotationAngle(angle);
     
             stepIndex++;
-            currentTimeout = setTimeout(interpolate, timePerStep);
+            currentTimeout = setTimeout(interpolate, timePerStep / speedMultiplier); // Ajustar el tiempo por la velocidad seleccionada
         }
     
         interpolate();
     }
+    
+    
+  // La función de pausa/reanudación
+function toggleAnimation() {
+    isPaused = !isPaused;
+    const btn = document.getElementById("pauseResumeButton");
+    const icon = document.getElementById("playPauseIcon");
 
+    if (isPaused) {
+        icon.classList.remove("fa-play");
+        icon.classList.add("fa-pause");
+    } else {
+        icon.classList.remove("fa-pause");
+        icon.classList.add("fa-play");
+    }
+
+    if (!isPaused) {
+        moveMarker(); // Reanudar animación desde el último punto
+    }
+}
+    
+    
+    
     async function getAddress(lat, lng) {
         const key = `${lat},${lng}`;
         if (addressCache[key]) {
@@ -649,61 +749,74 @@ function toggleAnimation() {
                 return 'Address not found';
             }
         } catch (error) {
-            console.error('Error fetching address:', error);
+          //  console.error('Error fetching address:', error);
             return 'Error fetching address';
         }
     }   
 
 
-function resetMap() {
-    // Limpiar el mapa
-    clearMarkers();
-    if (routePath) {
-        map.removeLayer(routePath);
-        routePath = null;
-    }
-
-    // Eliminar los marcadores del primer y último punto si existen
-    startEndMarkers.forEach(marker => {
-        map.removeLayer(marker); // Eliminar del mapa
-    });
-    startEndMarkers = []; // Limpiar el arreglo de marcadores
-
-    // Reiniciar las ubicaciones recientes y el estado
-    lastKnownLocations = {};
-    markers = {};
-    routeCoordinates = [];
-
-    // Reiniciar el intervalo de actualizaciones si está detenido
-    if (!recentLocationsInterval) {
-        recentLocationsInterval = setInterval(loadRecentLocations, 10000);
-    }
-
-    // Recargar las opciones de GPS y las ubicaciones recientes
-    document.getElementById('gpsList').innerHTML = ''; // Limpiar la lista de GPS
-    document.getElementById('gpsSelector').innerHTML = ''; // Limpiar el selector
-    const gpsSelector = document.getElementById('gpsSelector');
-    const startDate = document.getElementById('startDate');
-    const endDate = document.getElementById('endDate');
-
-    if (gpsSelector) gpsSelector.value = ''; // Restablecer selector de GPS
-    if (startDate) startDate.value = ''; // Restablecer fecha de inicio
-    if (endDate) endDate.value = ''; // Restablecer fecha de fin
-    loadGpsOptions();
-
-    // Restablecer el mapa al zoom y coordenadas iniciales con animación más lenta
-    const initialCoordinates = [19.4202403, -102.0686549];
-    const initialZoom = 15;
-
-    map.options.zoomAnimation = true; // Asegurar que la animación de zoom esté habilitada
-    map.flyTo(initialCoordinates, initialZoom, { 
-        animate: true, 
-        duration: 2 // Duración de la animación en segundos 
-    });
-     // Ocultar los botones de "Iniciar Ruta" y "Play/Pause" después de resetear el mapa
-     document.getElementById('startRouteButton').classList.add('hidden');
-     document.getElementById('pauseResumeButton').classList.add('hidden');
-}
+        function resetMap() {
+            // Limpiar el mapa
+            clearMarkers();
+            if (routePath) {
+                map.removeLayer(routePath);
+                routePath = null;
+            }
+        
+            // Eliminar las rutas de animación (pasada y restante)
+            if (passedRoutePath) {
+                map.removeLayer(passedRoutePath);
+                passedRoutePath = null;
+            }
+        
+            if (remainingRoutePath) {
+                map.removeLayer(remainingRoutePath);
+                remainingRoutePath = null;
+            }
+        
+            // Eliminar los marcadores del primer y último punto si existen
+            startEndMarkers.forEach(marker => {
+                map.removeLayer(marker); // Eliminar del mapa
+            });
+            startEndMarkers = []; // Limpiar el arreglo de marcadores
+        
+            // Reiniciar las ubicaciones recientes y el estado
+            lastKnownLocations = {};
+            markers = {};
+            routeCoordinates = [];
+        
+            // Reiniciar el intervalo de actualizaciones si está detenido
+            if (!recentLocationsInterval) {
+                recentLocationsInterval = setInterval(loadRecentLocations, 10000);
+            }
+        
+            // Recargar las opciones de GPS y las ubicaciones recientes
+            document.getElementById('gpsList').innerHTML = ''; // Limpiar la lista de GPS
+            document.getElementById('gpsSelector').innerHTML = ''; // Limpiar el selector
+            const gpsSelector = document.getElementById('gpsSelector');
+            const startDate = document.getElementById('startDate');
+            const endDate = document.getElementById('endDate');
+        
+            if (gpsSelector) gpsSelector.value = ''; // Restablecer selector de GPS
+            if (startDate) startDate.value = ''; // Restablecer fecha de inicio
+            if (endDate) endDate.value = ''; // Restablecer fecha de fin
+            loadGpsOptions();
+        
+            // Restablecer el mapa al zoom y coordenadas iniciales con animación más lenta
+            const initialCoordinates = [19.4202403, -102.0686549];
+            const initialZoom = 15;
+        
+            map.options.zoomAnimation = true; // Asegurar que la animación de zoom esté habilitada
+            map.flyTo(initialCoordinates, initialZoom, { 
+                animate: true, 
+                duration: 2 // Duración de la animación en segundos 
+            });
+            // Ocultar los botones de "Iniciar Ruta" y "Play/Pause" después de resetear el mapa
+            document.getElementById('startRouteButton').classList.add('hidden');
+            document.getElementById('pauseResumeButton').classList.add('hidden');
+            document.getElementById('speedControl').classList.add('hidden');
+            minimizeButtonContainer();
+        }    
 
 function toggleButtonContainer() {
     var container = document.getElementById('buttonContainer');

@@ -18,6 +18,7 @@ $this->title = 'Gpslocations';
 <link rel="stylesheet" href="/vendor/pickadate/themes/default.css">
 <link rel="stylesheet" href="/vendor/pickadate/themes/default.date.css">
 <link rel="stylesheet" href="/vendor/toastr/css/toastr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <div class="main-content">
     <button class="floating-button" id="floatingButton" onclick="toggleButtonContainer()">+</button>
@@ -37,20 +38,30 @@ $this->title = 'Gpslocations';
         <div id="gpsList" class="gps-list"></div>
     </div>
     <div class="button-container" id="buttonContainer">
-        <label for="startDate">Fecha Inicio:</label>
+        <label for="startDate">Desde:</label>
         <input name="datepicker" class="datepicker-default form-control" id="startDate">
-        <label for="endDate">Fecha Fin:</label>
+        <label for="endDate">Hasta:</label>
         <input name="datepicker" class="datepicker-default form-control" id="endDate">
         <select id="gpsSelector" class="minimal-select large-select"></select>
         <button class="minimal-button small-button" onclick="loadRoute()">Cargar Ruta</button>
         <button id="startRouteButton" class="minimal-button small-button hidden" onclick="startAnimation()">Iniciar Ruta</button>
-        <button class="reset-button" onclick="resetMap()">
+        <button class="reset-button" onclick="resetMap()" title="Restablecer">
             <img src="https://img.icons8.com/?size=100&id=VG3PB5IAD9Oy&format=png&color=000000" alt="Reset" style="width: 20px; height: 20px;">
         </button>
         <button id="pauseResumeButton" class="pause-button hidden" onclick="toggleAnimation()">
         <i id="playPauseIcon" class="fas fa-play"></i>
     </button>
     
+    <select id="speedControl" class="select-speed hidden" onchange="changeSpeed()">
+    <option value="1">1x</option>
+    <option value="1.25">1.25x</option>
+    <option value="1.5">1.5x</option>
+    <option value="1.75">1.75x</option>
+    <option value="2">2x</option>
+    <option value="100">100x</option>
+    <option value="1000">200x</option>
+    </select> 
+
     </div>
     <br>
     <div id="map"></div>
