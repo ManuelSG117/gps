@@ -16,6 +16,7 @@
     let speedMultiplier = 1; // Velocidad inicial (1x)
     let passedRoutePath;
     let remainingRoutePath;
+    let lastSelectedGPS = null; // Variable para almacenar la última selección
 
     
 function toggleSelectAll(selectAllCheckbox) {
@@ -373,7 +374,6 @@ function toggleMarker(phoneNumber) {
     }
 
     
-    let lastSelectedGPS = null; // Variable para almacenar la última selección
 
     async function loadRoute() {
         const gpsSelector = document.getElementById('gpsSelector');
@@ -685,30 +685,35 @@ function toggleMarker(phoneNumber) {
             map.panTo(position);
     
             // Actualizar las rutas recorrida y no recorrida
-            const passedCoordinates = routeCoordinates.slice(0, index + 1); // Actualizar la parte recorrida
-            const remainingCoordinates = routeCoordinates.slice(index + 1); // Actualizar la parte no recorrida
+            const passedCoordinates = routeCoordinates.slice(0, index + 1);
+            const remainingCoordinates = routeCoordinates.slice(index + 1);
     
             if (passedRoutePath) {
                 map.removeLayer(passedRoutePath);
             }
-            passedRoutePath = L.polyline(passedCoordinates, { color: 'red' }).addTo(map); // Color verde
+            passedRoutePath = L.polyline(passedCoordinates, { color: 'red' }).addTo(map);
     
             if (remainingRoutePath) {
                 map.removeLayer(remainingRoutePath);
             }
-            remainingRoutePath = L.polyline(remainingCoordinates, { color: '#454B54' }).addTo(map); // Color gris
+            remainingRoutePath = L.polyline(remainingCoordinates, { color: '#454B54' }).addTo(map);
     
             const dx = end[1] - start[1];
             const dy = end[0] - start[0];
             const angle = Math.atan2(dy, dx) * (180 / Math.PI);
             marker.setRotationAngle(angle);
     
+            // Calcular y mostrar el porcentaje de avance
+            const progress = ((index + stepIndex / numSteps) / (routeCoordinates.length - 1)) * 100;
+            console.log(`Progreso de la ruta: ${progress.toFixed(2)}%`);
+    
             stepIndex++;
-            currentTimeout = setTimeout(interpolate, timePerStep / speedMultiplier); // Ajustar el tiempo por la velocidad seleccionada
+            currentTimeout = setTimeout(interpolate, timePerStep / speedMultiplier);
         }
     
         interpolate();
     }
+    
     
     
   // La función de pausa/reanudación

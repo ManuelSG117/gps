@@ -284,5 +284,73 @@ class GpsreportController extends Controller
         });
     }
     
+    public function actionReportStops()
+    {
+        $filter = Yii::$app->request->get('filter', 'today');
+        $gps = Yii::$app->request->get('gps', null);
+        $startDate = Yii::$app->request->get('startDate', null);
+        $endDate = Yii::$app->request->get('endDate', null);
+    
+        $query = GpsLocations::find()->orderBy(['lastUpdate' => SORT_ASC]);
+    
+        if ($gps) {
+            $query->andWhere(['phoneNumber' => $gps]);
+        }
+    
+        switch ($filter) {
+            case 'today':
+                $query->andWhere(['DATE(lastUpdate)' => date('Y-m-d')]);
+                break;
+            case 'yesterday':
+                $query->andWhere(['DATE(lastUpdate)' => date('Y-m-d', strtotime('-1 day'))]);
+                break;
+            case 'current_week':
+                $query->andWhere(['>=', 'DATE(lastUpdate)', date('Y-m-d', strtotime('monday this week'))]);
+                break;
+            case 'last_week':
+                $query->andWhere(['between', 'DATE(lastUpdate)', date('Y-m-d', strtotime('monday last week')), date('Y-m-d', strtotime('sunday last week'))]);
+                break;
+            case 'current_month':
+                $query->andWhere(['>=', 'DATE(lastUpdate)', date('Y-m-01')]);
+                break;
+            case 'last_month':
+                $query->andWhere(['between', 'DATE(lastUpdate)', date('Y-m-d', strtotime('first day of last month')), date('Y-m-d', strtotime('last day of last month'))]);
+                break;
+            case 'custom':
+                if ($startDate && $endDate) {
+                    $query->andWhere(['between', 'DATE(lastUpdate)', $startDate, $endDate]);
+                }
+                break;
+        }
+    
+        $locations = $query->all();
+        $stops = [];
+        $lastStop = null;
+    
+        foreach ($locations as $location) {
+            if ($location->speed == 0) {
+                if (!$lastStop) {
+                    $lastStop = [
+                        'start_time' => $location->lastUpdate,
+                        'latitude' => $location->latitude,
+                        'longitude' => $location->longitude,
+                    ];
+                }
+            } else {
+                if ($lastStop) {
+                    $lastStop['end_time'] = $location->lastUpdate;
+                    $lastStop['duration'] = strtotime($location->lastUpdate) - strtotime($lastStop['start_time']);
+                    $stops[] = $lastStop;
+                    $lastStop = null;
+                }
+            }
+        }
+    
+        return $this->render('report_stops', [
+            'stops' => $stops,
+        ]);
+    }
+    
 
+    
 }
