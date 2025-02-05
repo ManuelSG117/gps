@@ -120,7 +120,7 @@ function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, 
 
     // Obtener la última ubicación insertada
     $stmt = $pdo->prepare('SELECT latitude, longitude FROM gpslocations ORDER BY GPSLocationID DESC LIMIT 1');
-    $stmt->execute();
+     $stmt->execute();
     $last_location = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($last_location) {

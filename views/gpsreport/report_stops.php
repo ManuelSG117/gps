@@ -4,7 +4,7 @@ use yii\widgets\ActiveForm;
 use yii\widgets\LinkPager;
 use app\models\GpsLocations;
 use yii\helpers\Url;
-
+use yii\widgets\Pjax;
 
 ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -14,9 +14,9 @@ use yii\helpers\Url;
 <link href="/vendor/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
+<?php Pjax::begin(['id' => 'gps-report-pjax']); ?>
 <div class="gps-report-form">
-    <?php $form = ActiveForm::begin(['method' => 'get', 'action' => ['gpsreport/report-stops']]); ?>
+    <?php $form = ActiveForm::begin(['method' => 'get', 'action' => ['gpsreport/report-stops'], 'options' => ['data-pjax' => true]]); ?>
 
     <div class="container-fluid">
     <div class="row align-items-end">
@@ -87,8 +87,6 @@ use yii\helpers\Url;
 
 <br>
 
-
-
     <?php ActiveForm::end(); ?>
 </div>
 <div class="card">
@@ -106,7 +104,7 @@ use yii\helpers\Url;
                         <th>Ubicación</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="stops-table-body">
                     <?php if (!empty($stops)): ?>
                         <?php foreach ($stops as $stop): ?>
                             <tr>
@@ -130,10 +128,9 @@ use yii\helpers\Url;
         </div>
     </div>
 </div>
-
+<?php Pjax::end(); ?>
 
 <script>
-
     document.addEventListener('DOMContentLoaded', function () {
     // Inicializar Flatpickr
     flatpickr('#startDate', {
@@ -179,12 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-
-
-    </script>
-
-<script>
- function showAddress(lat, lng, element) {
+function showAddress(lat, lng, element) {
     console.log("Click detectado. Latitud:", lat, "Longitud:", lng);
 
     // Seleccionar el <span> asociado
@@ -242,18 +234,33 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 }
 
+document.addEventListener('pjax:end', function () {
+    // Re-inicializar Flatpickr después de que PJAX haya cargado el contenido
+    flatpickr('#startDate', {
+        dateFormat: 'Y-m-d',
+        locale: 'es',
+        allowInput: true,
+    });
+
+    flatpickr('#endDate', {
+        dateFormat: 'Y-m-d',
+        locale: 'es',
+        allowInput: true,
+    });
+});
 </script>
+
  <!-- Required vendors -->
  <script src="/vendor/global/global.min.js"></script>
-	
-	
-	<!-- Dashboard 1 -->
-	<script src="/js/dashboard/dashboard-2.js"></script>
+    
+    
+    <!-- Dashboard 1 -->
+    <script src="/js/dashboard/dashboard-2.js"></script>
 
-	<script src="/vendor/datatables/js/jquery.dataTables.min.js"></script>
-	<script src="/vendor/datatables/js/dataTables.buttons.min.js"></script>
-	<script src="/vendor/datatables/js/buttons.html5.min.js"></script>
-	<script src="/js/plugins-init/datatables.init.js"></script>
+    <script src="/vendor/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="/vendor/datatables/js/dataTables.buttons.min.js"></script>
+    <script src="/vendor/datatables/js/buttons.html5.min.js"></script>
+    <script src="/js/plugins-init/datatables.init.js"></script>
 
     <style>
     .table-responsive {
