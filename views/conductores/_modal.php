@@ -162,22 +162,18 @@ use yii\widgets\Pjax;
 </div>
 
 <div class="modal-footer">
-    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
-    <?= Html::submitButton('Guardar', ['class' => 'btn btn-primary', 'id' => 'btn-guardar']) ?>
+    <button type="button" class="btn btn-sm btn-danger btn-large" data-bs-dismiss="modal">
+        Cerrar 
+        <animated-icons src="https://animatedicons.co/get-icon?name=Close&style=minimalistic&token=33a7e205-ac54-43a2-ab29-8acd13581964" trigger="loop"   attributes='{"variationThumbColour":"#536DFE","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1,"defaultColours":{"group-1":"#000000","group-2":"#FFFFFFFF","background":"#FFFFFF"}}' height="20" width="20"></animated-icons>
+    </button>
+    <?= Html::submitButton('Guardar <animated-icons src="https://animatedicons.co/get-icon?name=Submited&style=minimalistic&token=75699d26-e7a8-4120-b72f-3ccd31083bf0" trigger="loop" attributes=\'{"variationThumbColour":"#536DFE","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1,"defaultColours":{"group-1":"#000000","group-2":"#536DFE","background":"#FFFFFF"}}\' height="30" width="30"></animated-icons>', ['class' => 'btn btn-sm btn-primary btn-large', 'id' => 'btn-guardar']) ?>
     </div>
 
 <?php ActiveForm::end(); ?>
 
 <?php Pjax::end(); ?>
 
-
-<style>
-.form-field-spacing label {
-    padding-top: 8px; /* Espacio debajo del label */
-}
-
-
-</style>     
+     
     <script src="/vendor/global/global.min.js"></script>
 	<script src="/vendor/bootstrap-datepicker-master/js/bootstrap-datepicker.min.js"></script>
     

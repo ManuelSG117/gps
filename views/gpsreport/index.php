@@ -92,7 +92,7 @@ use yii\helpers\Url;
     <?php ActiveForm::end(); ?>
 </div>
 
-<div class="card">
+<div class="card" >
     <div class="card-body p-0">
         <div class="table-responsive active-projects">
             <div class="tbl-caption">

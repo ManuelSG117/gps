@@ -22606,7 +22606,6 @@ button {
   border: 0rem solid transparent;
   border-radius: 0.625rem;
   height: calc(100% - 25px);
-  width: 130% !important;
   border: 1px solid var(--border); }
   @media only screen and (max-width: 35.9375rem) {
     .card {
@@ -30444,3 +30443,25 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   box-shadow: 2px 2px 5px rgba(0,0,0,0.2); /* Add a subtle shadow */
 }
 
+.form-field-spacing label {
+  padding-top: 8px; /* Espacio debajo del label */
+
+}
+.btn-large {
+  height: 30px; /* Ajusta la altura del botón */
+  width: 30%; /* Hace que el botón ocupe el 100% del ancho del contenedor */
+  padding: 10px 20px; /* Ajusta el relleno del botón */
+  font-size: 16px; /* Ajusta el tamaño de la fuente */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-large animated-icons {
+  margin-left: 10px; /* Espacio entre el texto y el icono */
+}
+.btn-index{
+height: 50px;
+display: flex;
+align-items: center;
+justify-content: center;
+}

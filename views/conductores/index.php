@@ -28,11 +28,10 @@ $this->registerJsFile('@web/js/conductores.js',['depends' => [\yii\web\JqueryAss
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-        <?= Html::button('Crear Conductor', [
-            'class' => 'btn btn-success',
+               <?= Html::button('Crear Conductor <animated-icons src="https://animatedicons.co/get-icon?name=Individual&style=minimalistic&token=ae97ee7c-56cc-4490-90bd-ecd3fc81466e" trigger="loop" attributes=\'{"variationThumbColour":"#536DFE","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":0.9,"defaultColours":{"group-1":"#222B40FF","group-2":"#EFEFEFFF","background":"#FFFFFFFF"}}\' height="35" width="35"></animated-icons>', [
+            'class' => 'btn btn- sm btn-success btn-index ',
             'data-bs-toggle' => 'modal',
             'data-bs-target' => '#exampleModalCenter',
-            // 'onclick' => 'clearForm()',
         ]) ?>
     </p>
         
@@ -123,6 +122,14 @@ $this->registerJsFile('@web/js/conductores.js',['depends' => [\yii\web\JqueryAss
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalCenterTitle">Crear Conductor</h5>
+                <script src="https://animatedicons.co/scripts/embed-animated-icons.js"></script>
+                <animated-icons
+                  src="https://animatedicons.co/get-icon?name=Register&style=minimalistic&token=be93a354-eb41-497f-bb52-cdf419e7d920"
+                  trigger="loop"
+                  attributes='{"variationThumbColour":"#536DFE","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1,"defaultColours":{"group-1":"#000000","group-2":"#536DFE","background":"#FFFFFF"}}'
+                  height="35"
+                  width="35"
+                ></animated-icons>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <?= $this->render('_modal', ['model' => $model, 'action' => 'create']) ?>
@@ -182,6 +189,5 @@ $this->registerJsFile('@web/js/conductores.js',['depends' => [\yii\web\JqueryAss
 </style>
 
 <script src="/vendor/sweetalert2/sweetalert2.min.js"></script>
-<!-- <script src="/js/plugins-init/sweetalert.init.js"></script> -->
 
 
