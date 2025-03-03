@@ -364,13 +364,13 @@ class GpsreportController extends Controller
         ]);
     }
 
-       public function actionDownloadReportStops()
+    public function actionDownloadReportStops()
     {
         $filter = Yii::$app->request->get('filter', 'today');
         $gps = Yii::$app->request->get('gps', null);
         $startDate = Yii::$app->request->get('startDate', null);
         $endDate = Yii::$app->request->get('endDate', null);
-        $includeChart = true;
+        $includeChart = Yii::$app->request->get('includeChart', true);
     
         $query = GpsLocations::find()->orderBy(['lastUpdate' => SORT_ASC]);
         $period = '';
@@ -428,13 +428,13 @@ class GpsreportController extends Controller
                 }
                 break;
             default:
-    
         }
     
         $locations = $query->all();
         $stops = [];
         $lastStop = null;
         $stopsPerDay = [];
+        $totalDuration = 0;
     
         foreach ($locations as $location) {
             if ($location->speed == 0) {
@@ -448,7 +448,8 @@ class GpsreportController extends Controller
             } else {
                 if ($lastStop) {
                     $durationInSeconds = strtotime($location->lastUpdate) - strtotime($lastStop['start_time']);
-                    if ($durationInSeconds > 180) { // 3 minutes = 180 seconds
+                    if ($durationInSeconds > 180) { // Más de 3 minutos
+                        $totalDuration += $durationInSeconds;
                         if ($durationInSeconds >= 3600) {
                             $hours = floor($durationInSeconds / 3600);
                             $minutes = floor(($durationInSeconds % 3600) / 60);
@@ -462,7 +463,7 @@ class GpsreportController extends Controller
                         $lastStop['end_time'] = $location->lastUpdate;
                         $stops[] = $lastStop;
     
-                        // Contar las paradas por día
+                        // Contabilizar paradas por día
                         $date = (new \DateTime($lastStop['start_time']))->format('Y-m-d');
                         if (!isset($stopsPerDay[$date])) {
                             $stopsPerDay[$date] = 0;
@@ -475,9 +476,12 @@ class GpsreportController extends Controller
             }
         }
     
+        $averageDuration = count($stops) > 0 ? ($totalDuration / count($stops)) : 0;
+        $averageStopsPerDay = count($stopsPerDay) > 0 ? (count($stops) / count($stopsPerDay)) : 0;
+    
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        // Agregar título y subtítulo
+        // Título y subtítulo
         $sheet->setCellValue('A1', 'Reporte de Paradas');
         $sheet->setCellValue('A2', 'Periodo: ' . $period);
         $sheet->mergeCells('A1:E1');
@@ -485,7 +489,7 @@ class GpsreportController extends Controller
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(12);
     
-        // Encabezados
+        // Encabezados de la tabla de paradas
         $sheet->setCellValue('A3', 'Latitud');
         $sheet->setCellValue('B3', 'Longitud');
         $sheet->setCellValue('C3', 'Inicio de Parada');
@@ -516,7 +520,7 @@ class GpsreportController extends Controller
             $row++;
         }
     
-        // Agregar los datos de paradas por día a la hoja de cálculo
+        // Agregar datos de paradas por día
         $sheet->setCellValue('G3', 'Fecha');
         $sheet->setCellValue('H3', 'Número de Paradas');
         $sheet->getStyle('G3:H3')->applyFromArray($headerStyle);
@@ -526,64 +530,63 @@ class GpsreportController extends Controller
             $sheet->setCellValue('H' . $row, $count);
             $row++;
         }
-        // Ajustar el ancho de las columnas automáticamente
+    
+        // Formatear y agregar duración total y promedio usando la función auxiliar
+        $sheet->setCellValue('G' . ($row + 2), 'Duración Total de Paradas');
+        $sheet->setCellValue('H' . ($row + 2), $this->formatDuration($totalDuration));
+        $sheet->setCellValue('G' . ($row + 3), 'Promedio de Tiempo entre Paradas');
+        $sheet->setCellValue('H' . ($row + 3), $this->formatDuration($averageDuration));
+        $sheet->setCellValue('G' . ($row + 4), 'Promedio de Paradas por Día');
+        $sheet->setCellValue('H' . ($row + 4), number_format($averageStopsPerDay, 2));
+        $sheet->getStyle('G' . ($row + 2) . ':G' . ($row + 4))->applyFromArray($headerStyle);
+    
+        // Ajustar ancho de columnas
         foreach (range('A', 'H') as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
     
         if ($includeChart) {
-            // Crear una serie de datos para la gráfica
             $dataSeriesLabels = [
-                new DataSeriesValues('String', 'Worksheet!$H$3', null, 1), // Etiqueta de la serie
+                new DataSeriesValues('String', 'Worksheet!$H$3', null, 1),
             ];
             $xAxisTickValues = [
-                new DataSeriesValues('String', 'Worksheet!$G$4:$G$' . ($row - 1), null, 4), // Valores del eje X (Fechas)
+                new DataSeriesValues('String', 'Worksheet!$G$4:$G$' . ($row - 1), null, 4),
             ];
             $dataSeriesValues = [
-                new DataSeriesValues('Number', 'Worksheet!$H$4:$H$' . ($row - 1), null, 4), // Valores del eje Y (Número de Paradas)
+                new DataSeriesValues('Number', 'Worksheet!$H$4:$H$' . ($row - 1), null, 4),
             ];
     
-            // Crear la serie de datos
             $series = new DataSeries(
-                DataSeries::TYPE_LINECHART, // Tipo de gráfica
-                DataSeries::GROUPING_STANDARD, // Agrupamiento
-                range(0, count($dataSeriesValues) - 1), // Orden de la serie
-                $dataSeriesLabels, // Etiquetas de la serie
-                $xAxisTickValues, // Valores del eje X
-                $dataSeriesValues // Valores del eje Y
+                DataSeries::TYPE_LINECHART,
+                DataSeries::GROUPING_STANDARD,
+                range(0, count($dataSeriesValues) - 1),
+                $dataSeriesLabels,
+                $xAxisTickValues,
+                $dataSeriesValues
             );
     
-            // Crear el área de la gráfica
             $plotArea = new PlotArea(null, [$series]);
-    
-            // Crear la leyenda de la gráfica
             $legend = new Legend(Legend::POSITION_RIGHT, null, false);
-    
-            // Crear el título de la gráfica
             $title = new Title('Número de Paradas por Día');
-    
-            // Crear la gráfica
             $chart = new Chart(
-                'chart1', // Nombre de la gráfica
-                $title, // Título de la gráfica
-                $legend, // Leyenda de la gráfica
-                $plotArea, // Área de la gráfica
-                true, // Plot visible only
-                0, // Display blanks as
-                null, // Eje X
-                null // Eje Y
+                'chart1',
+                $title,
+                $legend,
+                $plotArea,
+                true,
+                0,
+                null,
+                null
             );
     
-            // Establecer la posición de la gráfica en la hoja
             $chart->setTopLeftPosition('K1');
             $chart->setBottomRightPosition('R20');
     
-            // Agregar la gráfica a la hoja
             $sheet->addChart($chart);
         }
     
         $writer = new Xlsx($spreadsheet);
-        $writer->setIncludeCharts($includeChart); // Incluir la gráfica en el archivo si se especifica
+        $writer->setIncludeCharts($includeChart);
         $fileName = 'report_stops.xlsx';
         $tempFile = tempnam(sys_get_temp_dir(), $fileName);
         $writer->save($tempFile);
@@ -593,6 +596,27 @@ class GpsreportController extends Controller
             'inline' => false
         ]);
     }
+    
+    /**
+     * Función auxiliar para formatear la duración en segundos al formato deseado.
+     *
+     * @param int $seconds
+     * @return string
+     */
+    private function formatDuration($seconds)
+    {
+        if ($seconds >= 3600) {
+            $hours = floor($seconds / 3600);
+            $minutes = floor(($seconds % 3600) / 60);
+            $seconds = $seconds % 60;
+            return sprintf('%d horas, %d minutos, %d segundos', $hours, $minutes, $seconds);
+        } else {
+            $minutes = floor($seconds / 60);
+            $seconds = $seconds % 60;
+            return sprintf('%d minutos, %d segundos', $minutes, $seconds);
+        }
+    }
+    
 
     
 }

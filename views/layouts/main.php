@@ -29,14 +29,17 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 <!DOCTYPE html>
 <html lang="<?= Yii::$app->language ?>">
 <head>
-<link rel="icon" type="/image/png" sizes="16x16" href="./images/favicon.png">
-
-<link href="/vendor/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet">
+	<link rel="icon" type="/image/png" sizes="16x16" href="./images/favicon.png">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<link href="/vendor/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet">
 	<link href="/vendor/swiper/css/swiper-bundle.min.css" rel="stylesheet">
 	<link href="/vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
 	<link href="/vendor/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
 	<link href="/vendor/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
- 
+     <!-- Dashboard 1 -->
+	 <!-- <script src="/js/dashboard/dashboard-2.js"></script> -->
+
+<!-- <script src="/js/plugins-init/datatables.init.js"></script> -->
 
     <meta charset="<?= Yii::$app->charset ?>">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -45,9 +48,10 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
     <title><?= Html::encode($this->title) ?></title>
     <?php $this->head() ?>
    
-	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script src="/js/custom.js"></script>
-
+	<script src="/vendor/global/global.min.js"></script>
+    
+    
 
 <?php $this->beginBody() ?>
 </head>

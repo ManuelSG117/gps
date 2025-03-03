@@ -11,10 +11,11 @@ $this->registerJsFile('@web/js/stops.js', ['depends' => [\yii\web\JqueryAsset::c
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-<link href="/vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
-<link href="/vendor/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
 <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
 
 <div class="gps-report-form" style="margin-top: -60px;">
@@ -106,7 +107,7 @@ $this->registerJsFile('@web/js/stops.js', ['depends' => [\yii\web\JqueryAsset::c
                         <tr>
                             <th>Inicio de parada</th>
                             <th>Fin de parada</th>
-                            <th>Duración (minutos)</th>
+                            <th>Duración </th>
                             <th>Ubicación</th>
                         </tr>
                     </thead>
@@ -234,11 +235,21 @@ $this->registerJsFile('@web/js/stops.js', ['depends' => [\yii\web\JqueryAsset::c
         </div>
 
         <div class="col-lg-4 col-12">
-            <div id="stops-chart" style="height: 200px;"></div>
+    <!-- Contenedor del gráfico con animación de carga superpuesta -->
+    <div id="chart-wrapper">
+    <!-- Div donde se renderiza la gráfica -->
+    <div id="stops-chart" style="height: 200px;"></div>
+    
+    <!-- Animación de carga (overlay) -->
+    <div id="loading-animation" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+         display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.8);">
+        <dotlottie-player src="https://lottie.host/e0f85e03-ec5a-4435-a7ee-30dc93809080/92ftoDoc5w.lottie" background=" linear-gradient(to bottom, #1e3c72, #2a5298);" speed="1" style="width: 100%; height: 100%;" loop autoplay></dotlottie-player>
+    </div>
+</div>
         </div>
     </div>
 </div>
-<br>
+<br> <br>
 <script>
 document.getElementById('label-check').addEventListener('change', function() {
     let cardsContainer = document.getElementById("cards-container");
@@ -262,194 +273,133 @@ document.getElementById('label-check').addEventListener('change', function() {
 </script>
 <?php endif; ?>
 
+<script>
+// Inicialización del gráfico y ocultación de la animación al cargar
+$('#showinfo').on('click', function () {
+    setTimeout(function () {
+      Highcharts.chart('stops-chart', {
+        chart: {
+          type: 'line',
+          events: {
+            load: function () {
+              // Oculta la animación de carga cuando el gráfico se ha renderizado
+              document.getElementById('loading-animation').style.display = 'none';
+            }
+          }
+        },
+        title: {
+          text: 'Número de Paradas por Día'
+        },
+        xAxis: {
+          categories: <?= json_encode(array_keys($stopsPerDay)) ?>
+        },
+        yAxis: {
+          title: {
+            text: '# Paradas'
+          }
+        },
+        series: [{
+          name: 'Paradas',
+          data: <?= json_encode(array_values($stopsPerDay)) ?>,
+          dataLabels: {
+            enabled: true,
+          },
+          enableMouseTracking: true
+        }]
+      });
+    }, 500);
+  });
+  
 
-<style>
-#icon-container {
-text-align: center; 
-justify-content: center;
-margin-left:45%;
-}
-
-#cards-container {
-    display: none;
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-#cards-container.show {
-    display: block;
-    opacity: 1;
-    transform: translateY(0);
-}
-
-
-.label-check {
-  display: none;
-}
-
-.hamburger-label {
-  width: 24.5px;
-  height: 20.3px;
-  display: block;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.hamburger-label div {
-  width: 24.5px;
-  height: 2.1px;
-  background-color: #fff;
-  position: absolute;
-}
-
-.line1 {
-  transition: all 0.3s;
-}
-
-.line2 {
-  margin: 6.3px 0 0 0;
-  transition: 0.3s;
-}
-
-.line3 {
-  margin: 12.6px 0 0 0;
-  transition: 0.3s;
-}
-
-#label-check:checked + .hamburger-label .line1 {
-  transform: rotate(35deg) scaleX(0.55) translate(13.65px, -1.575px);
-  border-radius: 17.5px 17.5px 17.5px 0;
-}
-
-#label-check:checked + .hamburger-label .line3 {
-  transform: rotate(-35deg) scaleX(0.55) translate(13.65px, 1.575px);
-  border-radius: 0 17.5px 17.5px 17.5px;
-}
-
-#label-check:checked + .hamburger-label .line2 {
-  border-top-right-radius: 17.5px;
-  border-bottom-right-radius: 17.5px;
-  width: 15.75px;
-}
-
-#label-check:checked + .hamburger-label {
-  transform: rotate(90deg);
-}
-
-</style>
-
-
- <!-- Required vendors -->
- <script src="/vendor/global/global.min.js"></script>
-    
-    
-    <!-- Dashboard 1 -->
-    <script src="/js/dashboard/dashboard-2.js"></script>
-
+</script>
     <script src="/vendor/datatables/js/jquery.dataTables.min.js"></script>
-    <script src="/vendor/datatables/js/dataTables.buttons.min.js"></script>
-    <script src="/vendor/datatables/js/buttons.html5.min.js"></script>
     <script src="/js/plugins-init/datatables.init.js"></script>
 
-    <style>
-
-    .table-responsive {
-    height: calc(100vh - 400px) !important;  /* Ajusta el 200px según el espacio superior e inferior que necesites */
-    overflow-y: auto !important;
-    }
-
-    .card-body {
-        padding: 0 !important;
-    }
-
-    #projects-tbl {
-        width: 100% !important;
-        table-layout: fixed !important;  /* Opcional, para que las columnas tengan el mismo tamaño */
-        overflow-x: hidden !important;
-    }
-        
-       .cards {
-      position: relative;
-      height: 200px;
-      background: linear-gradient(to bottom, #1e3c72, #2a5298); /* Degradado de azul */
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      perspective: 1000px;
-      box-shadow: 0 0 0 5px rgba(90, 90, 90, 0.84);
-      transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      animation: breathing 3s ease-in-out infinite;
-    }
-    
-    @keyframes breathing {
-      0% {
-        box-shadow: 0 0 0 5px rgba(179, 172, 172, 0.84);
-      }
-      50% {
-        box-shadow: 0 0 0 5px rgba(172, 168, 168, 0.42);
-      }
-      100% {
-        box-shadow: 0 0 0 5px rgba(90, 90, 90, 0.84);
-      }
-    }
-
-    .cards svg {
-    width: 48px;
-    fill: #333;
-    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .cards:hover {
-    transform: scale(1.03);
-    box-shadow: 0 8px 16px rgba(146, 144, 144, 0.77);
-    }
-
-    .card__content {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    padding: 20px;
-    box-sizing: border-box;
-    background-color: #f2f2f2;
-    transform: rotateX(-90deg);
-    transform-origin: bottom;
-    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .cards:hover .card__content {
-    transform: rotateX(0deg);
-    }
-
-    .card__title {
-    margin: 0;
-    font-size: 24px;
-    text-align: center;
-    color: #444;
-    font-weight: 700;
-    }
-
-    .cards:hover svg {
-    scale: 0;
-    }
-
-    .card__description {
-    margin: 10px 0 0;
-    font-size: 14px;
-    text-align: center;
-    color: #777;
-    line-height: 1.4;
-    }
-
-
-</style>
-    
 <script>
-    function confirmExport() {
+
+
+$(document).ready(function() {
+   // console.log("Documento listo");
+
+    $(document).on('pjax:complete', function() {
+    //    console.log("Evento pjax:complete detectado, recargando stops.js...");
+    $.getScript('http://localhost:8080/js/stops.js?' + new Date().getTime(), function() {
+   //     console.log("stops.js recargado y ejecutado correctamente.");
+        if (typeof initStops === 'function') {
+            initStops();
+           console.log("initStops() ejecutado tras Pjax.");
+            reinicializarPlugins();
+     //       co
+        } else {
+   //         console.log("La función initStops() no está definida.");
+        }
+    }).fail(function() {
+   //     console.log("Error al recargar stops.js");
+    });
+});
+});
+
+
+function reinicializarPlugins() {
+    // Reinicializar flatpickr
+    if (typeof flatpickr !== 'undefined') {
+        flatpickr("#startDate", { locale: "es" });
+        flatpickr("#endDate", { locale: "es" });
+        console.log("Flatpickr reinicializado.");
+    }
+
+    // Recargar los scripts de DataTables de forma secuencial
+    $.getScript('/vendor/datatables/js/jquery.dataTables.min.js', function() {
+        console.log("Script jquery.dataTables.min.js recargado.");
+        $.getScript('/vendor/datatables/js/dataTables.buttons.min.js', function() {
+            console.log("Script dataTables.buttons.min.js recargado.");
+            $.getScript('/vendor/datatables/js/buttons.html5.min.js', function() {
+                console.log("Script buttons.html5.min.js recargado.");
+
+                // Inicializar DataTables en la tabla
+                if ($.fn.DataTable) {
+                    if ($.fn.DataTable.isDataTable('#projects-tbl')) {
+                        $('#projects-tbl').DataTable().destroy();
+                        console.log("DataTables destruido previamente.");
+                    }
+                    $('#projects-tbl').DataTable();
+                    console.log("DataTables inicializado.");
+                } else {
+                    console.log("DataTables no está definido.");
+                }
+
+                // Recargar los CSS: eliminar y agregar nuevamente
+                $('link[href="/vendor/datatables/css/jquery.dataTables.min.css"]').remove();
+                $('link[href="/vendor/datatables/css/buttons.dataTables.min.css"]').remove();
+                console.log("Archivos CSS de DataTables eliminados.");
+
+                // Insertar nuevamente el CSS sin parámetros adicionales
+                $('<link>', {
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: '/vendor/datatables/css/jquery.dataTables.min.css'
+                }).appendTo('head').on('load', function() {
+                    console.log("CSS jquery.dataTables.min.css recargado.");
+                });
+
+                $('<link>', {
+                    rel: 'stylesheet',
+                    type: 'text/css',
+                    href: '/vendor/datatables/css/buttons.dataTables.min.css'
+                }).appendTo('head').on('load', function() {
+                    console.log("CSS buttons.dataTables.min.css recargado.");
+                });
+            });
+        });
+    });
+}
+
+
+
+</script>
+
+<script>
+        function confirmExport() {
     Swal.fire({
         title: '¿Incluir gráfica?',
         text: "¿Deseas incluir la gráfica en el reporte?",
@@ -461,45 +411,17 @@ margin-left:45%;
     }).then((result) => {
         if (result.isConfirmed) {
             // Redirigir con includeChart=true
+            console.log('El usuario eligió incluir la gráfica.');
+
             window.location.href = '<?= Url::to(['gpsreport/download-report-stops', 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate'), 'includeChart' => true]) ?>';
         } else if (result.dismiss === Swal.DismissReason.cancel) {
             // Redirigir con includeChart=false
+            console.log('El usuario eligió no incluir la gráfica.');
+
             window.location.href = '<?= Url::to(['gpsreport/download-report-stops', 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate'), 'includeChart' => false]) ?>';
         }
         // No hacer nada si se cierra el diálogo con la "X" o fuera del modal
     });
     return false; // Prevenir la acción por defecto del enlace
 }
-$('#showinfo').on('click', function () {
-        setTimeout(function () {
-            Highcharts.chart('stops-chart', {
-                chart: {
-                    type: 'line'
-                },
-                title: {
-                    text: 'Número de Paradas por Día'
-                },
-                xAxis: {
-                    categories: <?= json_encode(array_keys($stopsPerDay)) ?>
-                },
-                yAxis: {
-                    title: {
-                        text: 'Número de Paradas'
-                    }
-                },
-                series: [{
-                    name: 'Paradas',
-                    data: <?= json_encode(array_values($stopsPerDay)) ?>
-                }]
-            });
-        }, 2000); // Esperar 1 segundo para asegurar que el contenido se haya cargado
-    });
-
-
-    $(document).on('pjax:end', function() {
-    flatpickr('#startDate', { enableTime: false, dateFormat: 'Y-m-d', locale: 'es' });
-    flatpickr('#endDate', { enableTime: false, dateFormat: 'Y-m-d', locale: 'es' });
-});
-
-
 </script>
