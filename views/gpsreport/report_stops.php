@@ -17,6 +17,8 @@ $this->registerJsFile('@web/js/stops.js', ['depends' => [\yii\web\JqueryAsset::c
 <script src="https://code.highcharts.com/modules/export-data.js"></script>
 <script src="https://code.highcharts.com/modules/accessibility.js"></script>
 <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+<script src="/vendor/datatables/js/jquery.dataTables.min.js"></script>
+<script src="/js/plugins-init/datatables.init.js"></script>
 
 <div class="gps-report-form" style="margin-top: -60px;">
     <?php Pjax::begin(['id' => 'gps-report-pjax', 'timeout' => 5000]); ?>
@@ -143,18 +145,15 @@ $this->registerJsFile('@web/js/stops.js', ['depends' => [\yii\web\JqueryAsset::c
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <td colspan="4" class="text-center"><strong>No hay paradas registradas.</strong></td>
-
+                            <p>No hay datos disponibles.</p>
                             <?php endif; ?>
                     </tbody>
                 </table>
             </div>
         </div>
-        <?php Pjax::end(); ?>
 
     </div>
 
-    <?php if (!empty($stops)): ?>
 
     
    <!-- Switch para mostrar/ocultar tarjetas --> 
@@ -168,7 +167,7 @@ $this->registerJsFile('@web/js/stops.js', ['depends' => [\yii\web\JqueryAsset::c
     ></label>
     </div>
     <br>
-<!-- Contenedor de tarjetas con ID -->
+ <!-- Contenedor de tarjetas con ID -->
 <div id="cards-container">
     <div class="row">
         <div class="col-lg-4 col-md-6 col-12">
@@ -227,7 +226,6 @@ $this->registerJsFile('@web/js/stops.js', ['depends' => [\yii\web\JqueryAsset::c
                         ?>
                     </p>
                     <div id="icon-container">
-                    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
                     <dotlottie-player src="https://lottie.host/ed2373fa-ca39-42e0-8da8-dbdabc4769b4/AuM0umjYJQ.lottie" background="transparent" speed="2" style="width: 100px; height: 76px" loop autoplay></dotlottie-player>
                      </div>
                 </div>
@@ -269,10 +267,7 @@ document.getElementById('label-check').addEventListener('change', function() {
     }
 });
 
-
 </script>
-<?php endif; ?>
-
 <script>
 // Inicialización del gráfico y ocultación de la animación al cargar
 $('#showinfo').on('click', function () {
@@ -309,15 +304,12 @@ $('#showinfo').on('click', function () {
       });
     }, 500);
   });
-  
-
 </script>
-    <script src="/vendor/datatables/js/jquery.dataTables.min.js"></script>
-    <script src="/js/plugins-init/datatables.init.js"></script>
+<?php Pjax::end(); ?>
 
+</div>
+    
 <script>
-
-
 $(document).ready(function() {
    // console.log("Documento listo");
 
@@ -327,9 +319,7 @@ $(document).ready(function() {
    //     console.log("stops.js recargado y ejecutado correctamente.");
         if (typeof initStops === 'function') {
             initStops();
-           console.log("initStops() ejecutado tras Pjax.");
-            reinicializarPlugins();
-     //       co
+          // console.log("initStops() ejecutado tras Pjax.");
         } else {
    //         console.log("La función initStops() no está definida.");
         }
@@ -340,88 +330,70 @@ $(document).ready(function() {
 });
 
 
-function reinicializarPlugins() {
-    // Reinicializar flatpickr
-    if (typeof flatpickr !== 'undefined') {
-        flatpickr("#startDate", { locale: "es" });
-        flatpickr("#endDate", { locale: "es" });
-        console.log("Flatpickr reinicializado.");
-    }
-
-    // Recargar los scripts de DataTables de forma secuencial
-    $.getScript('/vendor/datatables/js/jquery.dataTables.min.js', function() {
-        console.log("Script jquery.dataTables.min.js recargado.");
-        $.getScript('/vendor/datatables/js/dataTables.buttons.min.js', function() {
-            console.log("Script dataTables.buttons.min.js recargado.");
-            $.getScript('/vendor/datatables/js/buttons.html5.min.js', function() {
-                console.log("Script buttons.html5.min.js recargado.");
-
-                // Inicializar DataTables en la tabla
-                if ($.fn.DataTable) {
-                    if ($.fn.DataTable.isDataTable('#projects-tbl')) {
-                        $('#projects-tbl').DataTable().destroy();
-                        console.log("DataTables destruido previamente.");
-                    }
-                    $('#projects-tbl').DataTable();
-                    console.log("DataTables inicializado.");
-                } else {
-                    console.log("DataTables no está definido.");
-                }
-
-                // Recargar los CSS: eliminar y agregar nuevamente
-                $('link[href="/vendor/datatables/css/jquery.dataTables.min.css"]').remove();
-                $('link[href="/vendor/datatables/css/buttons.dataTables.min.css"]').remove();
-                console.log("Archivos CSS de DataTables eliminados.");
-
-                // Insertar nuevamente el CSS sin parámetros adicionales
-                $('<link>', {
-                    rel: 'stylesheet',
-                    type: 'text/css',
-                    href: '/vendor/datatables/css/jquery.dataTables.min.css'
-                }).appendTo('head').on('load', function() {
-                    console.log("CSS jquery.dataTables.min.css recargado.");
-                });
-
-                $('<link>', {
-                    rel: 'stylesheet',
-                    type: 'text/css',
-                    href: '/vendor/datatables/css/buttons.dataTables.min.css'
-                }).appendTo('head').on('load', function() {
-                    console.log("CSS buttons.dataTables.min.css recargado.");
-                });
-            });
-        });
-    });
-}
-
-
-
 </script>
+
+
+
 
 <script>
-        function confirmExport() {
-    Swal.fire({
-        title: '¿Incluir gráfica?',
-        text: "¿Deseas incluir la gráfica en el reporte?",
-        icon: 'question',
-        showCancelButton: true,
-        showCloseButton: true, // Mostrar botón de cierre
-        confirmButtonText: 'Sí, incluir',
-        cancelButtonText: 'No, solo datos'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Redirigir con includeChart=true
-            console.log('El usuario eligió incluir la gráfica.');
+$(document).ready(function () {
+    let card = $(".card");
+    let toggleContainer = $("#toggle-container");
 
-            window.location.href = '<?= Url::to(['gpsreport/download-report-stops', 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate'), 'includeChart' => true]) ?>';
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
-            // Redirigir con includeChart=false
-            console.log('El usuario eligió no incluir la gráfica.');
+    // Ocultar la card y el toggle al inicio
+    card.hide();
+    toggleContainer.hide();
+    console.log("Card y toggle ocultos al inicio");
 
-            window.location.href = '<?= Url::to(['gpsreport/download-report-stops', 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate'), 'includeChart' => false]) ?>';
-        }
-        // No hacer nada si se cierra el diálogo con la "X" o fuera del modal
+    // Manejar el envío del formulario sin recargar la página
+    $('#gps-report-form').on('submit', function (event) {
+        event.preventDefault(); // Evita la recarga
+        console.log("Formulario enviado, esperando respuesta...");
+        $.pjax.submit(event, '#gps-report-pjax', {timeout: 5000});
     });
-    return false; // Prevenir la acción por defecto del enlace
-}
+
+    // Detectar la actualización completa de PJAX
+    $(document).off('pjax:complete').on('pjax:complete', function () {
+        console.log("pjax:complete event detected");
+
+        // Esperar un momento para asegurarse de que el DOM se haya actualizado
+        setTimeout(function () {
+            console.log("Timeout completado, verificando filas en la tabla...");
+            let newTableBody = $("#projects-tbl tbody");
+            let numRows = newTableBody.find("tr").length;
+
+            console.log(`Filas encontradas en la tabla: ${numRows}`);
+
+            if (numRows > 0) {
+                console.log("Datos cargados, mostrando la card y el toggle...");
+                card.fadeIn(500, function() {
+                    console.log("Card mostrada");
+                });
+                toggleContainer.fadeIn(500, function() {
+                    console.log("ToggleContainer mostrado");
+                });
+            } else {
+                console.log("No se encontraron datos en la tabla.");
+                card.hide();
+                toggleContainer.hide();
+            }
+        }, 100); // Ajusta el tiempo de espera según sea necesario
+    });
+});
 </script>
+<script>$(document).on('pjax:end', function() {
+    console.log('Consulta PJAX completada');
+
+    var filaCount = $('#tabla-reportes tbody tr').length;
+    console.log('Número de filas en la tabla: ' + filaCount);
+
+    if (filaCount > 1) {
+        console.log('Más de una fila, mostrando el toggle');
+        $('#toggle-button').show();  // Asegúrate de que el toggle esté visible
+    } else {
+        console.log('Una o menos filas, ocultando el toggle');
+        $('#toggle-button').hide();  // Ocultar el toggle si no hay más de una fila
+    }
+});
+</script>
+

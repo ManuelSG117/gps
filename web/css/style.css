@@ -30486,58 +30486,6 @@ justify-content: center;
   }
   
   
-  .label-check {
-    display: none;
-  }
-  
-  .hamburger-label {
-    width: 24.5px;
-    height: 20.3px;
-    display: block;
-    cursor: pointer;
-    transition: 0.3s;
-  }
-  
-  .hamburger-label div {
-    width: 24.5px;
-    height: 2.1px;
-    background-color: rgba(179, 172, 172, 0.84);
-    position: absolute;
-  }
-  
-  .line1 {
-    transition: all 0.3s;
-  }
-  
-  .line2 {
-    margin: 6.3px 0 0 0;
-    transition: 0.3s;
-  }
-  
-  .line3 {
-    margin: 13px 0 0 0;
-    transition: 0.3s;
-  }
-  
-  #label-check:checked + .hamburger-label .line1 {
-    transform: rotate(35deg) scaleX(0.55) translate(13.65px, -1.575px);
-    border-radius: 17.5px 17.5px 17.5px 0;
-  }
-  
-  #label-check:checked + .hamburger-label .line3 {
-    transform: rotate(-35deg) scaleX(0.55) translate(13.65px, 1.575px);
-    border-radius: 0 17.5px 17.5px 17.5px;
-  }
-  
-  #label-check:checked + .hamburger-label .line2 {
-    border-top-right-radius: 17.5px;
-    border-bottom-right-radius: 17.5px;
-    width: 15.75px;
-  }
-  
-  #label-check:checked + .hamburger-label {
-    transform: rotate(90deg);
-  }
   .table-responsive {
     height: calc(100vh - 400px) !important;  /* Ajusta el 200px según el espacio superior e inferior que necesites */
     overflow-y: auto !important;
@@ -30643,3 +30591,56 @@ justify-content: center;
     color: #777;
     line-height: 1.4;
     }  
+
+    .label-check {
+      display: none;
+  }
+  
+  .hamburger-label {
+      width: 24.5px;
+      height: 20.3px;
+      display: block;
+      cursor: pointer;
+      transition: 0.3s;
+  }
+  
+  .hamburger-label div {
+      width: 24.5px;
+      height: 2.1px;
+      background-color: rgba(179, 172, 172, 0.84);
+      position: absolute;
+  }
+  
+  .line1 {
+      transition: all 0.3s;
+  }
+  
+  .line2 {
+      margin: 6.3px 0 0 0;
+      transition: 0.3s;
+  }
+  
+  .line3 {
+      margin: 13px 0 0 0;
+      transition: 0.3s;
+  }
+  
+  #label-check:checked + .hamburger-label .line1 {
+      transform: rotate(35deg) scaleX(0.55) translate(13.65px, -1.575px);
+      border-radius: 17.5px 17.5px 17.5px 0;
+  }
+  
+  #label-check:checked + .hamburger-label .line3 {
+      transform: rotate(-35deg) scaleX(0.55) translate(13.65px, 1.575px);
+      border-radius: 0 17.5px 17.5px 17.5px;
+  }
+  
+  #label-check:checked + .hamburger-label .line2 {
+      border-top-right-radius: 17.5px;
+      border-bottom-right-radius: 17.5px;
+      width: 15.75px;
+  }
+  
+  #label-check:checked + .hamburger-label {
+      transform: rotate(90deg);
+  }

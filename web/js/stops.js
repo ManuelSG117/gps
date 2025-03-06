@@ -20,6 +20,7 @@ function initStops() {
     const showButtonColumn = deviceColumn.nextElementSibling;
     const exportButtonColumn = showButtonColumn.nextElementSibling;
 
+
     // Función para ajustar la visibilidad y el orden de los campos de fecha
     function adjustDateFields() {
       //  console.log("adjustDateFields called");
@@ -57,6 +58,40 @@ function initStops() {
 
 // Llamar a initStops() en la carga inicial
 document.addEventListener('DOMContentLoaded', function () {
-  //  console.log("DOMContentLoaded event detected");
     initStops();
 });
+
+function confirmExport() {
+    Swal.fire({
+        title: '¿Incluir gráfica?',
+        text: "¿Deseas incluir la gráfica en el reporte?",
+        icon: 'question',
+        showCancelButton: true,
+        showCloseButton: true, // Mostrar botón de cierre
+        confirmButtonText: 'Sí, incluir',
+        cancelButtonText: 'No, solo datos'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirigir con includeChart=true
+            console.log('El usuario eligió incluir la gráfica.');
+            window.location.href = '/gpsreport/download-report-stops' + 
+                '?filter=' + encodeURIComponent($('#filter').val()) + 
+                '&gps=' + encodeURIComponent($('#gps').val()) + 
+                '&startDate=' + encodeURIComponent($('#startDate').val()) + 
+                '&endDate=' + encodeURIComponent($('#endDate').val()) + 
+                '&includeChart=true';
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            // Redirigir con includeChart=false
+            console.log('El usuario eligió no incluir la gráfica.');
+            window.location.href = '/gpsreport/download-report-stops' + 
+                '?filter=' + encodeURIComponent($('#filter').val()) + 
+                '&gps=' + encodeURIComponent($('#gps').val()) + 
+                '&startDate=' + encodeURIComponent($('#startDate').val()) + 
+                '&endDate=' + encodeURIComponent($('#endDate').val()) + 
+                '&includeChart=false';
+        }
+    });
+    return false; 
+}
+
+

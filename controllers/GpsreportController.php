@@ -370,7 +370,7 @@ class GpsreportController extends Controller
         $gps = Yii::$app->request->get('gps', null);
         $startDate = Yii::$app->request->get('startDate', null);
         $endDate = Yii::$app->request->get('endDate', null);
-        $includeChart = Yii::$app->request->get('includeChart', true);
+        $includeChart = Yii::$app->request->get('includeChart', 'true') === 'true';
     
         $query = GpsLocations::find()->orderBy(['lastUpdate' => SORT_ASC]);
         $period = '';
