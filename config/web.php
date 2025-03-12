@@ -16,9 +16,16 @@ $config = [
         'gridview' => [
             'class' => '\kartik\grid\Module',
         ],
+        'admin' => [
+            'class' => 'mdm\admin\Module',
+            'layout' => 'left-menu', 
+        ]
     ],
     'components' => [
-        
+
+        'authManager' => [
+            'class' => 'yii\rbac\DbManager',
+        ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'dlcdIjlWxvy1qBxjvD0PFAf6Ynp1TOxB',
@@ -29,7 +36,7 @@ $config = [
             'class' => 'yii\caching\FileCache',
         ],
         'user' => [
-            'identityClass' => 'app\models\User',
+            'identityClass' => 'app\models\Usuario',
             'enableAutoLogin' => true,
         ],
         'errorHandler' => [
@@ -58,6 +65,17 @@ $config = [
             'rules' => [
             ],
         ],
+        'as access' => [
+            'class' => 'mdm\admin\components\AccessControl',
+            'allowActions' => [
+                'site/login',
+                'site/logout',
+                'admin/*',
+                'gii/*',
+                'usuario/*'
+            ]
+        ],
+    
         
     ],
     'params' => $params,

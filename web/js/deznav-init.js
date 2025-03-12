@@ -27,7 +27,7 @@ function getUrlParams(dParam)
 	var direction =  getUrlParams('dir');
 	dzSettingsOptions = {
 		typography: "poppins",
-		version: "dark",
+		version: "light",
 		layout: "horizontal",
 		primary: "color_1",
 		headerBg: "color_1",

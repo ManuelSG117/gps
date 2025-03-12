@@ -13,7 +13,9 @@ use yii\helpers\Url;
 <link href="/vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
 <link href="/vendor/datatables/css/buttons.dataTables.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA73efm01Xa11C5aXzXBGFbWUjMtkad5HE"></script>
+<script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
 
 <div class="gps-report-form">
     <?php $form = ActiveForm::begin(['method' => 'get', 'action' => ['gpsreport/index']]); ?>
@@ -139,6 +141,7 @@ use yii\helpers\Url;
 
 
 
+<!-- <div id="map"></div> -->
 
 <script>
  function confirmExport() {

@@ -302,10 +302,10 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 	<script>
 		jQuery(document).ready(function(){
 			setTimeout(function(){
-				dzSettingsOptions.version = 'dark';
+				dzSettingsOptions.version = 'light';
 				new dzSettings(dzSettingsOptions);
 
-				setCookie('version','dark');
+				setCookie('version','light');
 			},)
 		});
 	</script>

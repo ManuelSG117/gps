@@ -329,12 +329,7 @@ $(document).ready(function() {
 });
 });
 
-
 </script>
-
-
-
-
 <script>
 $(document).ready(function () {
     let card = $(".card");
@@ -343,12 +338,12 @@ $(document).ready(function () {
     // Ocultar la card y el toggle al inicio
     card.hide();
     toggleContainer.hide();
-    console.log("Card y toggle ocultos al inicio");
+//    console.log("Card y toggle ocultos al inicio");
 
     // Manejar el envío del formulario sin recargar la página
     $('#gps-report-form').on('submit', function (event) {
         event.preventDefault(); // Evita la recarga
-        console.log("Formulario enviado, esperando respuesta...");
+    //    console.log("Formulario enviado, esperando respuesta...");
         $.pjax.submit(event, '#gps-report-pjax', {timeout: 5000});
     });
 
@@ -368,6 +363,7 @@ $(document).ready(function () {
                 console.log("Datos cargados, mostrando la card y el toggle...");
                 card.fadeIn(500, function() {
                     console.log("Card mostrada");
+                    
                 });
                 toggleContainer.fadeIn(500, function() {
                     console.log("ToggleContainer mostrado");
@@ -380,20 +376,25 @@ $(document).ready(function () {
         }, 100); // Ajusta el tiempo de espera según sea necesario
     });
 });
+
 </script>
 <script>$(document).on('pjax:end', function() {
-    console.log('Consulta PJAX completada');
+ //   console.log('Consulta PJAX completada');
 
     var filaCount = $('#tabla-reportes tbody tr').length;
-    console.log('Número de filas en la tabla: ' + filaCount);
+    //console.log('Número de filas en la tabla: ' + filaCount);
 
     if (filaCount > 1) {
-        console.log('Más de una fila, mostrando el toggle');
+   //     console.log('Más de una fila, mostrando el toggle');
         $('#toggle-button').show();  // Asegúrate de que el toggle esté visible
+        
     } else {
-        console.log('Una o menos filas, ocultando el toggle');
+ //       console.log('Una o menos filas, ocultando el toggle');
         $('#toggle-button').hide();  // Ocultar el toggle si no hay más de una fila
     }
+
+    
 });
+
 </script>
 
