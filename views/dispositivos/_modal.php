@@ -272,7 +272,7 @@
     
     <?php ActiveForm::end(); ?>
     <?php Pjax::end(); ?>
-    
+            
     <script>
         let currentStep = 1;
         const totalSteps = 5;
@@ -370,3 +370,5 @@
             margin-top: -10px !important;
         }
     </style>
+
+    

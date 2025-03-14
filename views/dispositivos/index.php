@@ -35,7 +35,7 @@ $this->registerJsFile('@web/js/dispositivos.js',['depends' => [\yii\web\JqueryAs
         ]) ?>
     </p>
 
-    <?php Pjax::begin(['id' => 'conductores-grid', 'timeout' => 10000]); ?>
+    <?php Pjax::begin(['id' => 'dispositivos-grid', 'timeout' => 10000]); ?>
     <?= GridView::widget([
     'dataProvider' => $dataProvider,
     'filterModel' => $searchModel,

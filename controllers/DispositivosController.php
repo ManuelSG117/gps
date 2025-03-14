@@ -83,77 +83,71 @@ class DispositivosController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
-    private function uploadImages($model)
+    public function actionUploadVehicle()
     {
-        // Definir rutas base
-        $baseDir = Yii::getAlias('@webroot/uploads/' . $model->nombre);
-        $vehicleDir = $baseDir . '/vehiculo';
-        $policyDir = $baseDir . '/poliza';
-    
-        // Crear directorios de forma segura
-        try {
-            FileHelper::createDirectory($baseDir, 0755);
-            FileHelper::createDirectory($vehicleDir, 0755);
-            FileHelper::createDirectory($policyDir, 0755);
-        } catch (\Exception $e) {
-            Yii::error("Error al crear directorios: " . $e->getMessage(), __METHOD__);
-            throw $e;
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $files = \yii\web\UploadedFile::getInstancesByName('vehicle_images');
+        $uploadPath = \Yii::getAlias('@webroot/uploads/vehiculo_detalles/');
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
         }
-    
-        // Guardar imágenes de vehículo y póliza utilizando método auxiliar
-        $vehicleImages = UploadedFile::getInstancesByName('vehicle_images');
-        if (!empty($vehicleImages)) {
-            Yii::info("Se encontraron " . count($vehicleImages) . " imágenes de vehículo.", __METHOD__);
-            $this->saveFiles($vehicleImages, $vehicleDir, 'imagen de vehículo');
-        } else {
-            Yii::info("No se encontraron imágenes de vehículo.", __METHOD__);
-        }
-    
-        $policyImages = UploadedFile::getInstancesByName('policy_images');
-        if (!empty($policyImages)) {
-            Yii::info("Se encontraron " . count($policyImages) . " imágenes de póliza.", __METHOD__);
-            $this->saveFiles($policyImages, $policyDir, 'imagen de póliza');
-        } else {
-            Yii::info("No se encontraron imágenes de póliza.", __METHOD__);
-        }
-    }
-    
-    private function saveFiles($files, $directory, $type)
-    {
-        foreach ($files as $file) {
-            $filePath = $directory . '/' . $file->baseName . '.' . $file->extension;
-            if ($file->saveAs($filePath)) {
-                Yii::info("Archivo $type guardado en: $filePath", __METHOD__);
-            } else {
-                Yii::error("Error al guardar $type: " . $file->error, __METHOD__);
-                throw new \Exception("Error al guardar $type.");
-            }
-        }
-    }
-    
-    public function actionCreate()
-    {
-        $model = new Dispositivos();
-    
-        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
-            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-    
-            try {
-                if ($model->save()) {
-                    // Call the uploadImages function
-                    $this->uploadImages($model);
-    
-                    return ['success' => true, 'message' => 'Dispositivo creado exitosamente.'];
+        $out = [];
+        if ($files) {
+            foreach ($files as $file) {
+                $fileName = uniqid() . '.' . $file->extension;
+                if ($file->saveAs($uploadPath . $fileName)) {
+                    $out[] = ['success' => true, 'fileName' => $fileName];
                 } else {
-                    return ['success' => false, 'message' => 'Error al guardar el dispositivo.', 'errors' => $model->errors];
+                    $out[] = ['success' => false, 'error' => "Error al guardar: {$file->name}"];
                 }
-            } catch (\Exception $e) {
-                return ['success' => false, 'message' => 'Ocurrió un error: ' . $e->getMessage()];
             }
         }
-    
-        return $this->renderAjax('_modal', ['model' => $model]);
+        return $out;
     }
+    public function actionUploadPolicy()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $files = \yii\web\UploadedFile::getInstancesByName('policy_images');
+        $uploadPath = \Yii::getAlias('@webroot/uploads/poliza_seguro/');
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
+        $out = [];
+        if ($files) {
+            foreach ($files as $file) {
+                $fileName = uniqid() . '.' . $file->extension;
+                if ($file->saveAs($uploadPath . $fileName)) {
+                    $out[] = ['success' => true, 'fileName' => $fileName];
+                } else {
+                    $out[] = ['success' => false, 'error' => "Error al guardar: {$file->name}"];
+                }
+            }
+        }
+        return $out;
+    }
+        
+public function actionCreate()
+{
+    $model = new Dispositivos();
+
+    if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        try {
+            if ($model->save()) {
+                return ['success' => true, 'message' => 'Dispositivo creado exitosamente.'];
+            } else {
+                return ['success' => false, 'message' => 'Error al guardar el dispositivo.', 'errors' => $model->errors];
+            }
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Ocurrió un error: ' . $e->getMessage()];
+        }
+        
+    }
+
+    return $this->renderAjax('_modal', ['model' => $model]);
+}   
+
     /**
      * Updates an existing Dispositivos model.
      * If update is successful, the browser will be redirected to the 'view' page.
