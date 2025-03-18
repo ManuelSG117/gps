@@ -58,11 +58,7 @@ $this->registerJsFile('@web/js/dispositivos.js',['depends' => [\yii\web\JqueryAs
             'hAlign' => 'center',
             'contentOptions' => ['class' => 'imei'], 
         ],
-        [
-            'attribute' => 'placa',
-            'hAlign' => 'center',
-            'contentOptions' => ['class' => 'placa'], 
-        ],
+
        
         [
             'class' => ActionColumn::className(),

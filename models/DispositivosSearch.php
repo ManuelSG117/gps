@@ -17,8 +17,8 @@ class DispositivosSearch extends Dispositivos
     public function rules()
     {
         return [
-            [['id', 'sensor_temp'], 'integer'],
-            [['nombre', 'imei', 'num_tel', 'marca', 'modelo', 'cat_dispositivo', 'modelo_auto', 'marca_auto', 'placa', 'no_serie', 'color_auto', 'ano_auto', 'velocidad_max', 'tipo_motor', 'km_litro', 'aseguradora', 'no_poliza', 'fecha_vencimiento', 'fecha_compra', 'direccion', 'departamento', 'conductor_id'], 'safe'],
+            [['id'], 'integer'],
+            [['nombre', 'imei', 'num_tel', 'marca', 'modelo', 'cat_dispositivo'], 'safe'],
         ];
     }
 
@@ -60,9 +60,7 @@ class DispositivosSearch extends Dispositivos
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'sensor_temp' => $this->sensor_temp,
-            'fecha_vencimiento' => $this->fecha_vencimiento,
-            'fecha_compra' => $this->fecha_compra,
+           
         ]);
 
         $query->andFilterWhere(['like', 'nombre', $this->nombre])
@@ -70,22 +68,7 @@ class DispositivosSearch extends Dispositivos
             ->andFilterWhere(['like', 'num_tel', $this->num_tel])
             ->andFilterWhere(['like', 'marca', $this->marca])
             ->andFilterWhere(['like', 'modelo', $this->modelo])
-            ->andFilterWhere(['like', 'cat_dispositivo', $this->cat_dispositivo])
-            ->andFilterWhere(['like', 'modelo_auto', $this->modelo_auto])
-            ->andFilterWhere(['like', 'marca_auto', $this->marca_auto])
-            ->andFilterWhere(['like', 'placa', $this->placa])
-            ->andFilterWhere(['like', 'no_serie', $this->no_serie])
-            ->andFilterWhere(['like', 'color_auto', $this->color_auto])
-            ->andFilterWhere(['like', 'ano_auto', $this->ano_auto])
-            ->andFilterWhere(['like', 'velocidad_max', $this->velocidad_max])
-            ->andFilterWhere(['like', 'tipo_motor', $this->tipo_motor])
-            ->andFilterWhere(['like', 'km_litro', $this->km_litro])
-            ->andFilterWhere(['like', 'aseguradora', $this->aseguradora])
-            ->andFilterWhere(['like', 'no_poliza', $this->no_poliza])
-            ->andFilterWhere(['like', 'direccion', $this->direccion])
-            ->andFilterWhere(['like', 'departamento', $this->departamento])
-            ->andFilterWhere(['like', 'conductor_id', $this->conductor_id]);
-
+            ->andFilterWhere(['like', 'cat_dispositivo', $this->cat_dispositivo]);
         return $dataProvider;
     }
 }

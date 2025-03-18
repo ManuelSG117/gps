@@ -9,6 +9,8 @@ define('LOCATION_METHOD', '');  // Se puede actualizar según la lógica de nego
 define('EXTRA_INFO', '');
 define('EVENT_TYPE', 'tk103');
 
+date_default_timezone_set('America/Mexico_City');
+
 $ip_address = "0.0.0.0";
 $port = "7331";
 
@@ -42,7 +44,8 @@ $port = "7331";
         $new_client = @stream_socket_accept($server, 0);
         if ($new_client) {
             $client_info = stream_socket_get_name($new_client, true);
-            echo "Nueva conexión: " . $client_info . "\n";
+            $connection_time = date('Y-m-d H:i:s');
+            echo "Nueva conexión: " . $client_info . " en " . $connection_time . "\n";
             $client_sockets[] = $new_client;
         }
         // Remover el socket del servidor del array de lectura
