@@ -6,12 +6,15 @@ use yii\grid\ActionColumn;
 use kartik\grid\GridView;
 use yii\widgets\Pjax;
 use app\models\Dispositivos;
+use app\models\Vehiculos;
 use app\models\DispositivosSearch;
 use kartik\file\FileInput; 
 
 /** @var yii\web\View $this */
 /** @var app\models\DispositivosSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+/** @var app\models\Dispositivos $model */
+/** @var app\models\Vehiculos $vehiculoModel */
 
 $this->title = 'Dispositivos';
 $this->params['breadcrumbs'][] = $this->title;

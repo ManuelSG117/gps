@@ -194,6 +194,7 @@ public function actionCreate()
              Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
              return ['success' => true, 'message' => 'El dispositivo ha sido eliminado exitosamente.'];
          }
+          
      
          $this->findModel($id)->delete();
          return $this->redirect(['index']);

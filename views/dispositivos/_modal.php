@@ -68,86 +68,7 @@
         <div id="step-content-2" class="step-content">
             <h5 class="text-center text-primary">Características del vehículo</h5>
             
-            <?= $form->field($model, 'cat_dispositivo')->textInput(['maxlength' => true]) ?>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <?= $form->field($model, 'modelo_auto')->textInput(['maxlength' => true]) ?>
-                </div>
-                <div class="col-md-6">
-                    <?= $form->field($model, 'marca_auto')->textInput(['maxlength' => true]) ?>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <?= $form->field($model, 'placa')->textInput(['maxlength' => true]) ?>
-                </div>
-                <div class="col-md-6">
-                    <?= $form->field($model, 'no_serie')->textInput(['maxlength' => true]) ?>
-                </div>
-            </div>
-    
-            <div class="row">
-                <div class="col-md-6">
-                    <?= $form->field($model, 'color_auto')->textInput(['maxlength' => true]) ?>
-                </div>
-                <div class="col-md-6">
-                    <?= $form->field($model, 'ano_auto')->textInput([
-                        'maxlength' => 4,
-                        'pattern' => '\d{4}',
-                        'title' => 'El año debe contener 4 dígitos',
-                        'inputmode' => 'numeric',
-                        'type' => 'year',
-                        'placeholder' => 'AAAA',
-                        'oninput' => "this.value = this.value.replace(/[^0-9]/g, '');"
-                    ]) ?>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <?= $form->field($model, 'velocidad_max')->textInput(['maxlength' => true]) ?>
-                </div>
-                <div class="col-md-6">
-                    <?= $form->field($model, 'sensor_temp')->dropDownList([
-                        '1' => 'Sí',
-                        '0' => 'No',
-                    ], ['prompt' => 'Seleccione una opción']) ?>
-                </div>
-            </div>
-    
-            <div class="row">
-                <div class="col-md-6">
-                    <?= $form->field($model, 'tipo_motor')->dropDownList([
-                        'Gasolina' => 'Gasolina',
-                        'Diesel' => 'Diesel',
-                        'Eléctrico' => 'Eléctrico',
-                        'Híbrido' => 'Híbrido',
-                    ], ['prompt' => 'Seleccione el tipo de motor']) ?>
-                </div>
-                <div class="col-md-6">
-                    <?= $form->field($model, 'km_litro')->textInput(['maxlength' => true]) ?>
-                </div>
-            </div>
-    
-            <div class="row">
-                <div class="col-md-6">
-                    <?= $form->field($model, 'estado_vehiculo')->dropDownList([
-                        'Excelente' => 'Excelente',
-                        'Bueno' => 'Bueno',
-                        'Regular' => 'Regular',
-                        'Malo' => 'Malo',
-                    ], ['prompt' => 'Seleccione el estado del vehículo']) ?>
-                </div>
-                <div class="col-md-6">
-                    <?= $form->field($model, 'estado_llantas')->dropDownList([
-                        'Excelente' => 'Excelente',
-                        'Bueno' => 'Bueno',
-                        'Regular' => 'Regular',
-                        'Malo' => 'Malo',
-                    ], ['prompt' => 'Seleccione el estado de las llantas']) ?>
-                </div>
+         
             </div>
     
             <button type="button" class="btn btn-secondary prev-step">Atrás</button>
@@ -157,37 +78,7 @@
         <div id="step-content-3" class="step-content">
             <h5 class="text-center text-primary">Fotografías del vehículo</h5>
             
-            <div class="tooltip-wrapper" data-toggle="tooltip" data-placement="top" title="1. Frontal, 2. Derecha, 3. Izquierda, 4. Trasera, 5. Tarjeta de circulación, 6. Llantas, 7. Km recorridos">
-                <?= FileInput::widget([
-                    'name' => 'vehicle_images[]',
-                    'options' => [
-                        'multiple' => true,
-                        'maxFileCount' => 7, // Maximum number of files
-                    ],
-                    'pluginOptions' => [
-                        'initialPreviewAsData' => true,
-                        'initialCaption' => "Sube hasta 7 fotos",
-                        'overwriteInitial' => false,
-                        'maxFileSize' => 2800,
-                        'showUpload' => false, // Hide the upload button
-                        'fileActionSettings' => [
-                            'showRemove' => true, // Show the remove button for each file
-                            'showUpload' => false, // Hide the upload button for each file
-                        ],
-                        'previewFileType' => 'image',
-                        'allowedFileExtensions' => ['jpg', 'jpeg', 'png'],
-                        'uploadExtraData' => new \yii\web\JsExpression('function() {
-                            var out = {}, key, i = 0;
-                            $(".file-caption-name").each(function() {
-                                key = "foto" + (i + 1);
-                                out[key] = $(this).text();
-                                i++;
-                            });
-                            return out;
-                        }'),
-                        'msgFilesTooMany' => 'El número de archivos seleccionados ({n}) excede el límite permitido de {m}. Por favor, seleccione un máximo de 7 archivos.',
-                    ]
-                ]); ?>
+          
             </div>
             
             <button type="button" class="btn btn-secondary prev-step">Atrás</button>
@@ -197,55 +88,7 @@
         <div id="step-content-4" class="step-content">
             <h5 class="text-center text-primary">Póliza de Seguro</h5>
             
-            <div class="row">
-                <div class="col-md-6">
-                    <?= $form->field($model, 'aseguradora')->textInput(['maxlength' => true]) ?>
-                </div>
-                <div class="col-md-6">
-                    <?= $form->field($model, 'no_poliza')->textInput() ?>
-                </div>
-            </div>
-    
-            <div class="row">
-                <div class="col-md-6">
-                    <?= $form->field($model, 'fecha_compra')->textInput(['id' => 'fecha_compra']) ?>
-                </div>
-                <div class="col-md-6">
-                    <?= $form->field($model, 'fecha_vencimiento')->textInput(['id' => 'fecha_vencimiento']) ?>
-                </div>
-            </div>
-            
-            <br>
-            <?= FileInput::widget([
-                'name' => 'policy_images[]',
-                'options' => [
-                    'multiple' => true,
-                    'maxFileCount' => 2, // Maximum number of files
-                ],
-                'pluginOptions' => [
-                    'initialPreviewAsData' => true,
-                    'initialCaption' => "Sube hasta 2 fotos",
-                    'overwriteInitial' => false,
-                    'maxFileSize' => 2800,
-                    'showUpload' => false, // Hide the upload button
-                    'fileActionSettings' => [
-                        'showRemove' => true, // Show the remove button for each file
-                        'showUpload' => false, // Hide the upload button for each file
-                    ],
-                    'previewFileType' => 'image',
-                    'allowedFileExtensions' => ['jpg', 'jpeg', 'png'],
-                    'uploadExtraData' => new \yii\web\JsExpression('function() {
-                        var out = {}, key, i = 0;
-                        $(".file-caption-name").each(function() {
-                            key = "foto" + (i + 1);
-                            out[key] = $(this).text(); 
-                            i++;
-                        });
-                        return out;
-                    }'),
-                    'msgFilesTooMany' => 'El número de archivos seleccionados ({n}) excede el límite permitido de {m}. Por favor, seleccione un máximo de 2 archivos.',
-                ]
-            ]); ?>
+         
             
             <button type="button" class="btn btn-secondary prev-step ">Atrás</button>
             <button type="button" class="btn btn-primary next-step">Siguiente</button>
@@ -254,16 +97,7 @@
         <div id="step-content-5" class="step-content">
             <h5 class="text-center text-primary">Dirección</h5>
     
-            <div class="row">
-                <div class="col-md-6">
-                    <?= $form->field($model, 'direccion')->textInput(['maxlength' => true]) ?>
-                </div>
-                <div class="col-md-6">
-                    <?= $form->field($model, 'departamento')->textInput() ?>
-                </div>
-            </div>
-    
-            <?= $form->field($model, 'conductor_id')->textInput(['maxlength' => true]) ?>
+          
             
             <button type="button" class="btn btn-secondary prev-step">Atrás</button>
             <?= Html::submitButton('Guardar', ['class' => 'btn btn-primary']) ?>

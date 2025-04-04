@@ -24,16 +24,14 @@ $this->title = 'Gpslocations';
     <button class="floating-button" id="floatingButton" onclick="toggleButtonContainer()">+</button>
     <div class="sidebar" id="sidebar">   <button class="minimize-sidebar" onclick="toggleSidebar()">-</button>
         <h4>GPS</h4>
-        <div class="search-container">
-            <input type="text" id="gpsSearch" class="minimal-input gps-search" placeholder="Buscar" onkeyup="filterGpsList()">
-            <span class="clear-search" onclick="clearSearch()">×</span>
-        </div>
+
+        <input type="text" id="gpsSearch"  class="search-box" placeholder="Buscar ..." onkeyup="filterGpsList()">
+
         <div class="gps-titles">
             <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)">
             <span>Nombre</span>
             <span>Status</span>
             <span>Velocidad</span>
-            <span>Opciones</span>
         </div>
         <div id="gpsList" class="gps-list"></div>
     </div>

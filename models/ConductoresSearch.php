@@ -18,7 +18,7 @@ class ConductoresSearch extends Conductores
     {
         return [
             [['id', 'num_ext', 'cp', 'telefono'], 'integer'],
-            [['nombres', 'apellido_p', 'apellido_m', 'no_licencia', 'estado', 'municipio', 'colonia', 'calle', 'num_int', 'email', 'tipo_sangre', 'fecha_nacimiento', 'nombres_contacto', 'apellido_p_contacto', 'apellido_m_contacto', 'parentesco', 'telefono_contacto'], 'safe'],
+            [['nombre', 'apellido_p', 'apellido_m', 'no_licencia', 'estado', 'municipio', 'colonia', 'calle', 'num_int', 'email', 'tipo_sangre', 'fecha_nacimiento', 'nombre_contacto', 'apellido_p_contacto', 'apellido_m_contacto', 'parentesco', 'telefono_contacto'], 'safe'],
         ];
     }
 
@@ -65,7 +65,7 @@ class ConductoresSearch extends Conductores
             'fecha_nacimiento' => $this->fecha_nacimiento,
         ]);
 
-        $query->andFilterWhere(['like', 'nombres', $this->nombres])
+        $query->andFilterWhere(['like', 'nombre', $this->nombre])
             ->andFilterWhere(['like', 'apellido_p', $this->apellido_p])
             ->andFilterWhere(['like', 'apellido_m', $this->apellido_m])
             ->andFilterWhere(['like', 'no_licencia', $this->no_licencia])
@@ -76,7 +76,7 @@ class ConductoresSearch extends Conductores
             ->andFilterWhere(['like', 'num_int', $this->num_int])
             ->andFilterWhere(['like', 'email', $this->email])
             ->andFilterWhere(['like', 'tipo_sangre', $this->tipo_sangre])
-            ->andFilterWhere(['like', 'nombres_contacto', $this->nombres_contacto])
+            ->andFilterWhere(['like', 'nombre_contacto', $this->nombre_contacto])
             ->andFilterWhere(['like', 'apellido_p_contacto', $this->apellido_p_contacto])
             ->andFilterWhere(['like', 'apellido_m_contacto', $this->apellido_m_contacto])
             ->andFilterWhere(['like', 'parentesco', $this->parentesco])

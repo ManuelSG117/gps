@@ -61,7 +61,7 @@ while (true) {
                     echo "sent LOAD to client\n";
                 }
                 break;
-            case 19: // imei:359710049095095,tracker,151006012336,,F,172337.000,A,5105.9792,N,11404.9599,W,0.01,322.56,,0,0,,,  -> this is our gps data
+            case 19: // imei:359710049095095,tracker,151006012336,,F,172337.000,A,5105.9792,N,11404.9599,W,0.01,322.56,,0,0,,, 
                 $imei = substr($tk103_data[0], 5);
                 $alarm = $tk103_data[1];
                 $gps_time = nmea_to_mysql_time($tk103_data[2]);
@@ -111,6 +111,7 @@ function haversine_distance($lat1, $lon1, $lat2, $lon2)
     return $distance;
 }
 
+
 function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_kmh, $bearing, $userName = null, $sessionID = null, $locationMethod = null, $accuracy = null, $extraInfo = null, $eventType = null) {
     // Verificar si la latitud comienza con "0.0"
     if (strpos($latitude, '0.0') === 0) {
@@ -120,7 +121,7 @@ function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, 
 
     // Obtener la última ubicación insertada
     $stmt = $pdo->prepare('SELECT latitude, longitude FROM gpslocations ORDER BY GPSLocationID DESC LIMIT 1');
-     $stmt->execute();
+    $stmt->execute();
     $last_location = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($last_location) {

@@ -20,7 +20,7 @@
 
     
 function toggleSelectAll(selectAllCheckbox) {
-    const checkboxes = document.querySelectorAll('.gps-item input[type="checkbox"]');
+    const checkboxes = document.querySelectorAll('.item-item input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
         checkbox.checked = selectAllCheckbox.checked;
         toggleMarker(checkbox.id);
@@ -230,36 +230,11 @@ function loadGpsOptions() {
                         label.htmlFor = gps.phoneNumber;
                         label.textContent = `${gps.userName}  ${speed} km/h`;
 
-                        const button = document.createElement('button');
-                        button.textContent = '...';
-                        button.className = 'minimal-button';
-                        button.onclick = (event) => {
-                            event.stopPropagation();
-                            toggleOptionsMenu(event.target);
-                        };
-
-                        const optionsMenu = document.createElement('div');
-                        optionsMenu.className = 'options-menu';
-                        optionsMenu.style.display = 'none';
-
-                        const viewDetails = document.createElement('div');
-                        viewDetails.textContent = 'Ver detalles';
-                        viewDetails.onclick = () => viewDetailsHandler(gps.phoneNumber);
-
-                        const maintenance = document.createElement('div');
-                        maintenance.textContent = 'Mantenimientos';
-                        maintenance.onclick = () => maintenanceHandler(gps.phoneNumber);
-
-                        optionsMenu.appendChild(viewDetails);
-                        optionsMenu.appendChild(maintenance);
-
+                    
                         const div = document.createElement('div');
-                        div.className = 'gps-item';
+                        div.className = 'item-item';
                         div.appendChild(checkbox);
                         div.appendChild(label);
-                        div.appendChild(button);
-                        div.appendChild(optionsMenu);
-!
                         gpsList.appendChild(div);
 
                         // Crear y agregar opciones al select
@@ -275,24 +250,11 @@ function loadGpsOptions() {
 }
 
 
-function toggleOptionsMenu(button) {
-    const optionsMenu = button.nextElementSibling;
-    optionsMenu.style.display = optionsMenu.style.display === 'none' ? 'block' : 'none';
-}
 
-function viewDetailsHandler(phoneNumber) {
-    // Lógica para ver detalles
-  // console.log('Ver detalles de:', phoneNumber);
-}
-
-function maintenanceHandler(phoneNumber) {
-    // Lógica para mantenimientos
-  //  console.log('Mantenimientos de:', phoneNumber);
-}
 
 function filterGpsList() {
     const searchInput = document.getElementById('gpsSearch').value.toLowerCase();
-    const gpsItems = document.querySelectorAll('.gps-item');
+    const gpsItems = document.querySelectorAll('.item-item');
 
     gpsItems.forEach(item => {
         const label = item.querySelector('label').textContent.toLowerCase();
@@ -540,7 +502,6 @@ function toggleMarker(phoneNumber) {
             }).addTo(map).bindPopup(`
                 <b>Último punto de la ruta</b><br>
                 <b>Fecha:</b> ${data.locations[data.locations.length - 1].lastUpdate}<br>
-                <b>Velocidad:</b> ${data.locations[data.locations.length - 1].speed} km/h<br>
                 <b>Ubicación:</b> <a href="https://www.google.com/maps?q=${endPoint[0]},${endPoint[1]}" target="_blank">${endPoint[0]}, ${endPoint[1]}</a><br>
                 <b>Dirección:</b> <a href="javascript:void(0);" onclick="showAddress(${endPoint[0]}, ${endPoint[1]}, this)">Mostrar calle</a><br>
                 <b>Tiempo transcurrido:</b> ${timeDiffHours} horas y ${timeDiffMinutes} minutos<br>

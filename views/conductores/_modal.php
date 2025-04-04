@@ -25,7 +25,7 @@ use yii\widgets\Pjax;
 <div class="modal-body">
     <div class="row">
         <!-- Información personal -->
-        <?= $form->field($model, 'nombres', [
+        <?= $form->field($model, 'nombre', [
             'options' => ['class' => 'col-md-4 form-field-spacing']
         ])->textInput(['maxlength' => true]) ?>
 
@@ -123,7 +123,7 @@ use yii\widgets\Pjax;
             <hr>
         </div>
 
-        <?= $form->field($model, 'nombres_contacto', [
+        <?= $form->field($model, 'nombre_contacto', [
             'options' => ['class' => 'col-md-4 form-field-spacing']
         ])->textInput(['maxlength' => true]) ?>
 
