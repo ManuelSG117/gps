@@ -31,14 +31,14 @@ var geofencesData = <?= $geofencesJson ?>;
 
 <div class="geocerca-index">
 
-    <p>
+    <!-- <p>
         <button id="save-polygon-changes" class="btn btn-warning" style="display: none;">Guardar Cambios</button>
-    </p>
+    </p> -->
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
     
 
-    <div id="map-canvas"></div>
+    <div id="map"></div>
     
     <div id="info"></div>
 
@@ -89,6 +89,46 @@ var geofencesData = <?= $geofencesJson ?>;
 
 
 <style>
+    /* Add a new class for the geofence list items */
+    .geofence-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        background-color: #fff;
+        transition: all 0.3s ease;
+        margin-top: 5px;
+    }
+    
+    .geofence-item:hover {
+        background-color: #f5f5f5;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .geofence-item input[type="checkbox"] {
+        margin-right: 15px;
+        transform: scale(1.5);
+        accent-color: #222b40;
+        flex: 0 0 20px;
+    }
+    
+    .geofence-item label {
+        flex: 1;
+        font-size: 12px;
+        color: #333;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    
+    /* Add styles for the geofence list container */
+    .geofence-list {
+        max-height: calc(100% - 80px);
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
       #save-geofence {
     margin: 10px;
     padding: 10px;
@@ -158,10 +198,7 @@ var geofencesData = <?= $geofencesJson ?>;
     border: none;
 }
 
-.geofence-list {
-    width: 110%; /* Ajusta el ancho según tus necesidades */
-      margin-left:-15px; /* Centra el div horizontalmente */
-      margin-top: 20px; }
+
 
 
 .geofence-actions {
@@ -182,14 +219,7 @@ var geofencesData = <?= $geofencesJson ?>;
     gap: 1rem;
 }
 
-#map-canvas {
-    position: fixed; 
-        top: 0;
-        left: 0;
-        width: 100% !important;
-        height: 100vh !important; 
-        z-index: 1;
-        }
+
 
 @keyframes slideOut {
     0% {
@@ -212,28 +242,6 @@ var geofencesData = <?= $geofencesJson ?>;
         opacity: 1;
     }
 }
-.floating-button {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background-color: #222b40;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      font-size: 24px;
-      cursor: pointer;
-      z-index: 1000;
-      user-select: none; /* Prevent text selection */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.3s ease; /* Smooth transition for the hover effect */
-  }
-  
-  .floating-button:hover {
-      transform: rotate(90deg); /* Rotate the button on hover */
-  }
+
 </style>
 

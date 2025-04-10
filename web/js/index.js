@@ -851,4 +851,40 @@ function dragElement(elmnt) {
             maximizeButton.style.display = 'flex'; // Mostrar botón circular
         }
     }
+
+// Add this function to adjust sidebar height
+function adjustSidebarHeight() {
+    const sidebar = document.getElementById('sidebar');
+    const mapHeight = document.getElementById('map').offsetHeight;
+    sidebar.style.height = (mapHeight - 24) + 'px'; // 24px for the margins
+    
+    // Also adjust the gps-list height to ensure scrolling works properly
+    const gpsList = document.getElementById('gpsList');
+    const sidebarHeader = sidebar.querySelector('h4');
+    const searchBox = document.getElementById('gpsSearch');
+    const gpsTitles = document.querySelector('.gps-titles');
+    
+    const headerHeight = sidebarHeader ? sidebarHeader.offsetHeight : 0;
+    const searchHeight = searchBox ? searchBox.offsetHeight : 0;
+    const titlesHeight = gpsTitles ? gpsTitles.offsetHeight : 0;
+    
+    // Calculate available height for the list
+    const availableHeight = mapHeight - headerHeight - searchHeight - titlesHeight - 80; // 80px for padding and margins
+    
+    if (gpsList) {
+        gpsList.style.maxHeight = availableHeight + 'px';
+        gpsList.style.overflowY = 'auto';
+    }
+}
+
+// Add this to the existing document.addEventListener('DOMContentLoaded', ...) function
+document.addEventListener('DOMContentLoaded', function() {
+    initMap();
+    
+    // Adjust sidebar height when page loads
+    adjustSidebarHeight();
+    
+    // Adjust sidebar height when window is resized
+    window.addEventListener('resize', adjustSidebarHeight);
+});
     

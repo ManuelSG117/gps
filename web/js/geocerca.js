@@ -13,7 +13,7 @@ function InitMap() {
         center: location,
         mapTypeId: google.maps.MapTypeId.RoadMap
     }
-    map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions)
+    map = new google.maps.Map(document.getElementById('map'), mapOptions)
     
     // Add this code to display existing geofences
     const existingGeofences = geofencesData;

@@ -7,7 +7,7 @@ use yii\helpers\Url;
 /** @var yii\web\View $this */
 /** @var app\models\GpslocationsSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
-$this->registerJsFile('@web/js/index.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
+$this->registerJsFile('@web/js/index.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 $this->title = 'Gpslocations';
 ?>
 
@@ -22,11 +22,12 @@ $this->title = 'Gpslocations';
 
 <div class="main-content">
     <button class="floating-button" id="floatingButton" onclick="toggleButtonContainer()">+</button>
-    <div class="sidebar" id="sidebar">   <button class="minimize-sidebar" onclick="toggleSidebar()">-</button>
+    <div class="sidebar" id="sidebar">
+        <button class="minimize-sidebar" onclick="toggleSidebar()">-</button>
         <h4>GPS</h4>
-
-        <input type="text" id="gpsSearch"  class="search-box" placeholder="Buscar ..." onkeyup="filterGpsList()">
-
+    
+        <input type="text" id="gpsSearch" class="search-box" placeholder="Buscar ..." onkeyup="filterGpsList()">
+    
         <div class="gps-titles">
             <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)">
             <span>Nombre</span>
