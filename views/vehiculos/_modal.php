@@ -15,10 +15,11 @@ use kartik\file\FileInput;
 <?php Pjax::begin(['id' => 'create-vehiculos-pjax', 'enablePushState' => false]); ?>
 <?php $form = ActiveForm::begin([
     'id' => 'create-vehiculos-form',
-    'action' => ['vehiculos/create'],
+    'action' => ['/vehiculos/create'],
     'method' => 'post',
     'enableClientValidation' => true,
-    'options' => ['enctype' => 'multipart/form-data', 'data-pjax' => true],
+    'options' => ['enctype' => 'multipart/form-data', 'data-pjax' => false], // Changed data-pjax to false
+    'enableAjaxValidation' => false,
 ]); ?>
 
 <div class="modal-body">
@@ -324,7 +325,7 @@ use kartik\file\FileInput;
 
 <div class="modal-footer">
     <button type="button" class="btn btn-danger" data-dismiss="modal" id="btn-cancelar">Cancelar</button>
-    <?= Html::submitButton('Guardar', ['class' => 'btn btn-success', 'id' => 'btn-guardar', 'style' => 'display:none;']) ?>
+    <button type="button" class="btn btn-success" id="btn-guardar" style="display:none;" onclick="$('#create-vehiculos-form').submit()">Guardar</button>
 </div>
 
 <?php ActiveForm::end(); ?>

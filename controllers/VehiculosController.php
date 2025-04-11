@@ -91,6 +91,7 @@ class VehiculosController extends Controller
                     return [
                         'success' => true, 
                         'message' => 'Vehículo creado exitosamente.',
+                        'closeModal' => true, // Add this flag
                         'html' => $this->renderAjax('_modal', ['model' => new Vehiculos()]) // Return fresh form
                     ];
                 } else {
@@ -133,6 +134,7 @@ class VehiculosController extends Controller
                         return [
                             'success' => true, 
                             'message' => 'Vehículo actualizado exitosamente.',
+                            'closeModal' => true, // Add this flag
                             // Don't return a fresh form, just return success
                         ];
                     } else {

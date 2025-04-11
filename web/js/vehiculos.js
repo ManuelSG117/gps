@@ -166,64 +166,67 @@ $(document).on('click', '.ajax-delete', function (e) {
 });
 
 
-// Maneja la creación de vehículos con AJAX
-$('#create-vehiculos-form').on('beforeSubmit', function (e) {
-    e.preventDefault();
-    var form = $(this);
-    
-    // Create FormData object to handle file uploads
-    var formData = new FormData(form[0]);
-
-    // Mostrar el modal de carga
-    Swal.fire({
-        title: 'Cargando...',
-        text: 'Por favor espera.',
-        icon: 'info',
-        showConfirmButton: false,
-        allowOutsideClick: false
-    });
-
-    $.ajax({
-        url: form.attr('action'),
-        type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function (response) {
-            Swal.close(); // Cerrar el modal de carga
-            
-            if (response.success) {
-                // Close the modal first
-                $('#exampleModalCenter').modal('hide');
+// Add a form submission handler
+$(document).ready(function() {
+    // Handle form submission
+    $(document).on('submit', '#create-vehiculos-form', function(e) {
+        e.preventDefault(); // Prevent default form submission
+        
+        var form = $(this);
+        var formData = new FormData(this);
+        
+        // Show loading indicator
+        Swal.fire({
+            title: 'Guardando...',
+            text: 'Por favor espera mientras se guarda la información.',
+            icon: 'info',
+            showConfirmButton: false,
+            allowOutsideClick: false
+        });
+        
+        $.ajax({
+            url: form.attr('action'),
+            type: form.attr('method'),
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                Swal.close();
                 
-                // Then show success message
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Éxito!',
-                    text: response.message,
-                }).then((result) => {
-                    // Reload the grid after the user clicks OK
-                    $.pjax.reload({ container: '#vehiculos-grid' });
-                });
-            } else {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: response.message
+                    }).then((result) => {
+                        // Close modal and refresh grid
+                        $(document).data('confirmed-close', true);
+                        $('#exampleModalCenter').modal('hide');
+                        $.pjax.reload({container: '#vehiculos-grid'});
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Error al guardar el vehículo'
+                    });
+                    
+                    // If there's HTML to update, do it
+                    if (response.html) {
+                        $('#create-vehiculos-pjax').html(response.html);
+                    }
+                }
+            },
+            error: function() {
+                Swal.close();
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: response.message || 'No se pudo crear el vehículo.',
+                    text: 'Error de conexión al guardar el vehículo'
                 });
             }
-        },
-        error: function () {
-            Swal.close(); // Cerrar el modal de carga
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudo crear el vehículo.',
-            });
-        }
+        });
     });
-
-    return false;
 });
 
 // Add a click handler for the view button
