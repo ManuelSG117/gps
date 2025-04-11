@@ -1,13 +1,13 @@
 // Add this at the top of the file
-console.log('Vehiculos.js loaded successfully');
+//console.log('Vehiculos.js loaded successfully');
 
 // Add a click handler for the create button
 $(document).ready(function() {
-    console.log('Document ready in vehiculos.js');
+  //  console.log('Document ready in vehiculos.js');
     
     $(document).on('click', 'button[data-target="#exampleModalCenter"]', function(e) {
-        console.log('Create vehicle button clicked');
-        console.log('Modal target:', $(this).data('target'));
+    //    console.log('Create vehicle button clicked');
+      //  console.log('Modal target:', $(this).data('target'));
         $('#exampleModalCenter').modal('show');
         // Initialize the first step
         showStep(1);
@@ -111,7 +111,7 @@ $(document).ready(function() {
 });
 
 $(document).on('click', '.ajax-delete', function (e) {
-    console.log('Delete button clicked');
+   // console.log('Delete button clicked');
     e.preventDefault();
 
     var id = $(this).data('id');
@@ -226,12 +226,15 @@ $('#create-vehiculos-form').on('beforeSubmit', function (e) {
     return false;
 });
 
-$(document).on('click', '.ajax-view', function (e) {
+// Add a click handler for the view button
+$(document).on('click', '.ajax-view', function(e) {
+  //  console.log('View button clicked');
     e.preventDefault();
-
+    
     var url = $(this).data('url');
-
-    // Mostrar el modal de carga
+  //  console.log('View URL:', url);
+    
+    // Show loading indicator
     Swal.fire({
         title: 'Cargando...',
         text: 'Por favor espera.',
@@ -239,38 +242,45 @@ $(document).on('click', '.ajax-view', function (e) {
         showConfirmButton: false,
         allowOutsideClick: false
     });
-
+    
+    // Fetch vehicle data and update modal
     $.ajax({
         url: url,
         type: 'GET',
-        success: function (response) {
-            Swal.close(); // Cerrar el modal de carga
-
+        success: function(response) {
+            Swal.close();
+            
             if (response.success) {
-                // Cargar los datos en el formulario
-                var data = response.data;
-                $('#create-vehiculos-form').find('input, select, textarea').each(function () {
-                    var name = $(this).attr('name');
-                    if (name && data[name.replace('Vehiculos[', '').replace(']', '')] !== undefined) {
-                        $(this).val(data[name.replace('Vehiculos[', '').replace(']', '')]);
-                    }
-                });
-
-                // Deshabilitar los campos
-                $('#create-vehiculos-form').find('input, select, textarea').prop('disabled', true);
-
-                // Cambiar el título del modal y mostrarlo
-                $('#exampleModalCenterTitle').text('Ver Vehículo');
+                // Open the modal
                 $('#exampleModalCenter').modal('show');
-                $('#create-vehiculos-form').find('.btn-success').hide();
+                
+                // Update modal title
+                $('#exampleModalCenterTitle').text('Ver Vehículo');
+                
+                // Update form action to view
+                $('#create-vehiculos-form').attr('action', url);
+                
+                // Populate form with data
+                for (var field in response.data) {
+                    $('#vehiculos-' + field.toLowerCase()).val(response.data[field]);
+                }
+                
+                // Initialize the first step
+                showStep(1);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message || 'Error al cargar los datos del vehículo'
+                });
             }
         },
-        error: function () {
-            Swal.close(); // Cerrar el modal de carga
+        error: function() {
+            Swal.close();
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'No se pudo cargar los datos del vehículo.',
+                text: 'Error de conexión al cargar los datos del vehículo'
             });
         }
     });

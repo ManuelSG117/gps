@@ -397,11 +397,27 @@ $(document).ready(function() {
     
     // Function to check if form has data and show confirmation dialog
     function checkFormDataAndConfirm(callback) {
+        // Get the current form action
+        const formAction = $('#create-vehiculos-form').attr('action');
+ //       console.log('Current form action:', formAction);
+        
+        // Skip confirmation for view action or non-create/update actions
+        if (!/\/create$|\/update/.test(formAction) || /\/view/.test(formAction)) {
+   ///         console.log('Skipping confirmation - not create/update or is view action');
+            // For view or other actions, allow closing without confirmation
+            if (typeof callback === 'function') {
+                callback(true);
+            }
+            return true;
+        }
+        
+      //  console.log('Checking for form data...');
         // Check if any field has data
         let hasData = false;
         $('#create-vehiculos-form input, #create-vehiculos-form select').each(function() {
             if ($(this).val() && $(this).val() !== '') {
                 hasData = true;
+        //        console.log('Found data in field:', $(this).attr('id') || $(this).attr('name'), 'Value:', $(this).val());
                 return false; // Break the loop
             }
         });
@@ -411,14 +427,27 @@ $(document).ready(function() {
             $('.file-preview-thumbnails').each(function() {
                 if ($(this).find('.file-preview-frame').length > 0) {
                     hasData = true;
+          //          console.log('Found files in file input');
                     return false; // Break the loop
                 }
             });
         } catch (e) {
-            console.log('Error checking file inputs:', e);
+           // console.log('Error checking file inputs:', e);
         }
         
+        //console.log('Has data:', hasData);
+        
         if (hasData) {
+            // Double check for view action
+            if (/\/view/.test(formAction)) {
+          //      console.log('View action detected with data, bypassing confirmation');
+                if (typeof callback === 'function') {
+                    callback(true); // Allow closing without confirmation for view
+                }
+                return true;
+            }
+            
+            //console.log('Showing confirmation dialog');
             Swal.fire({
                 title: '¿Estás seguro?',
                 text: "Si cancelas, perderás toda la información ingresada.",
@@ -429,7 +458,9 @@ $(document).ready(function() {
                 confirmButtonText: 'Sí, cancelar',
                 cancelButtonText: 'No, continuar editando'
             }).then((result) => {
+              //  console.log('Dialog result:', result);
                 if (result.isConfirmed) {
+                //    console.log('User confirmed, resetting form');
                     // Reset form and close modal
                     $('#create-vehiculos-form')[0].reset();
                     
@@ -439,39 +470,47 @@ $(document).ready(function() {
                             // Check if the element has the fileinput plugin initialized
                             if ($(this).data('fileinput')) {
                                 $(this).fileinput('clear');
+                  //              console.log('Cleared file input');
                             }
                         });
                     } catch (e) {
-                        console.log('Error clearing file inputs:', e);
+                    //    console.log('Error clearing file inputs:', e);
                         // Fallback method to clear file inputs
                         $('input[type="file"]').val('');
                     }
                     
                     if (typeof callback === 'function') {
+                      //  console.log('Executing callback with true');
                         callback(true); // Allow closing
                     }
                 }
             });
             return false; // Prevent default closing
         }
+     //   console.log('No data found, allowing close without confirmation');
         return true; // Allow closing if no data
     }
     
     // Handle all modal closing events
     $('#exampleModalCenter').on('hide.bs.modal', function(e) {
+    //    console.log('Modal hide event triggered');
         // If this is triggered by our confirmed actions, don't interfere
         if ($(document).data('confirmed-close')) {
+           // console.log('Confirmed close flag found, allowing close');
             $(document).data('confirmed-close', false);
             return true;
         }
         
         // Otherwise check and confirm
         if (!checkFormDataAndConfirm(function(confirmed) {
+           // console.log('Confirmation callback with result:', confirmed);
             if (confirmed) {
+             //   console.log('Setting confirmed-close flag and hiding modal');
                 $(document).data('confirmed-close', true);
                 $('#exampleModalCenter').modal('hide');
             }
         })) {
+          //  console.log('Preventing default close');
             e.preventDefault();
             e.stopPropagation();
         }
