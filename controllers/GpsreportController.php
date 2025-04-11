@@ -65,6 +65,9 @@ class GpsreportController extends Controller
                 break;
         }
     
+        // Order by timestamp to ensure proper route display
+        $query->orderBy(['lastUpdate' => SORT_ASC]);
+        
         $locations = $query->all();
     
         return $this->render('index', [

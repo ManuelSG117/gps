@@ -94,7 +94,7 @@ use yii\helpers\Url;
     <?php ActiveForm::end(); ?>
 </div>
 
-<div class="card" >
+<div class="card" <?= empty($locations) ? 'style="display: none;"' : '' ?>>
     <div class="card-body p-0">
         <div class="table-responsive active-projects">
             <div class="tbl-caption">
@@ -111,64 +111,55 @@ use yii\helpers\Url;
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (!empty($locations)): ?>
-                        <?php foreach ($locations as $location): ?>
-                            <tr>
-                                <td><?= $location->lastUpdate ?></td>
-                                <td><?= $location->latitude ?></td>
-                                <td><?= $location->longitude ?></td>
-                                <td><?= $location->speed ?> km/h</td>
-                                <td>
-                                <a href="javascript:void(0);" 
-                                onclick="showAddress(<?= $location->latitude ?>, <?= $location->longitude ?>, this)">
-                                    <b>Mostrar calle</b>
-                                </a>
-                                <br>
-                                <span class="address-result"></span>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
+                    <?php foreach ($locations as $location): ?>
                         <tr>
-                            <td colspan="5">No data available.</td>
+                            <td><?= $location->lastUpdate ?></td>
+                            <td><?= $location->latitude ?></td>
+                            <td><?= $location->longitude ?></td>
+                            <td><?= $location->speed ?> km/h</td>
+                            <td>
+                            <a href="javascript:void(0);" 
+                            onclick="showAddress(<?= $location->latitude ?>, <?= $location->longitude ?>, this)">
+                                <b>Mostrar calle</b>
+                            </a>
+                            <br>
+                            <span class="address-result"></span>
+                            </td>
                         </tr>
-                    <?php endif; ?>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
+<?php if (empty($locations)): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                title: 'Sin datos',
+                text: 'No hay información de ubicación disponible para el período y dispositivo seleccionados.',
+                icon: 'info',
+                confirmButtonText: 'Entendido'
+            });
+        });
+    </script>
+<?php endif; ?>
 
-
-<!-- <div id="map"></div> -->
+<!-- After the table card div, add the map container -->
+<div class="card mt-4" <?= empty($locations) ? 'style="display: none;"' : '' ?>>
+    <div class="card-body" style="padding: 15px;">
+        <div class="tbl-caption">
+            <h4 class="heading mb-0">Mapa de Ruta</h4>
+        </div>
+        <div id="map" style="height: 500px; width: 100%; margin-top: 15px; position: relative;"></div>
+    </div>
+</div>
 
 <script>
- function confirmExport() {
-    Swal.fire({
-        title: '¿Incluir gráfica?',
-        text: "¿Deseas incluir la gráfica en el reporte?",
-        icon: 'question',
-        showCancelButton: true,
-        showCloseButton: true, // Mostrar botón de cierre
-        confirmButtonText: 'Sí, incluir',
-        cancelButtonText: 'No, solo datos'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Redirigir con includeChart=true
-            window.location.href = '<?= Url::to(['gpsreport/download-report', 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate'), 'includeChart' => true]) ?>';
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
-            // Redirigir con includeChart=false
-            window.location.href = '<?= Url::to(['gpsreport/download-report', 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate'), 'includeChart' => false]) ?>';
-        }
-        // No hacer nada si se cierra el diálogo con la "X" o fuera del modal
-    });
-    return false; // Prevenir la acción por defecto del enlace
-}
-
-
-    document.addEventListener('DOMContentLoaded', function () {
-    // Inicializar Flatpickr
+// Initialize map and route display
+document.addEventListener('DOMContentLoaded', async function() {
+    // Initialize Flatpickr
     flatpickr('#startDate', {
         dateFormat: 'Y-m-d',
         locale: 'es',
@@ -181,9 +172,6 @@ use yii\helpers\Url;
         allowInput: true,
     });
 
-    
-});
-document.addEventListener('DOMContentLoaded', function () {
     const filter = document.getElementById('filter');
     const customDates = document.querySelector('.custom-dates');
     const dateFields = document.querySelectorAll('.custom-dates .form-control');
@@ -210,14 +198,152 @@ document.addEventListener('DOMContentLoaded', function () {
             field.closest('.col-6').classList.add(colSize);
         });
     }
+    
+    // Initialize the map if we have location data
+    await initMap();
 });
 
+async function initMap() {
+    // Check if we have location data
+    const tableRows = document.querySelectorAll('#projects-tbl tbody tr');
+    if (tableRows.length === 0 || tableRows[0].cells.length <= 1) {
+        document.getElementById('map').innerHTML = '<div class="alert alert-info">No hay datos de ubicación disponibles para mostrar en el mapa.</div>';
+        return;
+    }
+    
+    // Extract location data from the table
+    const locations = [];
+    tableRows.forEach(row => {
+        if (row.cells.length >= 3) {
+            const lat = parseFloat(row.cells[1].textContent.trim());
+            const lng = parseFloat(row.cells[2].textContent.trim());
+            const timestamp = row.cells[0].textContent.trim();
+            const speed = parseFloat(row.cells[3].textContent.trim());
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+                locations.push({
+                    lat: lat,
+                    lng: lng,
+                    timestamp: timestamp,
+                    speed: speed
+                });
+            }
+        }
+    });
+    
+    if (locations.length === 0) {
+        document.getElementById('map').innerHTML = '<div class="alert alert-info">No se pudieron extraer coordenadas válidas de los datos.</div>';
+        return;
+    }
+    
+    try {
+        // Initialize the map with Leaflet
+        const map = L.map('map').setView([locations[0].lat, locations[0].lng], 13);
+        
+        // Add Google Maps layer
+        const googleStreets = L.gridLayer.googleMutant({
+            type: 'roadmap'
+        }).addTo(map);
+        
+        // Add OpenStreetMap as fallback/alternative
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Create a polyline for the route
+        const routeCoordinates = locations.map(loc => [loc.lat, loc.lng]);
+        const routeLine = L.polyline(routeCoordinates, {
+            color: 'blue',
+            weight: 4,
+            opacity: 0.7
+        }).addTo(map);
+        
+        // Add markers for start and end points
+        const startMarker = L.marker([locations[0].lat, locations[0].lng], {
+            title: 'Inicio: ' + locations[0].timestamp,
+            icon: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            })
+        }).addTo(map);
+        startMarker.bindPopup(`<b>Punto de inicio</b><br>Fecha: ${locations[0].timestamp}<br>Velocidad: ${locations[0].speed} km/h`);
+        
+        const endMarker = L.marker([locations[locations.length - 1].lat, locations[locations.length - 1].lng], {
+            title: 'Fin: ' + locations[locations.length - 1].timestamp,
+            icon: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            })
+        }).addTo(map);
+        endMarker.bindPopup(`<b>Punto final</b><br>Fecha: ${locations[locations.length - 1].timestamp}<br>Velocidad: ${locations[locations.length - 1].speed} km/h`);
+        
+        // Add intermediate markers with speed info
+        for (let i = 1; i < locations.length - 1; i += Math.max(1, Math.floor(locations.length / 10))) {
+            const marker = L.marker([locations[i].lat, locations[i].lng], {
+                opacity: 0.7,
+                title: locations[i].timestamp
+            }).addTo(map);
+            marker.bindPopup(`<b>Punto intermedio</b><br>Fecha: ${locations[i].timestamp}<br>Velocidad: ${locations[i].speed} km/h`);
+        }
+        
+        // Fit the map to show all the route
+        map.fitBounds(routeLine.getBounds(), {
+            padding: [50, 50]
+        });
+        
+        // Add a legend
+        const legend = L.control({position: 'bottomright'});
+        legend.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'info legend');
+            div.innerHTML = `
+                <div style="background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2);">
+                    <div><span style="color: green; font-size: 20px;">●</span> Inicio</div>
+                    <div><span style="color: blue; font-size: 20px;">―</span> Ruta</div>
+                    <div><span style="color: red; font-size: 20px;">●</span> Fin</div>
+                </div>
+            `;
+            return div;
+        };
+        legend.addTo(map);
+        
+    } catch (error) {
+        console.error('Error initializing map:', error);
+        document.getElementById('map').innerHTML = `<div class="alert alert-danger">Error al inicializar el mapa: ${error.message}</div>`;
+    }
+}
 
+function confirmExport() {
+    Swal.fire({
+        title: '¿Incluir gráfica?',
+        text: "¿Deseas incluir la gráfica en el reporte?",
+        icon: 'question',
+        showCancelButton: true,
+        showCloseButton: true, // Mostrar botón de cierre
+        confirmButtonText: 'Sí, incluir',
+        cancelButtonText: 'No, solo datos'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirigir con includeChart=true
+            window.location.href = '<?= Url::to(['gpsreport/download-report', 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate'), 'includeChart' => true]) ?>';
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            // Redirigir con includeChart=false
+            window.location.href = '<?= Url::to(['gpsreport/download-report', 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate'), 'includeChart' => false]) ?>';
+        }
+        // No hacer nada si se cierra el diálogo con la "X" o fuera del modal
+    });
+    return false; // Prevenir la acción por defecto del enlace
+}
 
-    </script>
-
-<script>
- function showAddress(lat, lng, element) {
+function showAddress(lat, lng, element) {
     console.log("Click detectado. Latitud:", lat, "Longitud:", lng);
 
     // Seleccionar el <span> asociado
@@ -274,34 +400,57 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log("La dirección ya fue cargada anteriormente:", span.textContent);
     }
 }
-
 </script>
- <!-- Required vendors -->
- <script src="/vendor/global/global.min.js"></script>
-	
-	
-	<!-- Dashboard 1 -->
-	<script src="/js/dashboard/dashboard-2.js"></script>
 
-	<script src="/vendor/datatables/js/jquery.dataTables.min.js"></script>
-	<script src="/vendor/datatables/js/dataTables.buttons.min.js"></script>
-	<script src="/vendor/datatables/js/buttons.html5.min.js"></script>
-	<script src="/js/plugins-init/datatables.init.js"></script>
+<!-- Add Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 
-    <style>
-    .table-responsive {
-    height: calc(100vh - 400px);  /* Ajusta el 200px según el espacio superior e inferior que necesites */
+<style>
+.table-responsive {
+    height: calc(100vh - 400px);
     overflow-y: auto;
-    }
+}
 
-    .card-body {
-        padding: 0;
-    }
+/* Override the padding for the map container specifically */
+.card-body {
+    padding: 0;
+}
 
-    #projects-tbl {
-        width: 100%;
-        table-layout: fixed;  /* Opcional, para que las columnas tengan el mismo tamaño */
-        overflow-x: hidden;
-    }
+.card-body .tbl-caption {
+    padding: 15px 15px 0 15px;
+}
 
-    </style>
+/* Specific styling for the map card */
+.card.mt-4 .card-body {
+    padding: 15px !important;
+}
+
+#projects-tbl {
+    width: 100%;
+    table-layout: fixed;
+    overflow-x: hidden;
+}
+
+#map {
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    z-index: 1;
+}
+
+.legend {
+    line-height: 18px;
+    color: #555;
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+}
+
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+</style>
