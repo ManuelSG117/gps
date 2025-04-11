@@ -231,11 +231,9 @@ $(document).ready(function() {
 
 // Add a click handler for the view button
 $(document).on('click', '.ajax-view', function(e) {
-  //  console.log('View button clicked');
     e.preventDefault();
     
     var url = $(this).data('url');
-  //  console.log('View URL:', url);
     
     // Show loading indicator
     Swal.fire({
@@ -268,6 +266,12 @@ $(document).on('click', '.ajax-view', function(e) {
                     $('#vehiculos-' + field.toLowerCase()).val(response.data[field]);
                 }
                 
+                // Disable all form fields for view mode
+                $('#create-vehiculos-form').find('input, select, textarea').prop('disabled', true);
+                
+                // Hide all submit buttons in view mode
+                $('#create-vehiculos-form .btn-success').hide();
+                
                 // Initialize the first step
                 showStep(1);
             } else {
@@ -292,13 +296,22 @@ $(document).on('click', '.ajax-view', function(e) {
 
 // Restablecer el formulario al cerrar el modal
 $('#exampleModalCenter').on('hidden.bs.modal', function () {
+    // Reset and enable all form fields
     $('#create-vehiculos-form').find('input, select, textarea').prop('disabled', false).val('');
-    $('#create-vehiculos-form .btn-success').show();  // Mostrar el botón "Guardar"
+    
+    // Show the save button again
+    $('#create-vehiculos-form .btn-success').show();
+    
+    // Reset modal title and form action
     $('#exampleModalCenterTitle').text('Crear Vehículo');
-    $('#create-vehiculos-form').attr('action', 'vehiculos/create');
+    $('#create-vehiculos-form').attr('action', '/vehiculos/create');
     
     // Reset file inputs
-    $('.file-input').fileinput('clear');
+    try {
+        $('.file-input').fileinput('clear');
+    } catch (e) {
+        console.log('Error clearing file inputs:', e);
+    }
     
     // Reset to first step
     showStep(1);

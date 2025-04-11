@@ -66,6 +66,7 @@ class VehiculosController extends Controller
             return [
                 'success' => true,
                 'data' => $model->attributes,
+                'isViewMode' => true, // Add this flag to indicate view mode
             ];
         }
         
