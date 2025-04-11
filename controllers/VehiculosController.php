@@ -7,6 +7,7 @@ use app\models\VehiculosSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use Yii;
 
 /**
  * VehiculosController implements the CRUD actions for Vehiculos model.
@@ -40,21 +41,34 @@ class VehiculosController extends Controller
     {
         $searchModel = new VehiculosSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        
+        // Crear un nuevo modelo para el formulario del modal
+        $model = new Vehiculos();
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'model' => $model, // Pasa el modelo a la vista
         ]);
     }
 
     /**
      * Displays a single Vehiculos model.
      * @param int $id ID
-     * @return string
+     * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
+        if (Yii::$app->request->isAjax) {
+            $model = $this->findModel($id);
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'success' => true,
+                'data' => $model->attributes,
+            ];
+        }
+        
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
@@ -69,17 +83,34 @@ class VehiculosController extends Controller
     {
         $model = new Vehiculos();
 
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            
+            try {
+                if ($model->save()) {
+                    return [
+                        'success' => true, 
+                        'message' => 'Vehículo creado exitosamente.',
+                        'html' => $this->renderAjax('_modal', ['model' => new Vehiculos()]) // Return fresh form
+                    ];
+                } else {
+                    return [
+                        'success' => false, 
+                        'message' => 'Error al guardar el vehículo.', 
+                        'errors' => $model->errors,
+                        'html' => $this->renderAjax('_modal', ['model' => $model]) // Return form with errors
+                    ];
+                }
+            } catch (\Exception $e) {
+                return [
+                    'success' => false, 
+                    'message' => 'Ocurrió un error: ' . $e->getMessage(),
+                    'html' => $this->renderAjax('_modal', ['model' => $model]) // Return form with model
+                ];
             }
-        } else {
-            $model->loadDefaultValues();
         }
 
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+        return $this->renderAjax('_modal', ['model' => $model]);
     }
 
     /**
@@ -93,8 +124,44 @@ class VehiculosController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if (Yii::$app->request->isAjax) {
+            if ($model->load(Yii::$app->request->post())) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                
+                try {
+                    if ($model->save()) {
+                        return [
+                            'success' => true, 
+                            'message' => 'Vehículo actualizado exitosamente.',
+                            // Don't return a fresh form, just return success
+                        ];
+                    } else {
+                        return [
+                            'success' => false, 
+                            'message' => 'Error al actualizar el vehículo.', 
+                            'errors' => $model->errors,
+                            'html' => $this->renderAjax('_modal', ['model' => $model]) // Return form with errors
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    return [
+                        'success' => false, 
+                        'message' => 'Ocurrió un error: ' . $e->getMessage(),
+                        'html' => $this->renderAjax('_modal', ['model' => $model]) // Return form with model
+                    ];
+                }
+            }
+            
+            if (Yii::$app->request->isGet) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                return [
+                    'success' => true,
+                    'data' => $model->attributes,
+                    'html' => $this->renderAjax('_modal', ['model' => $model]) // Return form with model
+                ];
+            }
+            
+            return $this->renderAjax('_modal', ['model' => $model]);
         }
 
         return $this->render('update', [
@@ -111,8 +178,13 @@ class VehiculosController extends Controller
      */
     public function actionDelete($id)
     {
+        if (Yii::$app->request->isAjax) {
+            $this->findModel($id)->delete();
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ['success' => true, 'message' => 'El vehículo ha sido eliminado exitosamente.'];
+        }
+        
         $this->findModel($id)->delete();
-
         return $this->redirect(['index']);
     }
 
