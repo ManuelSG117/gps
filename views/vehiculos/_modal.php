@@ -70,26 +70,26 @@ use kartik\file\FileInput;
         <div class="row">
             <div class="col-md-6">
                 <?= $form->field($model, 'ano_adquisicion')->textInput([
-                    'maxlength' => 4, 
-                    'required' => true,
-                    'type' => 'number',
-                    'min' => '1900',
-                    'max' => date('Y'),
-                    'placeholder' => 'YYYY',
-                    'onkeypress' => 'return (event.charCode >= 48 && event.charCode <= 57)',
-                    'oninput' => 'javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);'
+                  'maxlength' => 4, 
+                  'required' => true,
+                  'type' => 'number',
+                  'min' => '1900',
+                  'max' => date('Y'),
+                  'placeholder' => 'YYYY',
+                  'onkeypress' => 'return (event.charCode >= 48 && event.charCode <= 57)',
+                  'oninput' => 'javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);'
                 ]) ?>
             </div>
             <div class="col-md-6">
                 <?= $form->field($model, 'ano_auto')->textInput([
-                    'maxlength' => 4, 
-                    'required' => true,
-                    'type' => 'number',
-                    'min' => '1900',
-                    'max' => date('Y'),
-                    'placeholder' => 'YYYY',
-                    'onkeypress' => 'return (event.charCode >= 48 && event.charCode <= 57)',
-                    'oninput' => 'javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);'
+                'maxlength' => 4, 
+                'required' => true,
+                'type' => 'number',
+                'min' => '1900',
+                'max' => date('Y'),
+                'placeholder' => 'YYYY',
+                'onkeypress' => 'return (event.charCode >= 48 && event.charCode <= 57)',
+                'oninput' => 'javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);'
                 ]) ?>
             </div>
         </div>
@@ -182,7 +182,8 @@ use kartik\file\FileInput;
                     'name' => 'VehiculoImagenes[frente]',
                     'options' => [
                         'id' => 'vehiculo-imagen-frente',
-                        'accept' => 'image/*'
+                        'accept' => 'image/*',
+                        'class' => 'file-input'
                     ],
                     'pluginOptions' => [
                         'showCaption' => false,
@@ -200,7 +201,8 @@ use kartik\file\FileInput;
                     'name' => 'VehiculoImagenes[lateral_derecho]',
                     'options' => [
                         'id' => 'vehiculo-imagen-lateral_derecho',
-                        'accept' => 'image/*'
+                        'accept' => 'image/*',
+                        'class' => 'file-input'
                     ],
                     'pluginOptions' => [
                         'showCaption' => false,
@@ -221,7 +223,8 @@ use kartik\file\FileInput;
                     'name' => 'VehiculoImagenes[lateral_izquierdo]',
                     'options' => [
                         'id' => 'vehiculo-imagen-lateral_izquierdo',
-                        'accept' => 'image/*'
+                        'accept' => 'image/*',
+                        'class' => 'file-input'
                     ],
                     'pluginOptions' => [
                         'showCaption' => false,
@@ -239,7 +242,8 @@ use kartik\file\FileInput;
                     'name' => 'VehiculoImagenes[trasera]',
                     'options' => [
                         'id' => 'vehiculo-imagen-trasera',
-                        'accept' => 'image/*'
+                        'accept' => 'image/*',
+                        'class' => 'file-input'
                     ],
                     'pluginOptions' => [
                         'showCaption' => false,
@@ -260,7 +264,8 @@ use kartik\file\FileInput;
                     'name' => 'VehiculoImagenes[llantas]',
                     'options' => [
                         'id' => 'vehiculo-imagen-llantas',
-                        'accept' => 'image/*'
+                        'accept' => 'image/*',
+                        'class' => 'file-input'
                     ],
                     'pluginOptions' => [
                         'showCaption' => false,
@@ -278,7 +283,8 @@ use kartik\file\FileInput;
                     'name' => 'VehiculoImagenes[motor]',
                     'options' => [
                         'id' => 'vehiculo-imagen-motor',
-                        'accept' => 'image/*'
+                        'accept' => 'image/*',
+                        'class' => 'file-input'
                     ],
                     'pluginOptions' => [
                         'showCaption' => false,
@@ -296,7 +302,8 @@ use kartik\file\FileInput;
                     'name' => 'VehiculoImagenes[kilometraje]',
                     'options' => [
                         'id' => 'vehiculo-imagen-kilometraje',
-                        'accept' => 'image/*'
+                        'accept' => 'image/*',
+                        'class' => 'file-input'
                     ],
                     'pluginOptions' => [
                         'showCaption' => false,

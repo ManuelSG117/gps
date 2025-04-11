@@ -89,6 +89,9 @@ class VehiculosController extends Controller
             
             try {
                 if ($model->save()) {
+                    // Handle image uploads after saving the vehicle
+                    $this->saveVehicleImages($model);
+                    
                     return [
                         'success' => true, 
                         'message' => 'Vehículo creado exitosamente.',
@@ -132,6 +135,9 @@ class VehiculosController extends Controller
                 
                 try {
                     if ($model->save()) {
+                        // Handle image uploads after updating the vehicle
+                        $this->saveVehicleImages($model);
+                        
                         return [
                             'success' => true, 
                             'message' => 'Vehículo actualizado exitosamente.',
@@ -205,5 +211,56 @@ class VehiculosController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+    
+    /**
+     * Saves vehicle images to the specified directory structure
+     * @param Vehiculos $model The vehicle model
+     */
+    protected function saveVehicleImages($model)
+    {
+        // Define the base upload directory
+        $baseUploadDir = Yii::getAlias('@webroot') . '/uploads/Vehiculos/';
+        
+        // Create a unique folder name for this vehicle using marca, modelo and timestamp
+        $timestamp = date('Y-m-d_H-i-s');
+        $folderName = $model->marca_auto . '_' . $model->modelo_auto . '_' . $timestamp;
+        $folderName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $folderName); // Sanitize folder name
+        
+        // Create the full directory path
+        $uploadDir = $baseUploadDir . $folderName . '/';
+        
+        // Create directory if it doesn't exist
+        if (!file_exists($baseUploadDir)) {
+            mkdir($baseUploadDir, 0777, true);
+        }
+        
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        
+        // Define image categories
+        $imageCategories = [
+            'frente', 'lateral_derecho', 'lateral_izquierdo', 'trasera', 
+            'llantas', 'motor', 'kilometraje'
+        ];
+        
+        // Process each image upload
+        foreach ($imageCategories as $category) {
+            $uploadedFile = \yii\web\UploadedFile::getInstanceByName("VehiculoImagenes[{$category}]");
+            
+            if ($uploadedFile) {
+                // Generate a unique filename
+                $fileName = $category . '_' . time() . '.' . $uploadedFile->extension;
+                $filePath = $uploadDir . $fileName;
+                
+                // Save the file
+                if ($uploadedFile->saveAs($filePath)) {
+                    Yii::info("Saved {$category} image for vehicle {$model->id} to {$filePath}", 'app');
+                } else {
+                    Yii::error("Failed to save {$category} image for vehicle {$model->id}", 'app');
+                }
+            }
+        }
     }
 }

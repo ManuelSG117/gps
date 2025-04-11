@@ -46,11 +46,14 @@ $(document).ready(function() {
         
         // Get all required fields in the current step
         $(`#step-content-${stepNumber} [required]`).each(function() {
-            if($(this).val() === '') {
-                isValid = false;
-                $(this).addClass('is-invalid');
-            } else {
-                $(this).removeClass('is-invalid');
+            // Make sure the field is visible and enabled before validation
+            if($(this).is(':visible') && !$(this).prop('disabled')) {
+                if($(this).val() === '') {
+                    isValid = false;
+                    $(this).addClass('is-invalid');
+                } else {
+                    $(this).removeClass('is-invalid');
+                }
             }
         });
         
@@ -172,8 +175,27 @@ $(document).ready(function() {
     $(document).on('submit', '#create-vehiculos-form', function(e) {
         e.preventDefault(); // Prevent default form submission
         
+        // Temporarily enable all fields to allow form submission
+        $(this).find(':input:disabled').prop('disabled', false);
+        
         var form = $(this);
         var formData = new FormData(this);
+        
+        // Ensure all file inputs are included in the form data
+        $('.file-input').each(function() {
+            var inputId = $(this).attr('id');
+            // Check if inputId is defined before using replace
+            if (inputId) {
+                var fileCategory = inputId.replace('vehiculo-imagen-', '');
+                
+                // Check if there's a file selected
+                var fileInput = document.getElementById(inputId);
+                if (fileInput && fileInput.files.length > 0) {
+                    // The file will be automatically included in FormData
+                    console.log('File detected for ' + fileCategory);
+                }
+            }
+        });
         
         // Show loading indicator
         Swal.fire({
