@@ -63,9 +63,14 @@ class VehiculosController extends Controller
         if (Yii::$app->request->isAjax) {
             $model = $this->findModel($id);
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            
+            // Get vehicle images
+            $images = $this->getVehicleImages($model);
+            
             return [
                 'success' => true,
                 'data' => $model->attributes,
+                'images' => $images,
                 'isViewMode' => true, // Add this flag to indicate view mode
             ];
         }
@@ -262,5 +267,73 @@ class VehiculosController extends Controller
                 }
             }
         }
+    }
+    
+    /**
+     * Gets the vehicle images from the uploads directory
+     * @param Vehiculos $model The vehicle model
+     * @return array Array of image URLs by category
+     */
+    protected function getVehicleImages($model)
+    {
+        $images = [];
+        $baseUploadDir = Yii::getAlias('@webroot') . '/uploads/vehiculos/';
+        $baseWebPath = Yii::getAlias('@web') . '/uploads/vehiculos/';
+        
+        // Check if the uploads directory exists
+        if (!file_exists($baseUploadDir)) {
+            return $images;
+        }
+        
+        // Look for a folder that matches this vehicle's ID
+        $vehicleFolder = $model->id;
+        $uploadDir = $baseUploadDir . $vehicleFolder . '/';
+        
+        if (!file_exists($uploadDir)) {
+            // Try alternative folder naming patterns
+            $vehicleFolders = glob($baseUploadDir . '*_' . $model->id);
+            if (empty($vehicleFolders)) {
+                // Try by marca and modelo
+                $vehicleFolders = glob($baseUploadDir . $model->marca_auto . '_' . $model->modelo_auto . '*');
+                if (empty($vehicleFolders)) {
+                    return $images;
+                }
+            }
+            
+            // Get the most recent folder
+            usort($vehicleFolders, function($a, $b) {
+                return filemtime($b) - filemtime($a);
+            });
+            
+            $vehicleFolder = basename($vehicleFolders[0]);
+            $uploadDir = $baseUploadDir . $vehicleFolder . '/';
+        }
+        
+        $webPath = $baseWebPath . $vehicleFolder . '/';
+        
+        // Define image categories
+        $imageCategories = [
+            'frente', 'lateral_derecho', 'lateral_izquierdo', 'trasera', 
+            'llantas', 'motor', 'kilometraje'
+        ];
+        
+        // Find images for each category
+        foreach ($imageCategories as $category) {
+            $categoryImages = glob($uploadDir . $category . '*');
+            if (!empty($categoryImages)) {
+                // Get the most recent image for this category
+                usort($categoryImages, function($a, $b) {
+                    return filemtime($b) - filemtime($a);
+                });
+                
+                $imagePath = basename($categoryImages[0]);
+                $images[$category] = $webPath . $imagePath;
+            }
+        }
+        
+        // Debug log
+        Yii::info('Vehicle images found: ' . json_encode($images), 'application');
+        
+        return $images;
     }
 }

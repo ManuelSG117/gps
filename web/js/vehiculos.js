@@ -288,6 +288,48 @@ $(document).on('click', '.ajax-view', function(e) {
                     $('#vehiculos-' + field.toLowerCase()).val(response.data[field]);
                 }
                 
+                // Display images if available
+                if (response.images) {
+                    console.log('Images received:', response.images);
+                    
+                    // Initialize file inputs with preview images
+                    for (var category in response.images) {
+                        var inputId = 'vehiculo-imagen-' + category;
+                        var fileInput = $('#' + inputId);
+                        
+                        if (fileInput.length) {
+                            console.log('Setting preview for', category, response.images[category]);
+                            
+                            // Destroy existing file input instance if it exists
+                            if (fileInput.data('fileinput')) {
+                                fileInput.fileinput('destroy');
+                            }
+                            
+                            // Initialize with preview image
+                            fileInput.fileinput({
+                                theme: 'fa',
+                                showUpload: false,
+                                showCancel: false,
+                                showRemove: false,
+                                showBrowse: false,
+                                showClose: false,
+                                initialPreview: [response.images[category]],
+                                initialPreviewAsData: true,
+                                initialPreviewConfig: [
+                                    {caption: category, downloadUrl: response.images[category], key: 1}
+                                ],
+                                fileActionSettings: {
+                                    showRemove: false,
+                                    showUpload: false,
+                                    showZoom: true,
+                                    showDrag: false,
+                                    showDownload: true
+                                }
+                            });
+                        }
+                    }
+                }
+                
                 // Disable all form fields for view mode
                 $('#create-vehiculos-form').find('input, select, textarea').prop('disabled', true);
                 

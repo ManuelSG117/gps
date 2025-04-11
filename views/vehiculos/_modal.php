@@ -191,7 +191,14 @@ use kartik\file\FileInput;
                         'showUpload' => false,
                         'browseClass' => 'btn btn-primary',
                         'browseIcon' => '<i class="fas fa-camera"></i> ',
-                        'browseLabel' =>  'Seleccionar imagen'
+                        'browseLabel' =>  'Seleccionar imagen',
+                        'fileActionSettings' => [
+                            'showRemove' => true,
+                            'showUpload' => false,
+                            'showZoom' => true,
+                            'showDrag' => true,
+                            'showDownload' => false
+                        ]
                     ]
                 ]); ?>
             </div>
