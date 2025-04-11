@@ -133,7 +133,7 @@ class VehiculosController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-
+    
         if (Yii::$app->request->isAjax) {
             if ($model->load(Yii::$app->request->post())) {
                 Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -168,16 +168,22 @@ class VehiculosController extends Controller
             
             if (Yii::$app->request->isGet) {
                 Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                
+                // Get vehicle images for the update form
+                $images = $this->getVehicleImages($model);
+                
                 return [
                     'success' => true,
                     'data' => $model->attributes,
+                    'images' => $images,
+                    'isViewMode' => false, // This is update mode, not view mode
                     'html' => $this->renderAjax('_modal', ['model' => $model]) // Return form with model
                 ];
             }
             
             return $this->renderAjax('_modal', ['model' => $model]);
         }
-
+    
         return $this->render('update', [
             'model' => $model,
         ]);
@@ -282,34 +288,70 @@ class VehiculosController extends Controller
         
         // Check if the uploads directory exists
         if (!file_exists($baseUploadDir)) {
+            Yii::info('Uploads directory does not exist: ' . $baseUploadDir, 'application');
             return $images;
         }
         
-        // Look for a folder that matches this vehicle's ID
-        $vehicleFolder = $model->id;
-        $uploadDir = $baseUploadDir . $vehicleFolder . '/';
+        // Try different folder naming patterns
+        $possibleFolders = [
+            $model->id, // By ID
+            $model->marca_auto . '_' . $model->modelo_auto, // By marca_modelo
+            $model->placa, // By license plate
+        ];
         
-        if (!file_exists($uploadDir)) {
-            // Try alternative folder naming patterns
-            $vehicleFolders = glob($baseUploadDir . '*_' . $model->id);
-            if (empty($vehicleFolders)) {
-                // Try by marca and modelo
-                $vehicleFolders = glob($baseUploadDir . $model->marca_auto . '_' . $model->modelo_auto . '*');
-                if (empty($vehicleFolders)) {
-                    return $images;
-                }
+        $vehicleFolder = null;
+        
+        foreach ($possibleFolders as $folderName) {
+            // Skip empty folder names
+            if (empty($folderName)) continue;
+            
+            $folderPath = $baseUploadDir . $folderName;
+            if (file_exists($folderPath)) {
+                $vehicleFolder = $folderName;
+                break;
             }
             
-            // Get the most recent folder
-            usort($vehicleFolders, function($a, $b) {
-                return filemtime($b) - filemtime($a);
-            });
-            
-            $vehicleFolder = basename($vehicleFolders[0]);
-            $uploadDir = $baseUploadDir . $vehicleFolder . '/';
+            // Try with wildcard
+            $matchingFolders = glob($baseUploadDir . $folderName . '*');
+            if (!empty($matchingFolders)) {
+                // Get the most recent folder
+                usort($matchingFolders, function($a, $b) {
+                    return filemtime($b) - filemtime($a);
+                });
+                
+                $vehicleFolder = basename($matchingFolders[0]);
+                break;
+            }
         }
         
+        // If no folder found, try to find any folder containing vehicle images
+        if ($vehicleFolder === null) {
+            // Look in all folders for images that might match this vehicle
+            $allFolders = glob($baseUploadDir . '*');
+            foreach ($allFolders as $folder) {
+                if (is_dir($folder)) {
+                    $folderName = basename($folder);
+                    // Check if folder name contains vehicle identifiers
+                    if (stripos($folderName, $model->marca_auto) !== false || 
+                        stripos($folderName, $model->modelo_auto) !== false || 
+                        stripos($folderName, $model->placa) !== false) {
+                        $vehicleFolder = $folderName;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // If still no folder found, return empty array
+        if ($vehicleFolder === null) {
+            Yii::info('No matching folder found for vehicle ID: ' . $model->id, 'application');
+            return $images;
+        }
+        
+        $uploadDir = $baseUploadDir . $vehicleFolder . '/';
         $webPath = $baseWebPath . $vehicleFolder . '/';
+        
+        Yii::info('Found vehicle folder: ' . $uploadDir, 'application');
         
         // Define image categories
         $imageCategories = [
@@ -328,11 +370,9 @@ class VehiculosController extends Controller
                 
                 $imagePath = basename($categoryImages[0]);
                 $images[$category] = $webPath . $imagePath;
+                Yii::info('Found image for category ' . $category . ': ' . $imagePath, 'application');
             }
         }
-        
-        // Debug log
-        Yii::info('Vehicle images found: ' . json_encode($images), 'application');
         
         return $images;
     }

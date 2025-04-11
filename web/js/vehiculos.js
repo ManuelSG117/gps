@@ -288,53 +288,144 @@ $(document).on('click', '.ajax-view', function(e) {
                     $('#vehiculos-' + field.toLowerCase()).val(response.data[field]);
                 }
                 
-                // Display images if available
-                if (response.images) {
-                    console.log('Images received:', response.images);
+                // First, hide all file input containers in view mode only
+                if (response.isViewMode) {
+                    // Remove any previous messages
+                    $('#step-content-3 .alert').remove();
                     
-                    // Initialize file inputs with preview images
-                    for (var category in response.images) {
-                        var inputId = 'vehiculo-imagen-' + category;
-                        var fileInput = $('#' + inputId);
+                    // Hide all file input containers initially
+                    $('.file-input').each(function() {
+                        $(this).closest('.col-md-6, .col-md-4').hide();
+                    });
+                    
+                    // Display only images that are available
+                    if (response.images && Object.keys(response.images).length > 0) {
+                        console.log('Images received:', response.images);
                         
-                        if (fileInput.length) {
-                            console.log('Setting preview for', category, response.images[category]);
+                        // Initialize file inputs with preview images
+                        for (var category in response.images) {
+                            var inputId = 'vehiculo-imagen-' + category;
+                            var fileInput = $('#' + inputId);
                             
-                            // Destroy existing file input instance if it exists
-                            if (fileInput.data('fileinput')) {
-                                fileInput.fileinput('destroy');
-                            }
-                            
-                            // Initialize with preview image
-                            fileInput.fileinput({
-                                theme: 'fa',
-                                showUpload: false,
-                                showCancel: false,
-                                showRemove: false,
-                                showBrowse: false,
-                                showClose: false,
-                                initialPreview: [response.images[category]],
-                                initialPreviewAsData: true,
-                                initialPreviewConfig: [
-                                    {caption: category, downloadUrl: response.images[category], key: 1}
-                                ],
-                                fileActionSettings: {
-                                    showRemove: false,
-                                    showUpload: false,
-                                    showZoom: true,
-                                    showDrag: false,
-                                    showDownload: true
+                            if (fileInput.length) {
+                                // Show this file input's container
+                                fileInput.closest('.col-md-6, .col-md-4').show();
+                                
+                                console.log('Setting preview for', category, response.images[category]);
+                                
+                                // Destroy existing file input instance if it exists
+                                if (fileInput.data('fileinput')) {
+                                    fileInput.fileinput('destroy');
                                 }
-                            });
+                                
+                                // Initialize with preview image
+                                fileInput.fileinput({
+                                    theme: 'fa',
+                                    showUpload: false,
+                                    showCancel: false,
+                                    showRemove: false,
+                                    showBrowse: false,
+                                    showClose: false,
+                                    initialPreview: [response.images[category]],
+                                    initialPreviewAsData: true,
+                                    initialPreviewConfig: [
+                                        {caption: category, downloadUrl: response.images[category], key: 1}
+                                    ],
+                                    fileActionSettings: {
+                                        showRemove: false,
+                                        showUpload: false,
+                                        showZoom: true,
+                                        showDrag: false,
+                                        showDownload: true
+                                    }
+                                });
+                            }
                         }
+                        
+                        // If no images were found, show a message
+                        if (Object.keys(response.images).length === 0) {
+                            $('#step-content-3').append('<div class="alert alert-info text-center">No hay imágenes disponibles para este vehículo.</div>');
+                        }
+                    } else {
+                        // If no images property in response, show a message
+                        $('#step-content-3').append('<div class="alert alert-info text-center">No hay imágenes disponibles para este vehículo.</div>');
                     }
                 }
                 
                 // Disable all form fields for view mode
-                $('#create-vehiculos-form').find('input, select, textarea').prop('disabled', true);
+                if (response.isViewMode) {
+                    $('#create-vehiculos-form').find('input, select, textarea').prop('disabled', true);
+                    
+                    // Hide all submit buttons in view mode
+                    $('#create-vehiculos-form .btn-success').hide();
+                }
                 
-                // Hide all submit buttons in view mode
-                $('#create-vehiculos-form .btn-success').hide();
+                // Initialize the first step
+                showStep(1);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message || 'Error al cargar los datos del vehículo'
+                });
+            }
+        },
+        error: function() {
+            Swal.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error de conexión al cargar los datos del vehículo'
+            });
+        }
+    });
+});
+
+// Add a click handler for the update button
+$(document).on('click', '.ajax-update', function(e) {
+    e.preventDefault();
+    
+    var url = $(this).data('url');
+    
+    // Show loading indicator
+    Swal.fire({
+        title: 'Cargando...',
+        text: 'Por favor espera.',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+    
+    // Fetch vehicle data and update modal
+    $.ajax({
+        url: url,
+        type: 'GET',
+        success: function(response) {
+            Swal.close();
+            
+            if (response.success) {
+                // Open the modal
+                $('#exampleModalCenter').modal('show');
+                
+                // Update modal title
+                $('#exampleModalCenterTitle').text('Actualizar Vehículo');
+                
+                // Update form action to update
+                $('#create-vehiculos-form').attr('action', url);
+                $('#create-vehiculos-form').attr('method', 'post');
+                
+                // Populate form with data
+                for (var field in response.data) {
+                    $('#vehiculos-' + field.toLowerCase()).val(response.data[field]);
+                }
+                
+                // Make sure all file inputs are visible in update mode
+                $('.file-input').each(function() {
+                    $(this).closest('.col-md-6, .col-md-4').show();
+                });
+                
+                // Remove any previous messages
+                $('#step-content-3 .alert').remove();
                 
                 // Initialize the first step
                 showStep(1);
@@ -380,54 +471,3 @@ $('#exampleModalCenter').on('hidden.bs.modal', function () {
     // Reset to first step
     showStep(1);
 });
-
-$(document).on('click', '.ajax-update', function (e) {
-    e.preventDefault();
-
-    var url = $(this).data('url');
-
-    // Mostrar el modal de carga
-    Swal.fire({
-        title: 'Cargando...',
-        text: 'Por favor espera.',
-        icon: 'info',
-        showConfirmButton: false,
-        allowOutsideClick: false
-    });
-
-    $.ajax({
-        url: url,
-        type: 'GET',
-        success: function (response) {
-            Swal.close(); // Cerrar el modal de carga
-
-            if (response.success) {
-                // Cargar los datos en el formulario
-                var data = response.data;
-                $('#create-vehiculos-form').find('input, select, textarea').each(function () {
-                    var name = $(this).attr('name');
-                    if (name && data[name.replace('Vehiculos[', '').replace(']', '')] !== undefined) {
-                        $(this).val(data[name.replace('Vehiculos[', '').replace(']', '')]);
-                    }
-                });
-
-                // Habilitar los campos para editar
-                $('#create-vehiculos-form').find('input, select, textarea').prop('disabled', false);
-
-                // Cambiar el título del modal y mostrarlo
-                $('#exampleModalCenterTitle').text('Actualizar Vehículo');
-                $('#exampleModalCenter').modal('show');
-
-                // Cambiar la acción del formulario para actualizar
-                $('#create-vehiculos-form').attr('action', url);
-            }
-        },
-        error: function () {
-            Swal.close(); // Cerrar el modal de carga
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudieron cargar los datos del vehículo.',
-            });
-        }
-    });});
