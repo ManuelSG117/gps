@@ -140,13 +140,28 @@ use kartik\file\FileInput;
 
         <div class="row">
             <div class="col-md-4">
-                <?= $form->field($model, 'estado_llantas')->textInput(['maxlength' => true]) ?>
+                <?= $form->field($model, 'estado_llantas')->dropDownList([
+                    'Nuevo' => 'Nuevo',
+                    'Bueno' => 'Bueno',
+                    'Regular' => 'Regular',
+                    'Malo' => 'Malo'
+                ], ['prompt' => 'Seleccione estado']) ?>
             </div>
             <div class="col-md-4">
-                <?= $form->field($model, 'estado_vehiculo')->textInput(['maxlength' => true]) ?>
+                <?= $form->field($model, 'estado_vehiculo')->dropDownList([
+                    'Nuevo' => 'Nuevo',
+                    'Bueno' => 'Bueno',
+                    'Regular' => 'Regular',
+                    'Malo' => 'Malo'
+                ], ['prompt' => 'Seleccione estado']) ?>
             </div>
             <div class="col-md-4">
-                <?= $form->field($model, 'estado_motor')->textInput(['maxlength' => true]) ?>
+                <?= $form->field($model, 'estado_motor')->dropDownList([
+                    'Nuevo' => 'Nuevo',
+                    'Bueno' => 'Bueno',
+                    'Regular' => 'Regular',
+                    'Malo' => 'Malo'
+                ], ['prompt' => 'Seleccione estado']) ?>
             </div>
         </div>
         
