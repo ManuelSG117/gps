@@ -4,7 +4,7 @@ use yii\widgets\ActiveForm;
 use yii\widgets\LinkPager;
 use app\models\GpsLocations;
 use yii\helpers\Url;
-
+use yii\widgets\Pjax;
 
 ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -17,8 +17,13 @@ use yii\helpers\Url;
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA73efm01Xa11C5aXzXBGFbWUjMtkad5HE"></script>
 <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
 
+<?php Pjax::begin(['id' => 'gps-report-pjax', 'timeout' => 10000]); ?>
 <div class="gps-report-form">
-    <?php $form = ActiveForm::begin(['method' => 'get', 'action' => ['gpsreport/index']]); ?>
+    <?php $form = ActiveForm::begin([
+        'method' => 'get', 
+        'action' => ['gpsreport/index'],
+        'options' => ['data-pjax' => true]
+    ]); ?>
 
     <div class="container-fluid">
     <div class="row align-items-end">
@@ -89,8 +94,6 @@ use yii\helpers\Url;
 
 <br>
 
-
-
     <?php ActiveForm::end(); ?>
 </div>
 
@@ -155,11 +158,29 @@ use yii\helpers\Url;
         <div id="map" style="height: 500px; width: 100%; margin-top: 15px; position: relative;"></div>
     </div>
 </div>
+<?php Pjax::end(); ?>
 
 <script>
 // Initialize map and route display
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', function() {
     // Initialize Flatpickr
+    initFlatpickr();
+    
+    // Setup filter change event
+    setupFilterChangeEvent();
+    
+    // Initialize the map if we have location data
+    initMap();
+    
+    // Setup Pjax events
+    $(document).on('pjax:success', function() {
+        initFlatpickr();
+        setupFilterChangeEvent();
+        initMap();
+    });
+});
+
+function initFlatpickr() {
     flatpickr('#startDate', {
         dateFormat: 'Y-m-d',
         locale: 'es',
@@ -171,8 +192,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         locale: 'es',
         allowInput: true,
     });
+}
 
+function setupFilterChangeEvent() {
     const filter = document.getElementById('filter');
+    if (!filter) return;
+    
     const customDates = document.querySelector('.custom-dates');
     const dateFields = document.querySelectorAll('.custom-dates .form-control');
     const colSize = 'col-lg-2 col-md-4 col-12'; // Tamaño por defecto para cada campo
@@ -198,16 +223,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             field.closest('.col-6').classList.add(colSize);
         });
     }
-    
-    // Initialize the map if we have location data
-    await initMap();
-});
+}
 
 async function initMap() {
     // Check if we have location data
     const tableRows = document.querySelectorAll('#projects-tbl tbody tr');
     if (tableRows.length === 0 || tableRows[0].cells.length <= 1) {
-        document.getElementById('map').innerHTML = '<div class="alert alert-info">No hay datos de ubicación disponibles para mostrar en el mapa.</div>';
+        const mapElement = document.getElementById('map');
+        if (mapElement) {
+            mapElement.innerHTML = '<div class="alert alert-info">No hay datos de ubicación disponibles para mostrar en el mapa.</div>';
+        }
         return;
     }
     
@@ -237,6 +262,10 @@ async function initMap() {
     }
     
     try {
+        // Clear previous map if exists
+        const mapContainer = document.getElementById('map');
+        mapContainer.innerHTML = '';
+        
         // Initialize the map with Leaflet
         const map = L.map('map').setView([locations[0].lat, locations[0].lng], 13);
         
@@ -452,5 +481,34 @@ function showAddress(lat, lng, element) {
     float: left;
     margin-right: 8px;
     opacity: 0.7;
+}
+
+/* Add loading indicator for PJAX */
+.pjax-loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pjax-loading:after {
+    content: '';
+    width: 50px;
+    height: 50px;
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 </style>

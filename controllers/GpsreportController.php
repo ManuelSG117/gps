@@ -23,6 +23,17 @@ use PhpOffice\PhpSpreadsheet\Chart\Title;
 
 class GpsreportController extends Controller
 {
+    public function behaviors()
+    {
+        return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'delete' => ['POST'],
+                ],
+            ],
+        ];
+    }
     
     public function actionIndex()
     {
@@ -70,6 +81,13 @@ class GpsreportController extends Controller
         
         $locations = $query->all();
     
+        // If it's a PJAX request, render only the content
+        if (Yii::$app->request->isPjax) {
+            return $this->renderAjax('index', [
+                'locations' => $locations,
+            ]);
+        }
+        
         return $this->render('index', [
             'locations' => $locations,
         ]);
@@ -282,9 +300,7 @@ class GpsreportController extends Controller
         $tempFile = Yii::getAlias('@runtime') . '/' . $fileName;
         $writer->save($tempFile);
     
-        return Yii::$app->response->sendFile($tempFile)->on(Response::EVENT_AFTER_SEND, function () use ($tempFile) {
-            unlink($tempFile); // Eliminar el archivo temporal después de enviarlo
-        });
+        return Yii::$app->response->sendFile($tempFile);
     }
     
     public function actionReportStops()
