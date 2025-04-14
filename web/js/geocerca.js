@@ -653,101 +653,87 @@ InitMap()
 
 
 
-// Add this new event listener after the existing code
-
+// Add this code after the InitMap function or at the end of the file
 document.getElementById('save-polygon-changes').addEventListener('click', function() {
-    if (!window.currentEditingPolygon) {
-        return;
-    }
-
-    Swal.fire({
-        title: '¿Guardar cambios?',
-        text: '¿Está seguro de guardar los cambios en el geofence?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, guardar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Get coordinates from current editing polygon
-            const path = window.currentEditingPolygon.polygon.getPath();
-            const coordinates = [];
-            for (let i = 0; i < path.getLength(); i++) {
-                const point = path.getAt(i);
-                coordinates.push(`${point.lat()},${point.lng()}`);
-            }
-
-            // Send update request
-            fetch(`/geocerca/update-coordinates?id=${window.currentEditingPolygon.geofenceId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    coordinates: coordinates.join('|')
-                })
+    if (window.currentEditingPolygon) {
+        const polygon = window.currentEditingPolygon.polygon;
+        const geofenceId = window.currentEditingPolygon.geofenceId;
+        
+        // Get the updated coordinates from the polygon
+        const path = polygon.getPath();
+        const updatedCoordinates = [];
+        
+        for (let i = 0; i < path.getLength(); i++) {
+            const point = path.getAt(i);
+            updatedCoordinates.push(point.lat() + ',' + point.lng());
+        }
+        
+        // Send the updated coordinates to the server
+        fetch(`/geocerca/update-coordinates?id=${geofenceId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                coordinates: updatedCoordinates.join('|')
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Update the geofence data in the array
-                    const geofenceId = window.currentEditingPolygon.geofenceId;
-                    const index = geofencesData.findIndex(g => g.id == geofenceId);
-                    if (index !== -1) {
-                        geofencesData[index].coordinates = coordinates.join('|');
-                        
-                        // Update tooltip position
-                        if (tooltipsMap[geofenceId]) {
-                            const path = window.currentEditingPolygon.polygon.getPath();
-                            const points = [];
-                            for (let i = 0; i < path.getLength(); i++) {
-                                points.push(path.getAt(i));
-                            }
-                            
-                            const topPoint = points.reduce((highest, coord) => {
-                                return coord.lat() > highest.lat() ? coord : highest;
-                            }, points[0]);
-                            
-                            tooltipsMap[geofenceId].setPosition(topPoint);
-                        }
-                    }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the geofence data in the array
+                const index = geofencesData.findIndex(g => g.id == geofenceId);
+                if (index !== -1) {
+                    geofencesData[index].coordinates = updatedCoordinates.join('|');
                     
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Éxito!',
-                        text: 'Coordenadas actualizadas exitosamente',
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error al actualizar las coordenadas',
-                        confirmButtonText: 'Aceptar'
-                    });
+                    // Update tooltip position
+                    if (tooltipsMap[geofenceId]) {
+                        const points = [];
+                        for (let i = 0; i < path.getLength(); i++) {
+                            points.push(path.getAt(i));
+                        }
+                        
+                        const topPoint = points.reduce((highest, coord) => {
+                            return coord.lat() > highest.lat() ? coord : highest;
+                        }, points[0]);
+                        
+                        tooltipsMap[geofenceId].setPosition(topPoint);
+                    }
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Guardado!',
+                    text: 'Coordenadas actualizadas correctamente',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                
+                // Make the polygon non-editable again
+                polygon.setEditable(false);
+                
+                // Hide the save button
+                document.getElementById('save-polygon-changes').style.display = 'none';
+                
+                // Clear the current editing polygon
+                window.currentEditingPolygon = null;
+            } else {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Error al actualizar las coordenadas',
+                    text: 'Error al guardar las coordenadas',
                     confirmButtonText: 'Aceptar'
                 });
+            }
+        })
+        .catch(error => {
+            console.error('Error saving coordinates:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al guardar las coordenadas: ' + error.message,
+                confirmButtonText: 'Aceptar'
             });
-        }
-    });
+        });
+    }
 });
-function toggleSelectAll(selectAllCheckbox) {
-    const checkboxes = document.querySelectorAll('.item-item input[type="checkbox"]');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = selectAllCheckbox.checked;
-        toggleMarker(checkbox.id);
-    });
-}
