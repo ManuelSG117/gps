@@ -258,7 +258,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 					</a>
 					<ul aria-expanded="false">
 						<li><a href="/gpsreport/index">Reporte Ruta</a></li>
-						<li><a href="/gpsreport/report_stops">Reporte Paradas</a></li>
+						<li><a href="/gpsreport/report-stops">Reporte Paradas</a></li>
 					</ul>
 					</li>
 				

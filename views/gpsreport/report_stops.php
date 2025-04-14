@@ -98,63 +98,114 @@ $this->registerJsFile('@web/js/stops.js', ['depends' => [\yii\web\JqueryAsset::c
 
     <br>
 
-    <div class="card">
-        <div class="card-body p-0">
-            <div class="table-responsive active-projects">
-                <div class="tbl-caption">
-                    <h4 class="heading mb-0">Reporte Paradas Dispositivo</h4>
-                </div>
-                <table id="projects-tbl" class="table">
-                    <thead>
-                        <tr>
-                            <th>Inicio de parada</th>
-                            <th>Fin de parada</th>
-                            <th>Duración </th>
-                            <th>Ubicación</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (!empty($stops)): ?>
-                            <?php foreach ($stops as $stop): ?>
-                                <tr>
-                                    <td><?= $stop['start_time'] ?></td>
-                                    <td><?= isset($stop['end_time']) ? $stop['end_time'] : 'En curso' ?></td>
-                                    <td>
-                                        <?php
-                                        if (isset($stop['duration'])) {
-                                            $durationInSeconds = $stop['duration'];
-                                            if ($durationInSeconds >= 3600) {
-                                                $hours = floor($durationInSeconds / 3600);
-                                                $minutes = floor(($durationInSeconds % 3600) / 60);
-                                                $seconds = $durationInSeconds % 60;
-                                                echo sprintf('%d horas, %d minutos, %d segundos', $hours, $minutes, $seconds);
+    <div class="custom-card-container">
+        <div class="custom-card">
+            <div class="custom-card-header">
+                <h4 class="custom-card-title">Reporte Paradas Dispositivo</h4>
+            </div>
+            <div class="custom-card-body">
+                <div class="table-responsive active-projects">
+                    <table id="projects-tbl" class="table table-striped table-bordered compact-table">
+                        <thead>
+                            <tr class="table-primary">
+                                <th>Inicio de parada</th>
+                                <th>Fin de parada</th>
+                                <th>Duración </th>
+                                <th>Ubicación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($stops)): ?>
+                                <?php 
+                                // Pagination setup
+                                $pageSize = 10;
+                                $totalCount = count($stops);
+                                $pageCount = ceil($totalCount / $pageSize);
+                                $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                                $currentPage = max(1, min($currentPage, $pageCount));
+                                $offset = ($currentPage - 1) * $pageSize;
+                                
+                                // Get current page items
+                                $currentItems = array_slice($stops, $offset, $pageSize);
+                                
+                                foreach ($currentItems as $stop): 
+                                ?>
+                                    <tr>
+                                        <td><?= $stop['start_time'] ?></td>
+                                        <td><?= isset($stop['end_time']) ? $stop['end_time'] : 'En curso' ?></td>
+                                        <td><span class="badge badge-sm  badge-primary">
+                                            <?php
+                                            if (isset($stop['duration'])) {
+                                                $durationInSeconds = $stop['duration'];
+                                                if ($durationInSeconds >= 3600) {
+                                                    $hours = floor($durationInSeconds / 3600);
+                                                    $minutes = floor(($durationInSeconds % 3600) / 60);
+                                                    $seconds = $durationInSeconds % 60;
+                                                    echo sprintf('%d horas, %d minutos, %d segundos', $hours, $minutes, $seconds);
+                                                } else {
+                                                    $minutes = floor($durationInSeconds / 60);
+                                                    $seconds = $durationInSeconds % 60;
+                                                    echo sprintf('%d minutos, %d segundos', $minutes, $seconds);
+                                                }
                                             } else {
-                                                $minutes = floor($durationInSeconds / 60);
-                                                $seconds = $durationInSeconds % 60;
-                                                echo sprintf('%d minutos, %d segundos', $minutes, $seconds);
+                                                echo 'N/A';
                                             }
-                                        } else {
-                                            echo 'N/A';
-                                        }
-                                        ?>
-                                    </td>                                    <td>
-                                        <a href="https://www.google.com/maps?q=<?= $stop['latitude'] ?>,<?= $stop['longitude'] ?>" target="_blank">
-                                            Ver en mapa
-                                        </a>
-                                    </td>
+                                            ?>
+                                        </span>
+                                        </td>
+                                        <td>
+                                            
+                                            <a href="https://www.google.com/maps?q=<?= $stop['latitude'] ?>,<?= $stop['longitude'] ?>" target="_blank">
+                                                Ver en mapa
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="4">No hay datos disponibles.</td>
                                 </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <p>No hay datos disponibles.</p>
                             <?php endif; ?>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                    
+                    <!-- Pagination -->
+                    <?php if (!empty($stops) && $totalCount > $pageSize): ?>
+                    <div class="pagination-container mt-3">
+                        <nav>
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item <?= ($currentPage <= 1) ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="<?= Url::to(['gpsreport/report-stops', 'page' => $currentPage - 1, 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate')]) ?>">
+                                        &laquo;
+                                    </a>
+                                </li>
+                                
+                                <?php for ($i = 1; $i <= $pageCount; $i++): ?>
+                                    <li class="page-item <?= ($i == $currentPage) ? 'active' : '' ?>">
+                                        <a class="page-link" href="<?= Url::to(['gpsreport/report-stops', 'page' => $i, 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate')]) ?>">
+                                            <?= $i ?>
+                                        </a>
+                                    </li>
+                                <?php endfor; ?>
+                                
+                                <li class="page-item <?= ($currentPage >= $pageCount) ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="<?= Url::to(['gpsreport/report-stops', 'page' => $currentPage + 1, 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate')]) ?>">
+                                        &raquo;
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                        <div class="text-center text-muted">
+                            Mostrando <?= min($offset + 1, $totalCount) ?>-<?= min($offset + $pageSize, $totalCount) ?> de <?= $totalCount ?> registros
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
-
     </div>
-
-
+    
+    
     
    <!-- Switch para mostrar/ocultar tarjetas --> 
    <div id="toggle-container">
@@ -332,50 +383,37 @@ $(document).ready(function() {
 </script>
 <script>
 $(document).ready(function () {
-    let card = $(".card");
+    let cardContainer = $(".custom-card-container");
     let toggleContainer = $("#toggle-container");
 
     // Ocultar la card y el toggle al inicio
-    card.hide();
+    cardContainer.hide();
     toggleContainer.hide();
-//    console.log("Card y toggle ocultos al inicio");
 
     // Manejar el envío del formulario sin recargar la página
     $('#gps-report-form').on('submit', function (event) {
         event.preventDefault(); // Evita la recarga
-    //    console.log("Formulario enviado, esperando respuesta...");
         $.pjax.submit(event, '#gps-report-pjax', {timeout: 5000});
     });
 
     // Detectar la actualización completa de PJAX
     $(document).off('pjax:complete').on('pjax:complete', function () {
-        console.log("pjax:complete event detected");
-
         // Esperar un momento para asegurarse de que el DOM se haya actualizado
         setTimeout(function () {
-            console.log("Timeout completado, verificando filas en la tabla...");
             let newTableBody = $("#projects-tbl tbody");
             let numRows = newTableBody.find("tr").length;
 
-            console.log(`Filas encontradas en la tabla: ${numRows}`);
-
-            if (numRows > 0) {
-                console.log("Datos cargados, mostrando la card y el toggle...");
-                card.fadeIn(500, function() {
-                    console.log("Card mostrada");
-                    
-                });
-                toggleContainer.fadeIn(500, function() {
-                    console.log("ToggleContainer mostrado");
-                });
+            if (numRows > 0 && !newTableBody.find("tr td[colspan]").length) {
+                cardContainer.fadeIn(500);
+                toggleContainer.fadeIn(500);
             } else {
-                console.log("No se encontraron datos en la tabla.");
-                card.hide();
+                cardContainer.hide();
                 toggleContainer.hide();
             }
         }, 100); // Ajusta el tiempo de espera según sea necesario
     });
 });
+</script>
 
 </script>
 <script>$(document).on('pjax:end', function() {
@@ -397,4 +435,52 @@ $(document).ready(function () {
 });
 
 </script>
+
+<style>
+    .custom-card {
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        background-color: #fff;
+        position: relative;
+    }
+
+    .custom-card-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .custom-card-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .custom-card-body {
+        padding: 20px;
+        position: relative;
+    }
+
+    .compact-table {
+        font-size: 14px;
+    }
+
+    .compact-table th, .compact-table td {
+        padding: 10px 15px;
+    }
+    
+    /* Map container styles */
+    #stops-map {
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    /* Legend styles */
+    .info.legend {
+        background: white;
+        padding: 6px 8px;
+        border-radius: 4px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+</style>
 
