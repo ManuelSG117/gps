@@ -6,6 +6,7 @@ let new_coordinates = []
 let lastElement
 var polygonsMap = {}; 
 var selectedShape; // Move this to global scope
+var tooltipsMap = {}; // Add this to store references to tooltips
 
 function InitMap() {
     var location = new google.maps.LatLng(19.4091657,-102.076571)
@@ -37,26 +38,29 @@ function InitMap() {
         polygon.setMap(map);
         polygonsMap[geofence.id] = polygon; 
         
-// Calculate the top position of the polygon
-const topPoint = coordinates.reduce((highest, coord) => {
-    return coord.lat() > highest.lat() ? coord : highest;
-}, coordinates[0]);
+        // Calculate the top position of the polygon
+        const topPoint = coordinates.reduce((highest, coord) => {
+            return coord.lat() > highest.lat() ? coord : highest;
+        }, coordinates[0]);
 
-// Add a tooltip to the polygon
-const tooltip = new google.maps.Marker({
-    position: topPoint, // Use the top point instead of the center
-    map: map,
-    icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 0, // Invisible marker
-    },
-    label: {
-        text: geofence.name,
-        color: '#000',
-        fontSize: '14px',
-        className: 'custom-tooltip', // Custom class for styling
-    }
-});
+        // Add a tooltip to the polygon
+        const tooltip = new google.maps.Marker({
+            position: topPoint, // Use the top point instead of the center
+            map: map,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 0, // Invisible marker
+            },
+            label: {
+                text: geofence.name,
+                color: '#000',
+                fontSize: '14px',
+                className: 'custom-tooltip', // Custom class for styling
+            }
+        });
+        
+        // Store the tooltip reference
+        tooltipsMap[geofence.id] = tooltip;
         
     document.getElementById('geofenceList').addEventListener('change', function (e) {
         if (e.target.classList.contains('geofence-checkbox')) {
@@ -372,6 +376,12 @@ function deleteGeofence(id) {
                         delete polygonsMap[id];
                     }
                     
+                    // Remove the tooltip from the map
+                    if (tooltipsMap[id]) {
+                        tooltipsMap[id].setMap(null);
+                        delete tooltipsMap[id];
+                    }
+                    
                     // Remove the geofence from the geofencesData array
                     const index = geofencesData.findIndex(g => g.id === id);
                     if (index !== -1) {
@@ -515,6 +525,28 @@ document.getElementById('saveGeofenceData').addEventListener('click', function()
                 polygon.setMap(map);
                 polygonsMap[data.id] = polygon;
                 
+                // Add tooltip for the new geofence
+                const topPoint = newCoordinates.reduce((highest, coord) => {
+                    return coord.lat() > highest.lat() ? coord : highest;
+                }, newCoordinates[0]);
+                
+                const tooltip = new google.maps.Marker({
+                    position: topPoint,
+                    map: map,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 0,
+                    },
+                    label: {
+                        text: name,
+                        color: '#000',
+                        fontSize: '14px',
+                        className: 'custom-tooltip',
+                    }
+                });
+                
+                tooltipsMap[data.id] = tooltip;
+                
                 // Update the geofence list
                 populateGeofenceList();
             } else if (id) {
@@ -535,6 +567,25 @@ document.getElementById('saveGeofenceData').addEventListener('click', function()
                         });
                         
                         polygonsMap[id].setPath(updatedCoordinates);
+                        
+                        // Update tooltip position if coordinates changed
+                        if (tooltipsMap[id]) {
+                            const topPoint = updatedCoordinates.reduce((highest, coord) => {
+                                return coord.lat() > highest.lat() ? coord : highest;
+                            }, updatedCoordinates[0]);
+                            
+                            tooltipsMap[id].setPosition(topPoint);
+                        }
+                    }
+                    
+                    // Update tooltip text with new name
+                    if (tooltipsMap[id]) {
+                        tooltipsMap[id].setLabel({
+                            text: name,
+                            color: '#000',
+                            fontSize: '14px',
+                            className: 'custom-tooltip',
+                        });
                     }
                     
                     // Update the geofence list
@@ -641,6 +692,28 @@ document.getElementById('save-polygon-changes').addEventListener('click', functi
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // Update the geofence data in the array
+                    const geofenceId = window.currentEditingPolygon.geofenceId;
+                    const index = geofencesData.findIndex(g => g.id == geofenceId);
+                    if (index !== -1) {
+                        geofencesData[index].coordinates = coordinates.join('|');
+                        
+                        // Update tooltip position
+                        if (tooltipsMap[geofenceId]) {
+                            const path = window.currentEditingPolygon.polygon.getPath();
+                            const points = [];
+                            for (let i = 0; i < path.getLength(); i++) {
+                                points.push(path.getAt(i));
+                            }
+                            
+                            const topPoint = points.reduce((highest, coord) => {
+                                return coord.lat() > highest.lat() ? coord : highest;
+                            }, points[0]);
+                            
+                            tooltipsMap[geofenceId].setPosition(topPoint);
+                        }
+                    }
+                    
                     Swal.fire({
                         icon: 'success',
                         title: '¡Éxito!',
