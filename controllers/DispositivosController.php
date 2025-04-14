@@ -62,21 +62,21 @@ class DispositivosController extends Controller
      * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
-     {
-         $model = $this->findModel($id);
+    {
+        $model = $this->findModel($id);
      
-         if (Yii::$app->request->isAjax) {
-             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-             return [
-                 'success' => true,
-                 'data' => $model->attributes,
-             ];
-         }
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'success' => true,
+                'data' => $model->attributes,
+            ];
+        }
      
-         return $this->render('view', [
-             'model' => $model,
-         ]);
-     }
+        return $this->render('view', [
+            'model' => $model,
+        ]);
+    }
 
     /**
      * Creates a new Dispositivos model.
@@ -104,6 +104,7 @@ class DispositivosController extends Controller
         }
         return $out;
     }
+    
     public function actionUploadPolicy()
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -126,27 +127,118 @@ class DispositivosController extends Controller
         return $out;
     }
         
-public function actionCreate()
-{
-    $model = new Dispositivos();
+    public function actionCreate()
+    {
+        $model = new Dispositivos();
 
-    if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        try {
-            if ($model->save()) {
-                return ['success' => true, 'message' => 'Dispositivo creado exitosamente.'];
-            } else {
-                return ['success' => false, 'message' => 'Error al guardar el dispositivo.', 'errors' => $model->errors];
+            try {
+                if ($model->save()) {
+                    // Handle vehicle images
+                    $vehicleImages = UploadedFile::getInstancesByName('vehicle_images');
+                    if (!empty($vehicleImages)) {
+                        $this->saveVehicleImages($model, $vehicleImages);
+                    }
+                    
+                    // Handle policy images
+                    $policyImages = UploadedFile::getInstancesByName('policy_images');
+                    if (!empty($policyImages)) {
+                        $this->savePolicyImages($model, $policyImages);
+                    }
+                    
+                    return [
+                        'success' => true,
+                        'message' => 'Dispositivo creado exitosamente.',
+                    ];
+                } else {
+                    return [
+                        'success' => false,
+                        'message' => 'Error al guardar el dispositivo.',
+                        'errors' => $model->errors
+                    ];
+                }
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'message' => 'Error: ' . $e->getMessage()
+                ];
             }
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => 'Ocurrió un error: ' . $e->getMessage()];
         }
-        
+
+        return $this->render('create', [
+            'model' => $model,
+        ]);
     }
 
-    return $this->renderAjax('_modal', ['model' => $model]);
-}   
+    /**
+     * Saves vehicle images to the specified directory
+     * @param Dispositivos $model The dispositivo model
+     * @param array $images The uploaded images
+     */
+    protected function saveVehicleImages($model, $images)
+    {
+        $baseUploadDir = Yii::getAlias('@webroot') . '/uploads/vehiculos/';
+        $folderName = 'dispositivo_' . $model->id . '_' . date('Y-m-d_H-i-s');
+        $uploadDir = $baseUploadDir . $folderName . '/';
+        
+        if (!file_exists($baseUploadDir)) {
+            mkdir($baseUploadDir, 0777, true);
+        }
+        
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        
+        foreach ($images as $index => $file) {
+            $fileName = 'vehiculo_' . ($index + 1) . '_' . time() . '.' . $file->extension;
+            $filePath = $uploadDir . $fileName;
+            
+            if ($file->saveAs($filePath)) {
+                Yii::info("Saved vehicle image {$index} for dispositivo {$model->id} to {$filePath}", 'app');
+            } else {
+                Yii::error("Failed to save vehicle image {$index} for dispositivo {$model->id}", 'app');
+            }
+        }
+    }
+
+    /**
+     * Saves policy images to the specified directory
+     * @param Dispositivos $model The dispositivo model
+     * @param array $images The uploaded images
+     */
+    protected function savePolicyImages($model, $images)
+    {
+        $baseUploadDir = Yii::getAlias('@webroot') . '/uploads/polizas/';
+        $folderName = 'dispositivo_' . $model->id . '_' . date('Y-m-d_H-i-s');
+        $uploadDir = $baseUploadDir . $folderName . '/';
+        
+        if (!file_exists($baseUploadDir)) {
+            mkdir($baseUploadDir, 0777, true);
+        }
+        
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        
+        foreach ($images as $index => $file) {
+            $fileName = 'poliza_' . ($index + 1) . '_' . time() . '.' . $file->extension;
+            $filePath = $uploadDir . $fileName;
+            
+            if ($file->saveAs($filePath)) {
+                Yii::info("Saved policy image {$index} for dispositivo {$model->id} to {$filePath}", 'app');
+            } else {
+                Yii::error("Failed to save policy image {$index} for dispositivo {$model->id}", 'app');
+            }
+        }
+    }
+
+    public function actionModal()
+    {
+        $model = new Dispositivos();
+        return $this->renderAjax('_modal', ['model' => $model]);
+    }
 
     /**
      * Updates an existing Dispositivos model.
@@ -216,3 +308,4 @@ public function actionCreate()
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 }
+

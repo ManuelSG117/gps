@@ -57,9 +57,10 @@ $(document).on('click', '.ajax-delete', function (e) {
 $('#create-dispositivos-form').on('beforeSubmit', function (e) {
     e.preventDefault();
     var form = $(this);
+    var formData = new FormData(form[0]);
 
-     // Mostrar el modal de carga
-     Swal.fire({
+    // Mostrar el modal de carga
+    Swal.fire({
         title: 'Cargando...',
         text: 'Por favor espera.',
         icon: 'info',
@@ -70,7 +71,9 @@ $('#create-dispositivos-form').on('beforeSubmit', function (e) {
     $.ajax({
         url: form.attr('action'),
         type: 'POST',
-        data: form.serialize(),
+        data: formData,
+        processData: false,
+        contentType: false,
         success: function (response) {
             if (response.success) {
                 Swal.fire({
@@ -78,15 +81,21 @@ $('#create-dispositivos-form').on('beforeSubmit', function (e) {
                     title: '¡Éxito!',
                     text: response.message,
                 });
-                $('#exampleModalCenter .btn-danger').click();  // Cierra el modal
+                $('#exampleModalCenter').modal('hide');  // Cierra el modal
                 $.pjax.reload({ container: '#dispositivos-grid' }); // Recarga el GridView
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message || 'No se pudo crear el dispositivo.',
+                });
             }
         },
         error: function () {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'No se pudo crear el conductor.',
+                text: 'No se pudo crear el dispositivo.',
             });
         }
     });
