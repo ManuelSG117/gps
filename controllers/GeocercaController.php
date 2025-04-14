@@ -88,6 +88,14 @@ class GeocercaController extends Controller
     if (\Yii::$app->request->isPost) {
         $data = json_decode(\Yii::$app->request->getRawBody(), true);
         
+        // Validate required fields
+        if (empty($data['name']) || empty($data['description']) || empty($data['coordinates'])) {
+            return [
+                'success' => false,
+                'message' => 'Name, description and coordinates are required'
+            ];
+        }
+        
         $model = new Geocerca();
         $model->name = $data['name'];
         $model->description = $data['description'];
@@ -100,6 +108,7 @@ class GeocercaController extends Controller
                 'message' => 'Geofence saved successfully'
             ];
         } else {
+            \Yii::error('Error saving geofence: ' . json_encode($model->getErrors()));
             return [
                 'success' => false,
                 'message' => $model->getErrors()
@@ -122,15 +131,49 @@ class GeocercaController extends Controller
      */
     public function actionUpdate($id)
     {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
         $model = $this->findModel($id);
-
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        
+        if (\Yii::$app->request->isPost) {
+            $data = json_decode(\Yii::$app->request->getRawBody(), true);
+            
+            // Validate required fields
+            if (empty($data['name']) || empty($data['description'])) {
+                return [
+                    'success' => false,
+                    'message' => 'Name and description are required'
+                ];
+            }
+            
+            $model->name = $data['name'];
+            $model->description = $data['description'];
+            
+            // Only update coordinates if they are provided
+            if (!empty($data['coordinates'])) {
+                $model->coordinates = $data['coordinates'];
+            }
+            
+         
+            
+            if ($model->save()) {
+                return [
+                    'success' => true,
+                    'message' => 'Geofence updated successfully'
+                ];
+            } else {
+                \Yii::error('Error updating geofence: ' . json_encode($model->getErrors()));
+                return [
+                    'success' => false,
+                    'message' => $model->getErrors()
+                ];
+            }
         }
-
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        
+        return [
+            'success' => false,
+            'message' => 'Invalid request method'
+        ];
     }
 
     public function actionUpdateCoordinates($id)

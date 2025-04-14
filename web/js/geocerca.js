@@ -186,28 +186,42 @@ const tooltip = new google.maps.Marker({
     drawingManager.setMap(map);
 
     var getPolygonCoords = function (newShape) {
-
-        coordinates.splice(0, coordinates.length)
+        console.log('getPolygonCoords called with shape:', newShape);
+        coordinates.splice(0, coordinates.length);
+        console.log('Coordinates array cleared:', coordinates);
 
         var len = newShape.getPath().getLength();
+        console.log('Path length:', len);
 
         for (var i = 0; i < len; i++) {
-            coordinates.push(newShape.getPath().getAt(i).toUrlValue(6))
+            var point = newShape.getPath().getAt(i).toUrlValue(6);
+            coordinates.push(point);
+            console.log(`Added point ${i}:`, point);
         }
-        document.getElementById('info').innerHTML = coordinates
-       
-       
+        
+        console.log('Final coordinates array:', coordinates);
+        document.getElementById('info').innerHTML = coordinates.join('|');
     }
 
     google.maps.event.addListener(drawingManager, 'polygoncomplete', function (event) {
-        event.getPath().getLength();
-        google.maps.event.addListener(event, "dragend", getPolygonCoords(event));
+        console.log('Polygon complete event fired');
+        console.log('Initial path length:', event.getPath().getLength());
+        
+        // Call getPolygonCoords immediately to set initial coordinates
+        getPolygonCoords(event);
+        
+        google.maps.event.addListener(event, "dragend", function() {
+            console.log('Drag end event fired');
+            getPolygonCoords(event);
+        });
 
         google.maps.event.addListener(event.getPath(), 'insert_at', function () {
+            console.log('Insert at event fired');
             getPolygonCoords(event);
         });
 
         google.maps.event.addListener(event.getPath(), 'set_at', function () {
+            console.log('Set at event fired');
             getPolygonCoords(event);
         });
 
@@ -259,20 +273,7 @@ document.getElementById('floating-button').addEventListener('click', function() 
     modal.show();
 });
 
-document.getElementById('saveGeofenceData').addEventListener('click', function () {
-    const name = document.getElementById('geofenceName').value;
-    const description = document.getElementById('geofenceDescription').value;
 
-    if (!name || !description) {
-        Swal.fire('Error', 'Por favor, completa todos los campos.', 'error');
-        return;
-    }
-
-    // Aquí puedes agregar la lógica para guardar la geofence en el servidor
-    Swal.fire('Éxito', 'Geofence creada correctamente.', 'success');
-    document.getElementById('geofenceForm').reset();
-    $('#geofenceModal').modal('hide');
-});
 
 function populateGeofenceList() {
     const geofenceList = document.getElementById('geofenceList');
@@ -301,6 +302,10 @@ function editGeofence(id) {
     const geofence = existingGeofences.find(g => g.id === id);
     
     if (geofence) {
+        // Load the coordinates of the existing geofence into the global coordinates array
+        coordinates = geofence.coordinates.split('|');
+        console.log('Loaded coordinates for editing:', coordinates);
+        
         const modal = new bootstrap.Modal(document.getElementById('geofenceModal'));
         document.getElementById('geofenceModalLabel').textContent = 'Editar Geofence';
         document.getElementById('geofenceId').value = geofence.id;
@@ -375,11 +380,17 @@ function deleteGeofence(id) {
 
 // Update the saveGeofenceData event listener to handle both create and update
 document.getElementById('saveGeofenceData').addEventListener('click', function() {
+    console.log('Save button clicked');
+    
     const id = document.getElementById('geofenceId').value;
     const name = document.getElementById('geofenceName').value;
     const description = document.getElementById('geofenceDescription').value;
+    
+    console.log('Form data:', { id, name, description });
+    console.log('Current coordinates:', coordinates);
 
     if (!name || !description) {
+        console.log('Name or description missing:', { name, description });
         Swal.fire({
             icon: 'warning',
             title: 'Campos requeridos',
@@ -389,12 +400,30 @@ document.getElementById('saveGeofenceData').addEventListener('click', function()
         return;
     }
 
+    // Check if we have coordinates for new geofences only
+    if (coordinates.length === 0 && !id) {
+        console.log('No coordinates and no ID (new geofence)');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Área requerida',
+            text: 'Por favor dibuje un área primero',
+            confirmButtonText: 'Aceptar'
+        });
+        return;
+    }
+
     const url = id ? `/geocerca/update?id=${id}` : '/geocerca/create-ajax';
+    const coordString = coordinates.join('|');
+    console.log('URL:', url);
+    console.log('Coordinates string:', coordString);
+    
     const geofenceData = {
-        coordinates: coordinates.join('|'),
+        coordinates: coordString,
         name: name,
         description: description
     };
+
+    console.log('Sending data:', geofenceData);
 
     fetch(url, {
         method: 'POST',
@@ -403,8 +432,21 @@ document.getElementById('saveGeofenceData').addEventListener('click', function()
         },
         body: JSON.stringify(geofenceData)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        // Check if the response is JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        } else {
+            // If not JSON, throw an error with the text response
+            return response.text().then(text => {
+                throw new Error('Server returned non-JSON response: ' + text);
+            });
+        }
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
             Swal.fire({
                 icon: 'success',
@@ -415,11 +457,32 @@ document.getElementById('saveGeofenceData').addEventListener('click', function()
             }).then(() => {
                 location.reload();
             });
+        } else {
+            console.error('Error saving geofence:', data.message);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al guardar el geofence: ' + JSON.stringify(data.message),
+                confirmButtonText: 'Aceptar'
+            });
         }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al guardar el geofence: ' + error.message,
+            confirmButtonText: 'Aceptar'
+        });
     });
 
     const modal = bootstrap.Modal.getInstance(document.getElementById('geofenceModal'));
-    modal.hide();
+    if (modal) {
+        modal.hide();
+    } else {
+        $('#geofenceModal').modal('hide'); // Fallback for older Bootstrap versions
+    }
 });
 
 // Call this after InitMap()
