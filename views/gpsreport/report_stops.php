@@ -206,7 +206,120 @@ $this->registerJsFile('@web/js/stops-chart.js', ['depends' => [\yii\web\JqueryAs
         </div>
     </div>
     
+    <!-- Map container for stops and route -->
+    <div class="custom-card mt-4" <?= empty($stops) ? 'style="display: none;"' : '' ?>>
+        <div class="custom-card-header">
+            <h4 class="custom-card-title">Mapa de Paradas y Ruta</h4>
+        </div>
+        <div class="custom-card-body">
+            <div id="stops-map" style="height: 500px; width: 100%; position: relative;"></div>
+        </div>
+    </div>
     
+    <!-- Add Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA73efm01Xa11C5aXzXBGFbWUjMtkad5HE"></script>
+    <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
+    
+    <script>
+    // Initialize map when data is available
+    $(document).ready(function() {
+        if (<?= !empty($stops) ? 'true' : 'false' ?>) {
+            initStopsMap();
+        }
+    });
+    
+    // Function to initialize the map with stops and route
+    function initStopsMap() {
+        // Create map
+        var map = L.map('stops-map').setView([0, 0], 13);
+        
+        // Add Google Maps layer
+        var googleStreets = L.gridLayer.googleMutant({
+            type: 'roadmap'
+        }).addTo(map);
+        
+        // Create markers for stops
+        var stopMarkers = [];
+        var stopCoordinates = [];
+        var bounds = L.latLngBounds();
+        
+        <?php if (!empty($stops)): ?>
+            <?php foreach ($stops as $index => $stop): ?>
+                var lat = <?= $stop['latitude'] ?>;
+                var lng = <?= $stop['longitude'] ?>;
+                var stopTime = "<?= $stop['start_time'] ?>";
+                var endTime = "<?= isset($stop['end_time']) ? $stop['end_time'] : 'En curso' ?>";
+                var duration = "<?php
+                    if (isset($stop['duration'])) {
+                        $durationInSeconds = $stop['duration'];
+                        if ($durationInSeconds >= 3600) {
+                            $hours = floor($durationInSeconds / 3600);
+                            $minutes = floor(($durationInSeconds % 3600) / 60);
+                            $seconds = $durationInSeconds % 60;
+                            echo sprintf('%d horas, %d minutos, %d segundos', $hours, $minutes, $seconds);
+                        } else {
+                            $minutes = floor($durationInSeconds / 60);
+                            $seconds = $durationInSeconds % 60;
+                            echo sprintf('%d minutos, %d segundos', $minutes, $seconds);
+                        }
+                    } else {
+                        echo 'N/A';
+                    }
+                ?>";
+                
+                // Use standard marker with red color instead of custom icon
+                var marker = L.marker([lat, lng], {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(map);
+                
+                marker.bindPopup(
+                    "<strong>Parada #" + (<?= $index ?> + 1) + "</strong><br>" +
+                    "Inicio: " + stopTime + "<br>" +
+                    "Fin: " + endTime + "<br>" +
+                    "Duración: " + duration + "<br>" +
+                    "<a href='https://www.google.com/maps?q=" + lat + "," + lng + "' target='_blank'>Ver en Google Maps</a>"
+                );
+                
+                stopMarkers.push(marker);
+                stopCoordinates.push([lat, lng]);
+                bounds.extend([lat, lng]);
+            <?php endforeach; ?>
+            
+            // Create a normal polyline (not dashed) to connect the stops
+            var routeLine = L.polyline(stopCoordinates, {
+                color: 'blue',
+                weight: 3,
+                opacity: 0.7,
+                lineJoin: 'round'
+            }).addTo(map);
+            
+            // Fit map to bounds
+            if (stopCoordinates.length > 0) {
+                map.fitBounds(bounds, {padding: [50, 50]});
+            }
+            
+            // Add legend
+            var legend = L.control({position: 'bottomright'});
+            legend.onAdd = function(map) {
+                var div = L.DomUtil.create('div', 'info legend');
+                div.innerHTML = 
+                    '<img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png" height="20"> Paradas<br>' +
+                    '<i style="background: blue; height: 2px; width: 30px; display: inline-block;"></i> Ruta';
+                return div;
+            };
+            legend.addTo(map);
+        <?php endif; ?>
+    }
+    </script>
     
    <!-- Switch para mostrar/ocultar tarjetas --> 
    <div id="toggle-container">
@@ -374,6 +487,9 @@ $(document).ready(function () {
     #stops-map {
         border-radius: 4px;
         overflow: hidden;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        z-index: 1;
+        position: relative;
     }
     
     /* Legend styles */
@@ -382,6 +498,12 @@ $(document).ready(function () {
         padding: 6px 8px;
         border-radius: 4px;
         box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+    
+    /* Stop marker styles */
+    .stop-marker-icon {
+        background: none;
+        border: none;
     }
 </style>
 
