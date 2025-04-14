@@ -99,14 +99,14 @@ $this->registerJsFile('@web/js/stops-chart.js', ['depends' => [\yii\web\JqueryAs
 
     <br>
 
-    <div class="custom-card-container">
+    <div class="custom-card-container" <?= empty($stops) ? 'style="display: none;"' : '' ?>>
         <div class="custom-card">
             <div class="custom-card-header">
                 <h4 class="custom-card-title">Reporte Paradas Dispositivo</h4>
             </div>
             <div class="custom-card-body">
                 <div class="table-responsive active-projects">
-                    <table id="projects-tbl" class="table table-striped table-bordered compact-table">
+                    <table id="projects-tbls" class="table table-striped table-bordered compact-table">
                         <thead>
                             <tr class="table-primary">
                                 <th>Inicio de parada</th>
@@ -162,10 +162,6 @@ $this->registerJsFile('@web/js/stops-chart.js', ['depends' => [\yii\web\JqueryAs
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="4">No hay datos disponibles.</td>
-                                </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -320,9 +316,9 @@ $this->registerJsFile('@web/js/stops-chart.js', ['depends' => [\yii\web\JqueryAs
         <?php endif; ?>
     }
     </script>
-    
+    <br>
    <!-- Switch para mostrar/ocultar tarjetas --> 
-   <div id="toggle-container">
+   <div id="toggle-container" <?= empty($stops) ? 'style="display: none;"' : '' ?>>
     <input type="checkbox" id="label-check" class="label-check" />
     <label class="hamburger-label" for="label-check">
         <div class="line1"></div>
@@ -370,6 +366,7 @@ $('#showinfo').on('click', function () {
     }, 500);
 });
 </script>
+
 <?php Pjax::end(); ?>
 
 </div>
@@ -391,10 +388,23 @@ $(document).ready(function() {
     }).fail(function() {
    //     console.log("Error al recargar stops.js");
     });
+    
+    // Check if there are no stops data after PJAX request completes
+    if ($('#projects-tbls tbody tr').length === 0 || $('#projects-tbls tbody tr td[colspan]').length > 0) {
+        // Only show alert if a device was selected (gps parameter exists in URL)
+        if (window.location.search.indexOf('gps=') > -1) {
+            Swal.fire({
+                title: 'Sin datos',
+                text: 'No hay información de paradas disponible para el período y dispositivo seleccionados.',
+                icon: 'info',
+                confirmButtonText: 'Entendido'
+            });
+        }
+    }
 });
 });
-
 </script>
+
 <script>
 $(document).ready(function () {
     let cardContainer = $(".custom-card-container");
@@ -414,7 +424,7 @@ $(document).ready(function () {
     $(document).off('pjax:complete').on('pjax:complete', function () {
         // Esperar un momento para asegurarse de que el DOM se haya actualizado
         setTimeout(function () {
-            let newTableBody = $("#projects-tbl tbody");
+            let newTableBody = $("#projects-tbls tbody");
             let numRows = newTableBody.find("tr").length;
 
             if (numRows > 0 && !newTableBody.find("tr td[colspan]").length) {
@@ -451,38 +461,6 @@ $(document).ready(function () {
 </script>
 
 <style>
-    .custom-card {
-        border-radius: 8px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-        background-color: #fff;
-        position: relative;
-    }
-
-    .custom-card-header {
-        padding: 15px 20px;
-        border-bottom: 1px solid #eee;
-    }
-
-    .custom-card-title {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 600;
-    }
-
-    .custom-card-body {
-        padding: 20px;
-        position: relative;
-    }
-
-    .compact-table {
-        font-size: 14px;
-    }
-
-    .compact-table th, .compact-table td {
-        padding: 10px 15px;
-    }
-    
     /* Map container styles */
     #stops-map {
         border-radius: 4px;

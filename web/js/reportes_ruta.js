@@ -64,12 +64,21 @@ function setupFilterChangeEvent() {
 
 async function initMap() {
     // Check if we have location data
-    const tableRows = document.querySelectorAll('#projects-tbl tbody tr');
+    const tableRows = document.querySelectorAll('#projects-tbls tbody tr');
     if (tableRows.length === 0 || tableRows[0].cells.length <= 1) {
-        const mapElement = document.getElementById('map');
+        const mapElement = document.getElementById('stops-map');
         if (mapElement) {
             mapElement.innerHTML = '<div class="alert alert-info">No hay datos de ubicación disponibles para mostrar en el mapa.</div>';
         }
+        
+        // Show SweetAlert notification when no data is available
+        Swal.fire({
+            title: 'Sin datos',
+            text: 'No hay información de ubicación disponible para el período y dispositivo seleccionados.',
+            icon: 'info',
+            confirmButtonText: 'Entendido'
+        });
+        
         return;
     }
 
