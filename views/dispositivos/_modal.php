@@ -70,9 +70,18 @@ use yii\helpers\Url;
             </div>
         </div>
 
-        <div class="row">
+               <div class="row">
             <div class="col-md-12">
-                <?= $form->field($model, 'cat_dispositivo')->textInput(['maxlength' => true, 'required' => true]) ?>
+                <?= $form->field($model, 'cat_dispositivo')->dropDownList([
+                    'autobus' => 'Autobús',
+                    'bicicleta' => 'Bicicleta',
+                    'moto' => 'Moto',
+                    'auto' => 'Auto',
+                    'camion' => 'Camión',
+                    'persona' => 'Persona',
+                    'pipa' => 'Pipa',
+                    'camioneta' => 'Camioneta'
+                ], ['prompt' => 'Seleccione una categoría', 'required' => true]) ?>
             </div>
         </div>
 
