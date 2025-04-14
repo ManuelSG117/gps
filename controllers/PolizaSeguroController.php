@@ -8,6 +8,8 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 
+use Yii;
+
 /**
  * PolizaSeguroController implements the CRUD actions for PolizaSeguro model.
  */
@@ -40,10 +42,14 @@ class PolizaSeguroController extends Controller
     {
         $searchModel = new PolizaSeguroSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
+        
+        // Create a new model for the modal form
+        $model = new PolizaSeguro();
 
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'model' => $model, // Pass the model to the view
         ]);
     }
 
@@ -55,8 +61,18 @@ class PolizaSeguroController extends Controller
      */
     public function actionView($id)
     {
+        $model = $this->findModel($id);
+        
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'success' => true,
+                'data' => $model->attributes,
+            ];
+        }
+        
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
         ]);
     }
 
@@ -68,7 +84,34 @@ class PolizaSeguroController extends Controller
     public function actionCreate()
     {
         $model = new PolizaSeguro();
-
+    
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post()) && $model->save()) {
+            // Handle file uploads
+            $uploadedFiles = \yii\web\UploadedFile::getInstancesByName('poliza_images');
+            
+            if (!empty($uploadedFiles)) {
+                // Create upload directory if it doesn't exist
+                $uploadDir = Yii::getAlias('@webroot/uploads/polizas/');
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                $today = date('Ymd');
+                $aseguradora = preg_replace('/[^a-zA-Z0-9]/', '', $model->aseguradora);
+                
+                foreach ($uploadedFiles as $index => $file) {
+                    if ($index < 2) { // Limit to 2 images
+                        $fileName = $model->id . '_' . $today . '_' . $aseguradora . '_' . ($index + 1) . '.' . $file->extension;
+                        $filePath = $uploadDir . $fileName;
+                        $file->saveAs($filePath);
+                    }
+                }
+            }
+            
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ['success' => true, 'message' => 'Póliza de seguro creada exitosamente.'];
+        }
+    
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
                 return $this->redirect(['view', 'id' => $model->id]);
@@ -76,7 +119,7 @@ class PolizaSeguroController extends Controller
         } else {
             $model->loadDefaultValues();
         }
-
+    
         return $this->render('create', [
             'model' => $model,
         ]);
@@ -92,11 +135,49 @@ class PolizaSeguroController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+    
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            // Handle file uploads
+            $uploadedFiles = \yii\web\UploadedFile::getInstancesByName('poliza_images');
+            
+            if (!empty($uploadedFiles)) {
+                // Create upload directory if it doesn't exist
+                $uploadDir = Yii::getAlias('@webroot/uploads/polizas/');
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                $today = date('Ymd');
+                $aseguradora = preg_replace('/[^a-zA-Z0-9]/', '', $model->aseguradora);
+                
+                foreach ($uploadedFiles as $index => $file) {
+                    if ($index < 2) { // Limit to 2 images
+                        $fileName = $model->id . '_' . $today . '_' . $aseguradora . '_' . ($index + 1) . '.' . $file->extension;
+                        $filePath = $uploadDir . $fileName;
+                        $file->saveAs($filePath);
+                    }
+                }
+            }
+            
+            if (Yii::$app->request->isAjax) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                return [
+                    'success' => true,
+                    'message' => 'Póliza de seguro actualizada correctamente.',
+                ];
+            }
+            
             return $this->redirect(['view', 'id' => $model->id]);
         }
-
+    
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'success' => true,
+                'data' => $model->attributes,
+            ];
+        }
+    
         return $this->render('update', [
             'model' => $model,
         ]);
@@ -111,6 +192,12 @@ class PolizaSeguroController extends Controller
      */
     public function actionDelete($id)
     {
+        if (Yii::$app->request->isAjax) {
+            $this->findModel($id)->delete();
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return ['success' => true, 'message' => 'La póliza de seguro ha sido eliminada exitosamente.'];
+        }
+
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
