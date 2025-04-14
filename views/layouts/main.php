@@ -347,7 +347,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 				dzSettingsOptions.version = 'light';
 				new dzSettings(dzSettingsOptions);
 
-				setCookie('version','light');
+				setCookie('version','light',365);
 			},)
 		});
 	</script>
