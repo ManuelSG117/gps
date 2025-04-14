@@ -85,31 +85,32 @@ class PolizaSeguroController extends Controller
     {
         $model = new PolizaSeguro();
     
-        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post()) && $model->save()) {
-            // Handle file uploads
-            $uploadedFiles = \yii\web\UploadedFile::getInstancesByName('poliza_images');
-            
-            if (!empty($uploadedFiles)) {
-                // Create upload directory if it doesn't exist
-                $uploadDir = Yii::getAlias('@webroot/uploads/polizas/');
-                if (!file_exists($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-                
-                $today = date('Ymd');
-                $aseguradora = preg_replace('/[^a-zA-Z0-9]/', '', $model->aseguradora);
-                
-                foreach ($uploadedFiles as $index => $file) {
-                    if ($index < 2) { // Limit to 2 images
-                        $fileName = $model->id . '_' . $today . '_' . $aseguradora . '_' . ($index + 1) . '.' . $file->extension;
-                        $filePath = $uploadDir . $fileName;
-                        $file->saveAs($filePath);
-                    }
-                }
-            }
-            
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-            return ['success' => true, 'message' => 'Póliza de seguro creada exitosamente.'];
+            
+            try {
+                if ($model->save()) {
+                    // Handle image uploads after saving the poliza
+                    $this->savePolizaImages($model);
+                    
+                    return [
+                        'success' => true, 
+                        'message' => 'Póliza de seguro creada exitosamente.',
+                        'closeModal' => true
+                    ];
+                } else {
+                    return [
+                        'success' => false, 
+                        'message' => 'Error al guardar la póliza de seguro.', 
+                        'errors' => $model->errors
+                    ];
+                }
+            } catch (\Exception $e) {
+                return [
+                    'success' => false, 
+                    'message' => 'Ocurrió un error: ' . $e->getMessage()
+                ];
+            }
         }
     
         if ($this->request->isPost) {
@@ -217,5 +218,50 @@ class PolizaSeguroController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+    
+    /**
+     * Saves poliza images to the specified directory
+     * @param PolizaSeguro $model The poliza model
+     */
+    protected function savePolizaImages($model)
+    {
+        // Define the base upload directory
+        $baseUploadDir = Yii::getAlias('@webroot') . '/uploads/polizas/';
+        
+        // Create a unique folder name for this poliza
+        $timestamp = date('Y-m-d_H-i-s');
+        $folderName = $model->aseguradora . '_' . $model->no_poliza . '_' . $timestamp;
+        $folderName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $folderName); // Sanitize folder name
+        
+        // Create the full directory path
+        $uploadDir = $baseUploadDir . $folderName . '/';
+        
+        // Create directory if it doesn't exist
+        if (!file_exists($baseUploadDir)) {
+            mkdir($baseUploadDir, 0777, true);
+        }
+        
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        
+        // Process uploaded files
+        $uploadedFiles = \yii\web\UploadedFile::getInstancesByName('poliza_images');
+        
+        if (!empty($uploadedFiles)) {
+            foreach ($uploadedFiles as $index => $file) {
+                // Generate a unique filename
+                $fileName = 'poliza_' . ($index + 1) . '_' . time() . '.' . $file->extension;
+                $filePath = $uploadDir . $fileName;
+                
+                // Save the file
+                if ($file->saveAs($filePath)) {
+                    Yii::info("Saved poliza image {$index} for poliza {$model->id} to {$filePath}", 'app');
+                } else {
+                    Yii::error("Failed to save poliza image {$index} for poliza {$model->id}", 'app');
+                }
+            }
+        }
     }
 }

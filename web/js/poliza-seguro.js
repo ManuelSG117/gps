@@ -213,5 +213,52 @@ $(document).on('click', '.ajax-update', function (e) {
 // Handle save button click in modal footer
 $(document).on('click', '#btn-save-poliza-footer', function() {
     // Submit the form when the footer save button is clicked
-    $('#create-poliza-form').submit();
+    var form = $('#create-poliza-form');
+    var formData = new FormData(form[0]);
+    
+    // Show loading indicator
+    Swal.fire({
+        title: 'Guardando...',
+        text: 'Por favor espera mientras se guarda la información.',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+    
+    $.ajax({
+        url: form.attr('action'),
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            Swal.close();
+            
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: response.message
+                }).then((result) => {
+                    // Close modal and refresh grid
+                    $('#polizaModal').modal('hide');
+                    $.pjax.reload({container: '#poliza-grid'});
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message || 'Error al guardar la póliza'
+                });
+            }
+        },
+        error: function() {
+            Swal.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error de conexión al guardar la póliza'
+            });
+        }
+    });
 });
