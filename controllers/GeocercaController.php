@@ -81,46 +81,48 @@ class GeocercaController extends Controller
             'model' => $model,
         ]);
     }
+    
     public function actionCreateAjax()
-{
-    \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-    
-    if (\Yii::$app->request->isPost) {
-        $data = json_decode(\Yii::$app->request->getRawBody(), true);
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         
-        // Validate required fields
-        if (empty($data['name']) || empty($data['description']) || empty($data['coordinates'])) {
-            return [
-                'success' => false,
-                'message' => 'Name, description and coordinates are required'
-            ];
+        if (\Yii::$app->request->isPost) {
+            $data = json_decode(\Yii::$app->request->getRawBody(), true);
+            
+            // Validate required fields
+            if (empty($data['name']) || empty($data['description']) || empty($data['coordinates'])) {
+                return [
+                    'success' => false,
+                    'message' => 'Name, description and coordinates are required'
+                ];
+            }
+            
+            $model = new Geocerca();
+            $model->name = $data['name'];
+            $model->description = $data['description'];
+            $model->coordinates = $data['coordinates'];
+            $model->created_at = date('Y-m-d H:i:s');
+            
+            if ($model->save()) {
+                return [
+                    'success' => true,
+                    'message' => 'Geofence saved successfully',
+                    'id' => $model->id
+                ];
+            } else {
+                \Yii::error('Error saving geofence: ' . json_encode($model->getErrors()));
+                return [
+                    'success' => false,
+                    'message' => $model->getErrors()
+                ];
+            }
         }
         
-        $model = new Geocerca();
-        $model->name = $data['name'];
-        $model->description = $data['description'];
-        $model->coordinates = $data['coordinates'];
-        $model->created_at = date('Y-m-d H:i:s');
-        
-        if ($model->save()) {
-            return [
-                'success' => true,
-                'message' => 'Geofence saved successfully'
-            ];
-        } else {
-            \Yii::error('Error saving geofence: ' . json_encode($model->getErrors()));
-            return [
-                'success' => false,
-                'message' => $model->getErrors()
-            ];
-        }
+        return [
+            'success' => false,
+            'message' => 'Invalid request method'
+        ];
     }
-    
-    return [
-        'success' => false,
-        'message' => 'Invalid request method'
-    ];
-}
 
     /**
      * Updates an existing Geocerca model.
@@ -154,12 +156,11 @@ class GeocercaController extends Controller
                 $model->coordinates = $data['coordinates'];
             }
             
-         
-            
             if ($model->save()) {
                 return [
                     'success' => true,
-                    'message' => 'Geofence updated successfully'
+                    'message' => 'Geofence updated successfully',
+                    'id' => $model->id
                 ];
             } else {
                 \Yii::error('Error updating geofence: ' . json_encode($model->getErrors()));
@@ -204,6 +205,34 @@ class GeocercaController extends Controller
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+
+    /**
+     * Deletes an existing Geocerca model via AJAX.
+     * Returns JSON response.
+     * @param int $id ID
+     * @return array JSON response
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionDeleteAjax($id)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
+        try {
+            $model = $this->findModel($id);
+            $model->delete();
+            
+            return [
+                'success' => true,
+                'message' => 'Geofence deleted successfully'
+            ];
+        } catch (\Exception $e) {
+            \Yii::error('Error deleting geofence: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error deleting geofence: ' . $e->getMessage()
+            ];
+        }
     }
 
     /**
