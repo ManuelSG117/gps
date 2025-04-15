@@ -11,6 +11,7 @@ use yii\widgets\Pjax;
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <?php Pjax::begin(['id' => 'create-conductores-pjax', 'enablePushState' => false]); ?>
 <?php $form = ActiveForm::begin([
@@ -19,165 +20,220 @@ use yii\widgets\Pjax;
    'method' => 'post',
    'enableClientValidation' => false, 
    'options' => ['data-pjax' => true], 
-
 ]); ?>
 
 <div class="modal-body">
-    <div class="row">
-        <!-- Información personal -->
-        <?= $form->field($model, 'nombre', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput(['maxlength' => true]) ?>
-
-        <?= $form->field($model, 'apellido_p', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput(['maxlength' => true]) ?>
-
-        <?= $form->field($model, 'apellido_m', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput(['maxlength' => true]) ?>
-        
-        <?= $form->field($model, 'fecha_nacimiento', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput(['id' => 'fecha_nacimiento']) ?>
-                
-        <?= $form->field($model, 'no_licencia', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput(['maxlength' => true]) ?>
-        
-         <?= $form->field($model, 'cp', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput([
-            'maxlength' => true,
-            'oninput' => "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5)",
-         
-        ]) ?>
-
-        <?= $form->field($model, 'estado', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->dropDownList([], [
-            'prompt' => '',
-            'id' => 'estado-dropdown',
-        ]) ?>
-
-        <?= $form->field($model, 'municipio', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->dropDownList([], [
-            'prompt' => '',
-            'id' => 'municipio-dropdown',  
-        ]) ?>
-
-        <?= $form->field($model, 'colonia', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput(['maxlength' => true]) ?>
-
-
-        <?= $form->field($model, 'calle', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput(['maxlength' => true]) ?>
-
-        <?= $form->field($model, 'num_ext', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput() ?>
-
-        <?= $form->field($model, 'num_int', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput(['maxlength' => true]) ?>
-
-        <?= $form->field($model, 'telefono', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput([
-            'maxlength' => 10, 
-            'pattern' => '\d{10}', 
-            'title' => 'El teléfono debe contener 10 dígitos',
-            'inputmode' => 'numeric', // Asegura que solo se acepten números
-            'type' => 'tel', // Define el tipo de entrada como teléfono
-            'oninput' => "this.value = this.value.replace(/[^0-9]/g, '');" // Elimina caracteres no numéricos
-        ]) ?>
-
-        <?= $form->field($model, 'email', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput([
-            'type' => 'email',
-            'maxlength' => 255,
-            'title' => 'Ingresa una dirección de correo electrónico válida'
-        ]) ?>
-
-        <?= $form->field($model, 'tipo_sangre', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->dropDownList([
-            'A+' => 'A+',
-            'A-' => 'A-',
-            'B+' => 'B+',
-            'B-' => 'B-',
-            'AB+' => 'AB+',
-            'AB-' => 'AB-',
-            'O+' => 'O+',
-            'O-' => 'O-',
-        ], ['prompt' => '']) ?>
-
-        <!-- Sección de Contacto de Emergencia -->
-        <div class="col-12 mt-4 mb-3">
-            <hr>
-            <h5 class="text-center text-primary">Contacto de Emergencia</h5>
-            <hr>
+    <!-- Step Indicators -->
+    <div class="step-indicators mb-4">
+        <div class="d-flex justify-content-between">
+            <div class="step-indicator active" data-step="1">
+                <div class="step-number">1</div>
+                <div class="step-title">Información Personal</div>
+            </div>
+            <div class="step-indicator" data-step="2">
+                <div class="step-number">2</div>
+                <div class="step-title">Contacto de Emergencia</div>
+            </div>
         </div>
+    </div>
 
-        <?= $form->field($model, 'nombre_contacto', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput(['maxlength' => true]) ?>
+    <!-- Step 1: Personal Information -->
+    <div id="step-content-1" class="step-content" data-step="1">
+        <h5 class="text-center text-primary mb-4">Información Personal</h5>
+        <div class="row">
+            <?= $form->field($model, 'nombre', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput(['maxlength' => true]) ?>
 
-        <?= $form->field($model, 'apellido_p_contacto', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput(['maxlength' => true]) ?>
+            <?= $form->field($model, 'apellido_p', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput(['maxlength' => true]) ?>
 
-        <?= $form->field($model, 'apellido_m_contacto', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput(['maxlength' => true]) ?>
+            <?= $form->field($model, 'apellido_m', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput(['maxlength' => true]) ?>
+            
+            <?= $form->field($model, 'fecha_nacimiento', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput(['id' => 'fecha_nacimiento']) ?>
+                    
+            <?= $form->field($model, 'no_licencia', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput(['maxlength' => true]) ?>
+            
+            <?= $form->field($model, 'cp', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput([
+                'maxlength' => true,
+                'oninput' => "this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5)",
+            
+            ]) ?>
 
-        <?= $form->field($model, 'parentesco', [
-            'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->dropDownList([
-            'Padre' => 'Padre',
-            'Madre' => 'Madre',
-            'Hermano' => 'Hermano',
-            'Hermana' => 'Hermana',
-            'Esposo(a)' => 'Esposo(a)',
-            'Hijo(a)' => 'Hijo(a)',
-            'Amigo(a)' => 'Amigo(a)',
-            'Otro' => 'Otro',
-        ], ['prompt' => '']) ?>
+            <?= $form->field($model, 'estado', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->dropDownList([], [
+                'prompt' => '',
+                'id' => 'estado-dropdown',
+            ]) ?>
 
-        <?= $form->field($model, 'telefono_contacto', [
-                  'options' => ['class' => 'col-md-4 form-field-spacing']
-        ])->textInput([
-            'maxlength' => 10, 
-            'pattern' => '\d{10}', 
-            'title' => 'El teléfono debe contener 10 dígitos',
-            'inputmode' => 'numeric', // Asegura que solo se acepten números
-            'type' => 'tel', // Define el tipo de entrada como teléfono
-            'oninput' => "this.value = this.value.replace(/[^0-9]/g, '');" // Elimina caracteres no numéricos
-                ]) ?>
+            <?= $form->field($model, 'municipio', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->dropDownList([], [
+                'prompt' => '',
+                'id' => 'municipio-dropdown',  
+            ]) ?>
+
+            <?= $form->field($model, 'colonia', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput(['maxlength' => true]) ?>
+
+            <?= $form->field($model, 'calle', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput(['maxlength' => true]) ?>
+
+            <?= $form->field($model, 'num_ext', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput() ?>
+
+            <?= $form->field($model, 'num_int', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput(['maxlength' => true]) ?>
+
+            <?= $form->field($model, 'telefono', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput([
+                'maxlength' => 10, 
+                'pattern' => '\d{10}', 
+                'title' => 'El teléfono debe contener 10 dígitos',
+                'inputmode' => 'numeric',
+                'type' => 'tel',
+                'oninput' => "this.value = this.value.replace(/[^0-9]/g, '');",
+                'required' => false
+            ]) ?>
+
+            <?= $form->field($model, 'email', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput([
+                'type' => 'text', // Changed from 'email' to 'text' to avoid browser validation
+                'maxlength' => 255,
+                'title' => 'Ingresa una dirección de correo electrónico válida',
+                'required' => false,
+                'aria-invalid' => false,
+                'tabindex' => '0', // Ensure it's in the tab order
+                'class' => 'form-control' // Ensure proper styling
+            ]) ?>
+
+            <?= $form->field($model, 'tipo_sangre', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->dropDownList([
+                'A+' => 'A+',
+                'A-' => 'A-',
+                'B+' => 'B+',
+                'B-' => 'B-',
+                'AB+' => 'AB+',
+                'AB-' => 'AB-',
+                'O+' => 'O+',
+                'O-' => 'O-',
+            ], ['prompt' => 'Selecciona uno']) ?>
+        </div>
+        
+        <div class="d-flex justify-content-end mt-4">
+            <button type="button" class="btn btn-primary next-step" id="to-step-2">Siguiente <i class="fas fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <!-- Step 2: Emergency Contact -->
+    <div id="step-content-2" class="step-content" data-step="2" style="display:none;">
+        <h5 class="text-center text-primary mb-4">Contacto de Emergencia</h5>
+        <div class="row">
+            <?= $form->field($model, 'nombre_contacto', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput(['maxlength' => true]) ?>
+
+            <?= $form->field($model, 'apellido_p_contacto', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput(['maxlength' => true]) ?>
+
+            <?= $form->field($model, 'apellido_m_contacto', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput(['maxlength' => true]) ?>
+
+            <?= $form->field($model, 'parentesco', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->dropDownList([
+                'Padre' => 'Padre',
+                'Madre' => 'Madre',
+                'Hermano' => 'Hermano',
+                'Hermana' => 'Hermana',
+                'Esposo(a)' => 'Esposo(a)',
+                'Hijo(a)' => 'Hijo(a)',
+                'Amigo(a)' => 'Amigo(a)',
+                'Otro' => 'Otro',
+            ], ['prompt' => 'Selecciona uno']) ?>
+
+            <?= $form->field($model, 'telefono_contacto', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput([
+                'maxlength' => 10, 
+                'pattern' => '\d{10}', 
+                'title' => 'El teléfono debe contener 10 dígitos',
+                'inputmode' => 'numeric',
+                'type' => 'tel',
+                'oninput' => "this.value = this.value.replace(/[^0-9]/g, '');"
+            ]) ?>
+        </div>
+        
+        <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-warning prev-step"><i class="fas fa-arrow-left"></i> Atrás</button>
+            <?= Html::submitButton('Guardar ', ['class' => 'btn btn-success', 'id' => 'btn-guardar']) ?>
+        </div>
     </div>
 </div>
 
-<div class="modal-footer">
-    <button type="button" class="btn btn-sm btn-danger btn-large" data-bs-dismiss="modal">
-        Cerrar 
-        <animated-icons src="https://animatedicons.co/get-icon?name=Close&style=minimalistic&token=33a7e205-ac54-43a2-ab29-8acd13581964" trigger="loop"   attributes='{"variationThumbColour":"#536DFE","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1,"defaultColours":{"group-1":"#000000","group-2":"#FFFFFFFF","background":"#FFFFFF"}}' height="20" width="20"></animated-icons>
-    </button>
-    <?= Html::submitButton('Guardar <animated-icons src="https://animatedicons.co/get-icon?name=Submited&style=minimalistic&token=75699d26-e7a8-4120-b72f-3ccd31083bf0" trigger="loop" attributes=\'{"variationThumbColour":"#536DFE","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1,"defaultColours":{"group-1":"#000000","group-2":"#536DFE","background":"#FFFFFF"}}\' height="30" width="30"></animated-icons>', ['class' => 'btn btn-sm btn-primary btn-large', 'id' => 'btn-guardar']) ?>
-    </div>
+
 
 <?php ActiveForm::end(); ?>
-
 <?php Pjax::end(); ?>
 
-     
-    <script src="/vendor/global/global.min.js"></script>
-	<script src="/vendor/bootstrap-datepicker-master/js/bootstrap-datepicker.min.js"></script>
-    
-    <script>
+<script src="/vendor/global/global.min.js"></script>
+<script src="/vendor/bootstrap-datepicker-master/js/bootstrap-datepicker.min.js"></script>
+
+<style>
+.step-indicators {
+    margin-bottom: 20px;
+}
+.step-indicator {
+    text-align: center;
+    position: relative;
+    flex: 1;
+}
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 5px;
+    font-weight: bold;
+}
+.step-indicator.active .step-number {
+    background-color: #007bff;
+    color: white;
+}
+.step-title {
+    font-size: 12px;
+    color: #6c757d;
+}
+.step-indicator.active .step-title {
+    color: #007bff;
+    font-weight: bold;
+}
+</style>
+
+<script>
     document.addEventListener('DOMContentLoaded', function () {
         // Inicializa Flatpickr con localización en español
         flatpickr("#fecha_nacimiento", {
@@ -203,10 +259,70 @@ use yii\widgets\Pjax;
                 }
             }
         });
+
+        // Function to show a specific step
+        window.showStep = function(stepNumber) {
+            $('.step-content').hide();
+            $(`#step-content-${stepNumber}`).show();
+            
+            // Update progress indicator
+            $('.step-indicator').removeClass('active');
+            $(`.step-indicator[data-step="${stepNumber}"]`).addClass('active');
+        };
+
+        // Initialize the first step
+        showStep(1);
+
+        // Next step button click
+        $('.next-step').on('click', function() {
+            var currentStep = parseInt($(this).closest('.step-content').data('step'));
+            showStep(currentStep + 1);
+        });
+
+        // Previous step button click
+        $('.prev-step').on('click', function() {
+            var currentStep = parseInt($(this).closest('.step-content').data('step'));
+            showStep(currentStep - 1);
+        });
+
+        // Handle modal close with confirmation
+        $('#btn-cancelar, button[data-bs-dismiss="modal"]').on('click', function(e) {
+            e.preventDefault();
+            
+            // Check if form has data
+            let hasData = false;
+            $('#create-conductores-form input, #create-conductores-form select').each(function() {
+                if ($(this).val() && $(this).val() !== '') {
+                    hasData = true;
+                    return false; // Break the loop
+                }
+            });
+            
+            if (hasData) {
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "Si cancelas, perderás toda la información ingresada.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, cancelar',
+                    cancelButtonText: 'No, continuar editando'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Reset form and close modal
+                        $('#create-conductores-form')[0].reset();
+                        $('.modal').modal('hide');
+                    }
+                });
+            } else {
+                $('.modal').modal('hide');
+            }
+        });
     });
 </script>
 
-    <script>
+<script>
    // Cargar los estados en el primer dropdown
 $.ajax({
     url: '<?= \yii\helpers\Url::to(['conductores/get-estados']) ?>',
@@ -219,7 +335,7 @@ $.ajax({
         // Agregar la opción por defecto
         $estadoDropdown.append($('<option>', {
             value: '',
-            text: ''
+            text: 'Selecciona uno',
         }));
 
         // Crear un objeto para almacenar los estados y sus códigos
@@ -262,7 +378,7 @@ $.ajax({
             $municipioDropdown.empty();  // Limpiar cualquier opción previa
             $municipioDropdown.append($('<option>', {
                 value: '',
-                text: 'Selecciona el municipio...'
+                text: 'Selecciona uno'
             }));
 
             // Crear un objeto para almacenar los municipios y sus códigos
@@ -295,6 +411,4 @@ $.ajax({
         }
     });
 }
-
-
 </script>

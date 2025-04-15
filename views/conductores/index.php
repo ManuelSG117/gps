@@ -28,7 +28,7 @@ $this->registerJsFile('@web/js/conductores.js',['depends' => [\yii\web\JqueryAss
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-               <?= Html::button('Crear Conductor <animated-icons src="https://animatedicons.co/get-icon?name=Individual&style=minimalistic&token=ae97ee7c-56cc-4490-90bd-ecd3fc81466e" trigger="loop" attributes=\'{"variationThumbColour":"#536DFE","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":0.9,"defaultColours":{"group-1":"#222B40FF","group-2":"#EFEFEFFF","background":"#FFFFFFFF"}}\' height="35" width="35"></animated-icons>', [
+               <?= Html::button('Crear Conductor', [
             'class' => 'btn btn-sm btn-success btn-index ',
             'data-bs-toggle' => 'modal',
             'data-bs-target' => '#exampleModalCenter',

@@ -54,12 +54,12 @@ $(document).on('click', '.ajax-delete', function (e) {
 
 
 // Maneja la creación de conductores con AJAX
-$('#create-conductores-form').on('beforeSubmit', function (e) {
+$(document).on('submit', '#create-conductores-form', function (e) {
     e.preventDefault();
     var form = $(this);
 
-     // Mostrar el modal de carga
-     Swal.fire({
+    // Mostrar el modal de carga
+    Swal.fire({
         title: 'Cargando...',
         text: 'Por favor espera.',
         icon: 'info',
@@ -72,22 +72,37 @@ $('#create-conductores-form').on('beforeSubmit', function (e) {
         type: 'POST',
         data: form.serialize(),
         success: function (response) {
+            Swal.close(); // Cerrar el modal de carga
             if (response.success) {
                 Swal.fire({
                     icon: 'success',
                     title: '¡Éxito!',
                     text: response.message,
+                }).then((result) => {
+                    // Cerrar el modal después de que el usuario haga clic en OK
+                    $('#exampleModalCenter').modal('hide');
+                    // Asegurarse de que el backdrop también se elimine
+                    $('.modal-backdrop').remove();
+                    $('body').removeClass('modal-open').css('padding-right', '');
+                    // Recargar el GridView
+                    $.pjax.reload({ container: '#conductores-grid' });
                 });
-                $('#exampleModalCenter .btn-danger').click();  // Cierra el modal
-                $.pjax.reload({ container: '#conductores-grid' }); // Recarga el GridView
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message || 'No se pudo procesar la solicitud.',
+                });
             }
         },
-        error: function () {
+        error: function (xhr) {
+            Swal.close(); // Cerrar el modal de carga
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'No se pudo crear el conductor.',
+                text: 'No se pudo procesar la solicitud. Por favor, intenta de nuevo.',
             });
+            console.error('Error en la solicitud AJAX:', xhr.responseText);
         }
     });
 
@@ -130,7 +145,15 @@ $(document).on('click', '.ajax-view', function (e) {
                 // Cambiar el título del modal y mostrarlo
                 $('#exampleModalCenterTitle').text('Ver Conductor');
                 $('#exampleModalCenter').modal('show');
-                $('#create-conductores-form').find('.btn-primary').hide();
+                
+                // Ocultar el botón de guardar
+                $('#btn-guardar').hide();
+                
+                // Asegurarse de que los botones de navegación estén visibles
+                $('.next-step, .prev-step').show();
+                
+                // Mostrar el primer paso
+                window.showStep(1);
             }
         },
         error: function () {
@@ -144,12 +167,18 @@ $(document).on('click', '.ajax-view', function (e) {
     });
 });
 
-
 // Restablecer el formulario al cerrar el modal
 $('#exampleModalCenter').on('hidden.bs.modal', function () {
     $('#create-conductores-form').find('input, select, textarea').prop('disabled', false).val('');
-    $('#create-conductores-form .btn-primary').show();  // Mostrar el botón "Guardar"
+    $('#create-conductores-form').attr('action', '<?= \yii\helpers\Url::to(["conductores/create"]) ?>');
+    $('#btn-guardar').show();  // Mostrar el botón "Guardar"
     $('#exampleModalCenterTitle').text('Crear Conductor');
+    
+    // Restablecer los pasos
+    window.showStep(1);
+    
+    // Eliminar cualquier método oculto que se haya agregado
+    $('#create-conductores-form').find('input[name="_method"]').remove();
 });
 
 $(document).on('click', '.ajax-update', function (e) {
@@ -191,6 +220,13 @@ $(document).on('click', '.ajax-update', function (e) {
 
                 // Cambiar la acción del formulario para actualizar
                 $('#create-conductores-form').attr('action', url);
+                
+                // Asegurarse de que el método sea POST para la actualización
+                if ($('#create-conductores-form').find('input[name="_method"]').length) {
+                    $('#create-conductores-form').find('input[name="_method"]').val('POST');
+                } else {
+                    $('#create-conductores-form').append('<input type="hidden" name="_method" value="POST">');
+                }
             }
         },
         error: function () {
@@ -202,4 +238,49 @@ $(document).on('click', '.ajax-update', function (e) {
             });
         }
     });
+});
+
+
+// Handle modal close with confirmation
+$(document).on('click', '#btn-cancelar, button[data-bs-dismiss="modal"]', function(e) {
+    e.preventDefault();
+    
+    // Check if we're in view mode (fields are disabled)
+    var isViewMode = $('#create-conductores-form').find('input:first').prop('disabled');
+    
+    // If in view mode, just close the modal without confirmation
+    if (isViewMode) {
+        $('#exampleModalCenter').modal('hide');
+        return;
+    }
+    
+    // Check if form has data
+    let hasData = false;
+    $('#create-conductores-form input, #create-conductores-form select').each(function() {
+        if ($(this).val() && $(this).val() !== '') {
+            hasData = true;
+            return false; // Break the loop
+        }
+    });
+    
+    if (hasData) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Si cancelas, perderás toda la información ingresada.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, cancelar',
+            cancelButtonText: 'No, continuar editando'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Reset form and close modal
+                $('#create-conductores-form')[0].reset();
+                $('#exampleModalCenter').modal('hide');
+            }
+        });
+    } else {
+        $('#exampleModalCenter').modal('hide');
+    }
 });

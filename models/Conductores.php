@@ -69,9 +69,9 @@ class Conductores extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'nombre' => 'Nombre',
-            'apellido_p' => 'Apellido P',
-            'apellido_m' => 'Apellido M',
-            'no_licencia' => 'No Licencia',
+            'apellido_p' => 'A. Paterno',
+            'apellido_m' => 'A. Materno',
+            'no_licencia' => 'No. Licencia',
             'estado' => 'Estado',
             'municipio' => 'Municipio',
             'colonia' => 'Colonia',
@@ -83,11 +83,11 @@ class Conductores extends \yii\db\ActiveRecord
             'email' => 'Email',
             'tipo_sangre' => 'Tipo Sangre',
             'fecha_nacimiento' => 'Fecha Nacimiento',
-            'nombre_contacto' => 'Nombre Contacto',
-            'apellido_p_contacto' => 'Apellido P Contacto',
-            'apellido_m_contacto' => 'Apellido M Contacto',
+            'nombre_contacto' => 'Nombre',
+            'apellido_p_contacto' => 'A. Paterno',
+            'apellido_m_contacto' => 'A. Materno',
             'parentesco' => 'Parentesco',
-            'telefono_contacto' => 'Telefono Contacto',
+            'telefono_contacto' => 'Telefono',
             'estatus' => 'Estatus',
         ];
     }

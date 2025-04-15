@@ -31,7 +31,7 @@ $this->registerJsFile('@web/js/dispositivos.js',['depends' => [\yii\web\JqueryAs
 
    
     <p>
-        <?= Html::button('Crear Dispositivo <animated-icons src="https://animatedicons.co/get-icon?name=Wireless&style=minimalistic&token=8dff41c2-b1dd-4146-a4e9-3a487f0e0f22" trigger="loop" attributes=\'{"variationThumbColour":"#536DFE","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1,"defaultColours":{"group-1":"#000000","group-2":"#536DFE","background":"#FFFFFF"}}\' height="30" width="30"></animated-icons>', [
+        <?= Html::button('Crear Dispositivo', [
             'class' => 'btn btn-sm btn-success btn-index',
             'data-bs-toggle' => 'modal',
             'data-bs-target' => '#exampleModalCenter',

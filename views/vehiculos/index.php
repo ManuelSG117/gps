@@ -18,7 +18,6 @@ $this->params['breadcrumbs'][] = $this->title;
 $this->registerJsFile('@web/js/vehiculos.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 ?>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://animatedicons.co/scripts/embed-animated-icons.js"></script>
 
 <div class="vehiculos-index">
 
@@ -27,13 +26,6 @@ $this->registerJsFile('@web/js/vehiculos.js', ['depends' => [\yii\web\JqueryAsse
     <p>
         <button type="button" class="btn btn-sm btn-success btn-index" data-toggle="modal" data-target="#exampleModalCenter">
             Crear Vehículo
-            <animated-icons
-                src="https://animatedicons.co/get-icon?name=Car&style=minimalistic&token=8467715e-7688-4324-a72a-baa5aa8ec02e"
-                trigger="loop"
-                attributes='{"variationThumbColour":"#536DFE","variationName":"Two Tone","variationNumber":2,"numberOfGroups":2,"backgroundIsGroup":false,"strokeWidth":1,"defaultColours":{"group-1":"#000000","group-2":"#536DFE","background":"#FFFFFF"}}'
-                height="35"
-                width="35"
-            ></animated-icons>
         </button>
     </p>
 

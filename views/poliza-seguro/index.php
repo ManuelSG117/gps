@@ -30,7 +30,7 @@ $this->registerJsFile('@web/js/poliza-seguro.js', ['depends' => [\yii\web\Jquery
 
     <!-- Update the button that opens the modal -->
     <p>
-        <?= Html::button('<i class="fa fa-plus"></i> Crear Póliza de Seguro', [
+        <?= Html::button('Crear Póliza de Seguro', [
             'class' => 'btn btn-sm btn-success btn-index', 
             'data-bs-toggle' => 'modal', 
             'data-bs-target' => '#polizaModal'
@@ -55,28 +55,43 @@ $this->registerJsFile('@web/js/poliza-seguro.js', ['depends' => [\yii\web\Jquery
             [
                 'class' => ActionColumn::className(),
                 'template' => '{view} {update} {delete}',
+                'contentOptions' => ['class' => 'action-column'], // Added this line for consistent styling
                 'buttons' => [
                     'view' => function ($url, $model, $key) {
-                        return Html::a('<i class="fa fa-eye"></i>', 'javascript:void(0);', [
-                            'class' => 'ajax-view',
-                            'data-url' => Url::to(['view', 'id' => $model->id]),
-                            'title' => 'Ver',
-                        ]);
+                        return Html::a(
+                            '<i class="fa fa-eye"></i></span>',
+                            '#',
+                            [
+                                'title' => 'Ver',
+                                'class' => 'btn btn-info light btn-sharp ajax-view',
+                                'data-id' => $model->id,
+                                'data-url' => Url::to(['view', 'id' => $model->id]),
+                            ]
+                        );
                     },
                     'update' => function ($url, $model, $key) {
-                        return Html::a('<i class="fa fa-pencil"></i>', 'javascript:void(0);', [
-                            'class' => 'ajax-update',
-                            'data-url' => Url::to(['update', 'id' => $model->id]),
-                            'title' => 'Actualizar',
-                        ]);
+                        return Html::a(
+                            '<i class="fa fa-pencil-alt"></i></span>',
+                            '#',
+                            [
+                                'title' => 'Actualizar',
+                                'class' => 'btn btn-primary light btn-sharp ajax-update',
+                                'data-id' => $model->id,
+                                'data-url' => Url::to(['update', 'id' => $model->id]),
+                            ]
+                        );
                     },
                     'delete' => function ($url, $model, $key) {
-                        return Html::a('<i class="fa fa-trash"></i>', 'javascript:void(0);', [
-                            'class' => 'ajax-delete',
-                            'data-id' => $model->id,
-                            'data-url' => Url::to(['delete', 'id' => $model->id]),
-                            'title' => 'Eliminar',
-                        ]);
+                        return Html::a(
+                            '<i class="fa fa-trash"></i></span>',
+                            '#',
+                            [
+                                'title' => 'Eliminar',
+                                'class' => 'btn btn-danger light btn-sharp ajax-delete',
+                                'data-id' => $model->id,
+                                'data-url' => $url,
+                            ]
+                        );
                     },
                 ],
             ],
