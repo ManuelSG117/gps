@@ -17,6 +17,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Agregar un evento separado para verificar datos después de pjax
+$(document).on('pjax:complete', function() {
+    const tableRows = document.querySelectorAll('#projects-tbl tbody tr');
+    if (tableRows.length === 0) {
+        Swal.fire({
+            title: 'Sin datos',
+            text: 'No hay información de ubicación disponible para el período y dispositivo seleccionados.',
+            icon: 'info',
+            confirmButtonText: 'Entendido'
+        });
+    }
+});
+
 function initFlatpickr() {
     flatpickr('#startDate', {
         dateFormat: 'Y-m-d',
@@ -64,21 +77,14 @@ function setupFilterChangeEvent() {
 
 async function initMap() {
     // Check if we have location data
-    const tableRows = document.querySelectorAll('#projects-tbls tbody tr');
+    const tableRows = document.querySelectorAll('#projects-tbl tbody tr');
     if (tableRows.length === 0 || tableRows[0].cells.length <= 1) {
-        const mapElement = document.getElementById('stops-map');
+        const mapElement = document.getElementById('map');
         if (mapElement) {
             mapElement.innerHTML = '<div class="alert alert-info">No hay datos de ubicación disponibles para mostrar en el mapa.</div>';
         }
         
-        // Show SweetAlert notification when no data is available
-        Swal.fire({
-            title: 'Sin datos',
-            text: 'No hay información de ubicación disponible para el período y dispositivo seleccionados.',
-            icon: 'info',
-            confirmButtonText: 'Entendido'
-        });
-        
+    
         return;
     }
 

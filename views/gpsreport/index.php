@@ -198,15 +198,16 @@ use yii\widgets\Pjax;
 <?php endif; ?>
 
 <!-- After the table card div, add the map container -->
-<div class=" mt-4" <?= empty($locations) ? 'style="display: none;"' : '' ?>>
-    <div class="card-header">
-        <h4 class="card-title">Mapa de Ruta</h4>
+<div class="custom card-container" <?= empty($locations) ? 'style="display: none;"' : '' ?>>
+    <div class="custom-card-header">
+        <h4 class="custom-card-title">Mapa de Ruta</h4>
     </div>
-    <div class="card-body">
+    <div class="custom-card-body">
         <div id="map" style="height: 500px; width: 100%; position: relative;"></div>
     </div>
 </div>
 <?php Pjax::end(); ?>
+
 
 <!-- Configurar las URLs para la exportación -->
 <script>
