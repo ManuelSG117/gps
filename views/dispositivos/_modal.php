@@ -42,7 +42,23 @@ use yii\helpers\Url;
     <div id="step-content-1" class="step-content" data-step="1">
         <h5 class="text-center text-primary mb-4">Información del dispositivo</h5>
         
-        <?= $form->field($model, 'nombre')->textInput(['maxlength' => true, 'required' => true]) ?>
+        <div class="row">
+            <div class="col-md-6">
+            <?= $form->field($model, 'nombre')->textInput(['maxlength' => true, 'required' => true]) ?>
+            </div> 
+            <div class="col-md-6">
+            <?= $form->field($model, 'cat_dispositivo')->dropDownList([
+                    'autobus' => 'Autobús',
+                    'bicicleta' => 'Bicicleta',
+                    'moto' => 'Moto',
+                    'auto' => 'Auto',
+                    'camion' => 'Camión',
+                    'persona' => 'Persona',
+                    'pipa' => 'Pipa',
+                    'camioneta' => 'Camioneta'
+                ], ['prompt' => 'Seleccione una categoría', 'required' => true]) ?>
+            </div>
+        </div>
         
         <div class="row">
             <div class="col-md-6">
@@ -70,20 +86,7 @@ use yii\helpers\Url;
             </div>
         </div>
 
-               <div class="row">
-            <div class="col-md-12">
-                <?= $form->field($model, 'cat_dispositivo')->dropDownList([
-                    'autobus' => 'Autobús',
-                    'bicicleta' => 'Bicicleta',
-                    'moto' => 'Moto',
-                    'auto' => 'Auto',
-                    'camion' => 'Camión',
-                    'persona' => 'Persona',
-                    'pipa' => 'Pipa',
-                    'camioneta' => 'Camioneta'
-                ], ['prompt' => 'Seleccione una categoría', 'required' => true]) ?>
-            </div>
-        </div>
+            
 
         <div class="d-flex justify-content-end mt-4">
             <button type="button" class="btn btn-primary next-step">Siguiente <i class="fas fa-arrow-right"></i></button>
@@ -110,11 +113,10 @@ use yii\helpers\Url;
                         'initialPreviewConfig' => [],
                         'overwriteInitial' => false,
                         'maxFileCount' => 4,
-                        'showCaption' => true,
+                        'showCaption' => false,
                         'showRemove' => true,
                         'showUpload' => false,
-                        'browseClass' => 'btn btn-primary',
-                        'browseIcon' => '<i class="fas fa-camera"></i> ',
+                      
                         'browseLabel' => 'Seleccionar Imágenes',
                         'msgFilesTooMany' => 'Solo puede subir un máximo de {n} imágenes',
                         'fileActionSettings' => [
@@ -126,7 +128,7 @@ use yii\helpers\Url;
                         ]
                     ]
                 ]); ?>
-                <small class="text-muted">Formatos permitidos: JPG, PNG, GIF. Máximo 4 imágenes.</small>
+                <small class="text-muted">Formatos permitidos: JPG ó PNG. Máximo 4 imágenes.</small>
             </div>
         </div>
         
@@ -137,9 +139,7 @@ use yii\helpers\Url;
     </div>
 </div>
 
-<div class="modal-footer">
-    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-</div>
+
 
 <?php ActiveForm::end(); ?>
 <?php Pjax::end(); ?>
@@ -182,6 +182,10 @@ use yii\helpers\Url;
             
             $('.step-content').hide();
             $(`#step-content-${step}`).show();
+            
+            // Update footer buttons
+            $('.modal-footer > div').hide();
+            $(`#footer-step-${step}`).show();
         }
         
         $('.next-step').click(function() {
@@ -210,6 +214,10 @@ use yii\helpers\Url;
                 altFormat: "d/m/Y",
                 disableMobile: true
             });
+            
+            // Reset to first step when modal is opened
+            currentStep = 1;
+            updateStep(currentStep);
         });
     });
 </script>
