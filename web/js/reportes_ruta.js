@@ -15,19 +15,32 @@ document.addEventListener('DOMContentLoaded', function() {
         setupFilterChangeEvent();
         initMap();
     });
-});
-
-// Agregar un evento separado para verificar datos después de pjax
-$(document).on('pjax:complete', function() {
-    const tableRows = document.querySelectorAll('#projects-tbl tbody tr');
-    if (tableRows.length === 0) {
-        Swal.fire({
-            title: 'Sin datos',
-            text: 'No hay información de ubicación disponible para el período y dispositivo seleccionados.',
-            icon: 'info',
-            confirmButtonText: 'Entendido'
-        });
-    }
+    
+    // Evento separado para verificar datos después de pjax
+    $(document).on('pjax:complete', function() {
+        // Agregar logs para depuración
+        console.log('Evento pjax:complete disparado');
+        
+        // Verificar si hay parámetros en la URL (indica que se realizó una búsqueda)
+        const urlParams = new URLSearchParams(window.location.search);
+        console.log('Parámetros URL:', Object.fromEntries(urlParams));
+        const hasSearchParams = urlParams.has('filter') || urlParams.has('gps');
+        console.log('¿Tiene parámetros de búsqueda?:', hasSearchParams);
+        
+        // Solo mostrar el mensaje si hay parámetros de búsqueda y no hay resultados
+        const tableRows = document.querySelectorAll('#projects-tbl tbody tr');
+        console.log('Número de filas encontradas:', tableRows.length);
+        
+        if (tableRows.length === 0 && hasSearchParams) {
+            console.log('Mostrando SweetAlert - Sin datos');
+            Swal.fire({
+                title: 'Sin datos',
+                text: 'No hay información de ubicación disponible para el período y dispositivo seleccionados.',
+                icon: 'info',
+                confirmButtonText: 'Entendido'
+            });
+        }
+    });
 });
 
 function initFlatpickr() {

@@ -184,18 +184,7 @@ use yii\widgets\Pjax;
     </div>
 </div>
 
-<?php if (empty($locations)): ?>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            Swal.fire({
-                title: 'Sin datos',
-                text: 'No hay información de ubicación disponible para el período y dispositivo seleccionados.',
-                icon: 'info',
-                confirmButtonText: 'Entendido'
-            });
-        });
-    </script>
-<?php endif; ?>
+
 
 <!-- After the table card div, add the map container -->
 <div class="custom card-container" <?= empty($locations) ? 'style="display: none;"' : '' ?>>
