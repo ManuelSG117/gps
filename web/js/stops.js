@@ -1,5 +1,5 @@
 function initStops() {
-   // console.log("initStops called");
+   console.log("initStops called");
 
     // Inicializar Flatpickr
     flatpickr('#startDate', {
@@ -58,8 +58,68 @@ function initStops() {
 
 // Llamar a initStops() en la carga inicial
 document.addEventListener('DOMContentLoaded', function () {
+  //  console.log("DOMContentLoaded event fired");
     initStops();
+    
+    // Configurar los eventos de pjax una sola vez
+    setupPjaxEvents();
 });
+
+// Configurar eventos de pjax
+function setupPjaxEvents() {
+    // Eliminar manejadores existentes para evitar duplicados
+    $(document).off('pjax:complete.stopsCheck');
+    $(document).off('pjax:success.stopsCheck');
+    
+    // Registrar nuevos manejadores con namespace para poder eliminarlos después
+    $(document).on('pjax:complete.stopsCheck', function() {
+    //    console.log('pjax:complete triggered with namespace');
+        setTimeout(function() {
+            initStops();
+            checkForEmptyResults();
+        }, 100); // Pequeño retraso para asegurar que el DOM esté actualizado
+    });
+    
+    // También escuchar pjax:success como respaldo
+    $(document).on('pjax:success.stopsCheck', function() {
+      //  console.log('pjax:success triggered with namespace');
+        setTimeout(function() {
+            initStops();
+            checkForEmptyResults();
+        }, 100);
+    });
+}
+
+// Función separada para verificar resultados vacíos
+function checkForEmptyResults() {
+   // console.log('Checking for empty results');
+    
+    // Verificar si hay parámetros en la URL (indica que se realizó una búsqueda)
+    const urlParams = new URLSearchParams(window.location.search);
+    //console.log('URL params:', Object.fromEntries(urlParams));
+    
+    const hasSearchParams = urlParams.has('filter') || urlParams.has('gps');
+    //console.log('Has search params:', hasSearchParams);
+    
+    // Solo mostrar el mensaje si hay parámetros de búsqueda y no hay resultados
+    const tableRows = document.querySelectorAll('#projects-tbls tbody tr');
+    //console.log('Table rows found:', tableRows.length);
+    
+    // Verificar también si hay un mensaje de "No data available"
+    const noDataMessage = document.querySelector('#projects-tbls tbody tr td.dataTables_empty');
+    const hasNoResults = tableRows.length === 0 || noDataMessage !== null;
+    //console.log('Has no results:', hasNoResults, 'Empty message found:', noDataMessage !== null);
+    
+    if (hasNoResults && hasSearchParams) {
+      //  console.log('Showing SweetAlert - No data');
+        Swal.fire({
+            title: 'Sin datos',
+            text: 'No hay información de paradas disponible para el período y dispositivo seleccionados.',
+            icon: 'info',
+            confirmButtonText: 'Entendido'
+        });
+    }
+}
 
 function confirmExport() {
     Swal.fire({
@@ -73,7 +133,7 @@ function confirmExport() {
     }).then((result) => {
         if (result.isConfirmed) {
             // Redirigir con includeChart=true
-            console.log('El usuario eligió incluir la gráfica.');
+        //    console.log('El usuario eligió incluir la gráfica.');
             window.location.href = '/gpsreport/download-report-stops' + 
                 '?filter=' + encodeURIComponent($('#filter').val()) + 
                 '&gps=' + encodeURIComponent($('#gps').val()) + 
@@ -82,7 +142,7 @@ function confirmExport() {
                 '&includeChart=true';
         } else if (result.dismiss === Swal.DismissReason.cancel) {
             // Redirigir con includeChart=false
-            console.log('El usuario eligió no incluir la gráfica.');
+          ///  console.log('El usuario eligió no incluir la gráfica.');
             window.location.href = '/gpsreport/download-report-stops' + 
                 '?filter=' + encodeURIComponent($('#filter').val()) + 
                 '&gps=' + encodeURIComponent($('#gps').val()) + 

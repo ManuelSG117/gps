@@ -389,18 +389,7 @@ $(document).ready(function() {
    //     console.log("Error al recargar stops.js");
     });
     
-    // Check if there are no stops data after PJAX request completes
-    if ($('#projects-tbls tbody tr').length === 0 || $('#projects-tbls tbody tr td[colspan]').length > 0) {
-        // Only show alert if a device was selected (gps parameter exists in URL)
-        if (window.location.search.indexOf('gps=') > -1) {
-            Swal.fire({
-                title: 'Sin datos',
-                text: 'No hay información de paradas disponible para el período y dispositivo seleccionados.',
-                icon: 'info',
-                confirmButtonText: 'Entendido'
-            });
-        }
-    }
+ 
 });
 });
 </script>
