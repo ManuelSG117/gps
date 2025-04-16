@@ -11,12 +11,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Setup form submission event for loading screen
     setupFormSubmissionEvent();
+    
+    // Setup export button visibility
+    setupExportButtonVisibility();
 
     // Setup Pjax events
     $(document).on('pjax:success', function() {
         initFlatpickr();
         setupFilterChangeEvent();
         initMap();
+        setupExportButtonVisibility();
         hideLoadingScreen();
     });
     
@@ -34,6 +38,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Solo mostrar el mensaje si hay parámetros de búsqueda y no hay resultados
         const tableRows = document.querySelectorAll('#projects-tbl tbody tr');
         console.log('Número de filas encontradas:', tableRows.length);
+        
+        // Controlar la visibilidad del botón de exportar
+        const exportButton = document.querySelector('.btn-export-excel');
+        if (exportButton) {
+            if (tableRows.length > 0) {
+                exportButton.style.display = 'block';
+            } else {
+                exportButton.style.display = 'none';
+            }
+        }
         
         if (tableRows.length === 0 && hasSearchParams) {
             console.log('Mostrando SweetAlert - Sin datos');
@@ -457,3 +471,20 @@ $(document).on('pjax:complete', function() {
         exportUrlWithoutChart = urlWithoutChart.toString();
     }
 });
+
+// Function to set up export button visibility
+function setupExportButtonVisibility() {
+    // Add the class to the export button if it doesn't have it
+    const exportButton = document.querySelector('a.btn-success[onclick*="confirmExport"]');
+    if (exportButton) {
+        exportButton.classList.add('btn-export-excel');
+        
+        // Check if there are rows in the table
+        const tableRows = document.querySelectorAll('#projects-tbl tbody tr');
+        if (tableRows.length === 0) {
+            exportButton.style.display = 'none';
+        } else {
+            exportButton.style.display = 'block';
+        }
+    }
+}

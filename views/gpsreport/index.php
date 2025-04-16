@@ -70,7 +70,7 @@ use yii\widgets\Pjax;
 
             <!-- Exportar a Excel -->
             <div class="col-lg-2 col-md-4 col-12">
-                <?= Html::a('Export to Excel', '#', [
+                <?= Html::a('Exportar', '#', [
                     'class' => 'btn btn-success w-100',
                     'onclick' => 'return confirmExport();'
                 ]) ?>
