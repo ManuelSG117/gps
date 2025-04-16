@@ -52,10 +52,14 @@ use yii\widgets\Pjax;
             <div class="col-lg-2 col-md-4 col-12">
                 <div class="form-group">
                     <label for="gps">Dispositivo:</label>
-                    <?= Html::dropDownList('gps', Yii::$app->request->get('gps', null), GpsLocations::find()->select(['phoneNumber'])->indexBy('phoneNumber')->column(), [
-                        'class' => 'form-control',
-                        'id' => 'gps',
-                    ]) ?>
+                    <?= Html::dropDownList('gps', Yii::$app->request->get('gps', 'all'), 
+                        array_merge(
+                            ['all' => 'Todos los dispositivos'], 
+                            GpsLocations::find()->select(['phoneNumber'])->indexBy('phoneNumber')->column()
+                        ), [
+                            'class' => 'form-control',
+                            'id' => 'gps',
+                        ]) ?>
                 </div>
             </div>
 

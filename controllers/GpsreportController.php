@@ -38,14 +38,15 @@ class GpsreportController extends Controller
     public function actionIndex()
     {
         $filter = Yii::$app->request->get('filter', 'today');
-        $gps = Yii::$app->request->get('gps', null);
+        $gps = Yii::$app->request->get('gps', 'all');
         $startDate = Yii::$app->request->get('startDate', null);
         $endDate = Yii::$app->request->get('endDate', null);
     
         // Consulta principal
         $query = GpsLocations::find();
     
-        if ($gps) {
+        // Solo aplicar filtro de dispositivo si no es 'all'
+        if ($gps && $gps !== 'all') {
             $query->andWhere(['phoneNumber' => $gps]);
         }
     
@@ -93,10 +94,15 @@ class GpsreportController extends Controller
         ]);
     }   
 
-    public function actionDownloadReport($filter = 'today', $startDate = null, $endDate = null, $includeChart = true)
+    public function actionDownloadReport($filter = 'today', $gps = 'all', $startDate = null, $endDate = null, $includeChart = true)
     {
         $query = GpsLocations::find();
         $period = '';
+        
+        // Solo aplicar filtro de dispositivo si no es 'all'
+        if ($gps && $gps !== 'all') {
+            $query->andWhere(['phoneNumber' => $gps]);
+        }
 
         // Filtrar datos según el filtro seleccionado
         switch ($filter) {

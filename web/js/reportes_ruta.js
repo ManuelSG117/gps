@@ -9,11 +9,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize the map if we have location data
     initMap();
 
+    // Setup form submission event for loading screen
+    setupFormSubmissionEvent();
+
     // Setup Pjax events
     $(document).on('pjax:success', function() {
         initFlatpickr();
         setupFilterChangeEvent();
         initMap();
+        hideLoadingScreen();
     });
     
     // Evento separado para verificar datos después de pjax
@@ -40,8 +44,61 @@ document.addEventListener('DOMContentLoaded', function() {
                 confirmButtonText: 'Entendido'
             });
         }
+        
+        // Ocultar pantalla de carga
+        hideLoadingScreen();
     });
 });
+
+// Función para mostrar la pantalla de carga
+function showLoadingScreen() {
+    // Crear el elemento de pantalla de carga si no existe
+    if (!document.getElementById('loading-screen')) {
+        // Primero, asegurarse de que el script de dotlottie esté cargado
+        if (!document.querySelector('script[src*="dotlottie-player"]')) {
+            const script = document.createElement('script');
+            script.src = "https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs";
+            script.type = "module";
+            document.head.appendChild(script);
+        }
+        
+        const loadingScreen = document.createElement('div');
+        loadingScreen.id = 'loading-screen';
+        loadingScreen.innerHTML = `
+            <div class="loading-content">
+                <dotlottie-player src="https://lottie.host/5ee4a06b-91b8-4a89-b8a6-7a1ea7f47c47/nJPJm4QWbB.lottie" 
+                    background="transparent" 
+                    speed="1" 
+                    style="width: 300px; height: 300px" 
+                    loop 
+                    autoplay>
+                </dotlottie-player>
+                <h4 class="mt-3">Cargando datos...</h4>
+            </div>
+        `;
+        document.body.appendChild(loadingScreen);
+    } else {
+        document.getElementById('loading-screen').style.display = 'flex';
+    }
+}
+
+// Función para ocultar la pantalla de carga
+function hideLoadingScreen() {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        loadingScreen.style.display = 'none';
+    }
+}
+
+// Configurar evento de envío del formulario
+function setupFormSubmissionEvent() {
+    const form = document.querySelector('.gps-report-form form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            showLoadingScreen();
+        });
+    }
+}
 
 function initFlatpickr() {
     flatpickr('#startDate', {
@@ -333,3 +390,59 @@ window.addEventListener('load', function() {
 // Variables globales para las URLs de exportación
 let exportUrlWithChart = '';
 let exportUrlWithoutChart = '';
+
+// Agregar estilos para la pantalla de carga
+document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .loading-content {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Precargar el script de dotlottie para que esté disponible cuando se necesite
+    const script = document.createElement('script');
+    script.src = "https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs";
+    script.type = "module";
+    document.head.appendChild(script);
+});
+
+// Asegurarse de que las URLs de exportación incluyan el parámetro gps
+$(document).on('pjax:complete', function() {
+    // Actualizar las URLs de exportación con el parámetro gps actual
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentGps = urlParams.get('gps') || 'all';
+    
+    // Actualizar las URLs globales si están definidas en el script
+    if (typeof exportUrlWithChart !== 'undefined' && typeof exportUrlWithoutChart !== 'undefined') {
+        // Crear nuevas URLs con el parámetro gps actualizado
+        let urlWithChart = new URL(exportUrlWithChart, window.location.origin);
+        let urlWithoutChart = new URL(exportUrlWithoutChart, window.location.origin);
+        
+        // Actualizar el parámetro gps
+        urlWithChart.searchParams.set('gps', currentGps);
+        urlWithoutChart.searchParams.set('gps', currentGps);
+        
+        // Asignar las nuevas URLs
+        exportUrlWithChart = urlWithChart.toString();
+        exportUrlWithoutChart = urlWithoutChart.toString();
+    }
+});
