@@ -120,15 +120,20 @@ function setupFilterChangeEvent() {
 
     const customDates = document.querySelector('.custom-dates');
     const dateFields = document.querySelectorAll('.custom-dates .form-control');
-    const colSize = 'col-lg-2 col-md-4 col-12'; // Tamaño por defecto para cada campo
-
+    
     filter.addEventListener('change', function() {
         if (filter.value === 'custom') {
             customDates.style.display = 'flex';
             // Ajustar el tamaño de las columnas
             dateFields.forEach(function(field) {
-                field.closest('.col-6').classList.remove('col-6');
-                field.closest('.col-6').classList.add(colSize);
+                const parentCol = field.closest('.date-field-container');
+                if (parentCol) {
+                    parentCol.classList.remove('col-6');
+                    // Add each class individually instead of all at once
+                    parentCol.classList.add('col-lg-2');
+                    parentCol.classList.add('col-md-4');
+                    parentCol.classList.add('col-12');
+                }
             });
         } else {
             customDates.style.display = 'none';
@@ -139,8 +144,14 @@ function setupFilterChangeEvent() {
     if (filter.value === 'custom') {
         customDates.style.display = 'flex';
         dateFields.forEach(function(field) {
-            field.closest('.col-6').classList.remove('col-6');
-            field.closest('.col-6').classList.add(colSize);
+            const parentCol = field.closest('.date-field-container');
+            if (parentCol) {
+                parentCol.classList.remove('col-6');
+                // Add each class individually here too
+                parentCol.classList.add('col-lg-2');
+                parentCol.classList.add('col-md-4');
+                parentCol.classList.add('col-12');
+            }
         });
     }
 }

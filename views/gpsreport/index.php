@@ -79,14 +79,14 @@ use yii\widgets\Pjax;
             <!-- Rango de Fechas (se muestra solo cuando se selecciona 'Personalizado') -->
             <div class="col-lg-4 col-md-12 col-12 custom-dates" style="display: none;">
                 <div class="row">
-                    <div class="col-6">
+                    <div class="col-6 date-field-container">
                         <?= Html::input('text', 'startDate', Yii::$app->request->get('startDate', null), [
                             'class' => 'form-control',
                             'id' => 'startDate',
                             'placeholder' => 'Desde:',
                         ]) ?>
                     </div>
-                    <div class="col-6">
+                    <div class="col-6 date-field-container">
                         <?= Html::input('text', 'endDate', Yii::$app->request->get('endDate', null), [
                             'class' => 'form-control',
                             'id' => 'endDate',

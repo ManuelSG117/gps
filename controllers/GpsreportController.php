@@ -73,6 +73,12 @@ class GpsreportController extends Controller
             case 'custom':
                 if ($startDate && $endDate) {
                     $query->andWhere(['between', 'DATE(lastUpdate)', $startDate, $endDate]);
+                } else if ($startDate) {
+                    // If only start date is provided
+                    $query->andWhere(['>=', 'DATE(lastUpdate)', $startDate]);
+                } else if ($endDate) {
+                    // If only end date is provided
+                    $query->andWhere(['<=', 'DATE(lastUpdate)', $endDate]);
                 }
                 break;
         }
