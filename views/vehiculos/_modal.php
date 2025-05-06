@@ -5,6 +5,9 @@ use yii\widgets\Pjax;
 use yii\helpers\ArrayHelper;
 use app\models\Conductores;
 use kartik\file\FileInput;
+use app\models\Dispositivos;
+use app\models\PolizaSeguro;
+
 
 /** @var yii\web\View $this */
 /** @var app\models\Vehiculos $model */
@@ -335,13 +338,41 @@ use kartik\file\FileInput;
         <h5 class="text-center text-primary mb-4">Asignación</h5>
         
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <?= $form->field($model, 'conductor_id')->dropDownList(
                     ArrayHelper::map(Conductores::find()->all(), 'id', function($model) {
                         return $model->nombre . ' ' . $model->apellido_p . ' ' . ($model->apellido_m ? $model->apellido_m : '');
                     }),
                     ['prompt' => 'Seleccione un conductor']
                 ) ?>
+            </div>
+            <div class="col-md-6">
+                <?= $form->field($model, 'dispositivo_id')->dropDownList(
+                    ArrayHelper::map(Dispositivos::find()->all(), 'id', function($model) {
+                        return $model->nombre . ' - ' . $model->imei;
+                    }),
+                    ['prompt' => 'Seleccione un dispositivo']
+                ) ?>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <?= $form->field($model, 'poliza_id')->dropDownList(
+                    ArrayHelper::map(PolizaSeguro::find()->all(), 'id', function($model) {
+                        return $model->aseguradora . ' - ' . $model->no_poliza;
+                    }),
+                    ['prompt' => 'Seleccione una póliza']
+                ) ?>
+            </div>
+            <div class="col-md-6">
+                <?= $form->field($model, 'direccion_id')->textInput(['maxlength' => true]) ?>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <?= $form->field($model, 'departamento_id')->textInput(['maxlength' => true]) ?>
             </div>
         </div>
         

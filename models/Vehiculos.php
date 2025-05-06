@@ -88,11 +88,11 @@ class Vehiculos extends \yii\db\ActiveRecord
             'estado_vehiculo' => 'Estado Vehiculo',
             'estado_motor' => 'Estado Motor',
             'estatus' => 'Estatus',
-            'conductor_id' => 'Conductor ID',
-            'dispositivo_id' => 'Dispositivo ID',
-            'poliza_id' => 'Poliza ID',
-            'direccion_id' => 'Direccion ID',
-            'departamento_id' => 'Departamento ID',
+            'conductor_id' => 'Conductor ',
+            'dispositivo_id' => 'Dispositivo ',
+            'poliza_id' => 'Poliza ',
+            'direccion_id' => 'Direccion ',
+            'departamento_id' => 'Departamento ',
         ];
     }
 
