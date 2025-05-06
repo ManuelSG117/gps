@@ -157,13 +157,29 @@ use yii\widgets\Pjax;
                 <div class="pagination-container mt-3">
                     <nav>
                         <ul class="pagination justify-content-center">
+                            <!-- Primera página -->
+                            <li class="page-item <?= ($currentPage <= 1) ? 'disabled' : '' ?>">
+                                <a class="page-link" href="<?= Url::to(['gpsreport/index', 'page' => 1, 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate')]) ?>">
+                                    &laquo;&laquo;
+                                </a>
+                            </li>
+                            
+                            <!-- Página anterior -->
                             <li class="page-item <?= ($currentPage <= 1) ? 'disabled' : '' ?>">
                                 <a class="page-link" href="<?= Url::to(['gpsreport/index', 'page' => $currentPage - 1, 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate')]) ?>">
                                     &laquo;
                                 </a>
                             </li>
                             
-                            <?php for ($i = 1; $i <= $pageCount; $i++): ?>
+                            <?php
+                            // Mostrar solo 5 páginas a la vez
+                            $maxPagesToShow = 5;
+                            $startPage = max(1, min($currentPage - floor($maxPagesToShow / 2), $pageCount - $maxPagesToShow + 1));
+                            $startPage = max(1, $startPage); // Asegurar que no sea menor que 1
+                            $endPage = min($startPage + $maxPagesToShow - 1, $pageCount);
+                            
+                            for ($i = $startPage; $i <= $endPage; $i++): 
+                            ?>
                                 <li class="page-item <?= ($i == $currentPage) ? 'active' : '' ?>">
                                     <a class="page-link" href="<?= Url::to(['gpsreport/index', 'page' => $i, 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate')]) ?>">
                                         <?= $i ?>
@@ -171,9 +187,17 @@ use yii\widgets\Pjax;
                                 </li>
                             <?php endfor; ?>
                             
+                            <!-- Página siguiente -->
                             <li class="page-item <?= ($currentPage >= $pageCount) ? 'disabled' : '' ?>">
                                 <a class="page-link" href="<?= Url::to(['gpsreport/index', 'page' => $currentPage + 1, 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate')]) ?>">
                                     &raquo;
+                                </a>
+                            </li>
+                            
+                            <!-- Última página -->
+                            <li class="page-item <?= ($currentPage >= $pageCount) ? 'disabled' : '' ?>">
+                                <a class="page-link" href="<?= Url::to(['gpsreport/index', 'page' => $pageCount, 'filter' => Yii::$app->request->get('filter'), 'gps' => Yii::$app->request->get('gps'), 'startDate' => Yii::$app->request->get('startDate'), 'endDate' => Yii::$app->request->get('endDate')]) ?>">
+                                    &raquo;&raquo;
                                 </a>
                             </li>
                         </ul>
