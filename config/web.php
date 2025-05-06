@@ -59,10 +59,12 @@ $config = [
         ],
         'db' => $db,
     
-        'urlManager' => [
+ 'urlManager' => [
             'enablePrettyUrl' => true,
+            'enableStrictParsing' => false,
             'showScriptName' => true,
             'rules' => [
+                //['class' => 'yii\rest\UrlRule', 'controller' => 'user'],
             ],
         ],
         'as access' => [
