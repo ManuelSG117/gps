@@ -389,4 +389,11 @@ private function calculateDistance($lat1, $lon1, $lat2, $lon2)
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
+    
+    public function actionQueueAlert()
+    {
+        $flagPath = Yii::getAlias('@app/gps_queue_alert.flag');
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return ['alert' => file_exists($flagPath)];
+    }
 }

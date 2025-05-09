@@ -10,6 +10,18 @@ $min_distance_meters = 1; // Distancia mínima para registrar nueva posición
 $max_speed_kmh = 180; // Velocidad máxima razonable
 $connection_timeout = 600; // Tiempo en segundos para considerar una conexión inactiva (6 minutos)
 
+// --- Configuración de la cola persistente ---
+$gps_queue_file = __DIR__ . '/gps_queue.json';
+$batch_size = 20;
+$batch_interval = 10; // segundos
+$gps_queue_alert_flag = __DIR__ . '/gps_queue_alert.flag';
+$queue_alert_threshold = 500;
+
+// Inicializar archivo de cola si no existe
+if (!file_exists($gps_queue_file)) {
+    file_put_contents($gps_queue_file, json_encode([]));
+}
+
 // Iniciar registro
 function log_message($message) {
     global $log_file;
@@ -60,7 +72,69 @@ function validate_gps_data($latitude, $longitude, $speed) {
     return true;
 }
 
+// Función para agregar un registro a la cola JSON
+function queue_gps_location($data) {
+    global $gps_queue_file;
+    $fp = fopen($gps_queue_file, 'c+');
+    if (flock($fp, LOCK_EX)) {
+        $queue = stream_get_contents($fp);
+        $queue = $queue ? json_decode($queue, true) : [];
+        $queue[] = $data;
+        ftruncate($fp, 0);
+        rewind($fp);
+        fwrite($fp, json_encode($queue));
+        fflush($fp);
+        flock($fp, LOCK_UN);
+    }
+    fclose($fp);
+}
 
+// Función para obtener y eliminar un batch de la cola
+function dequeue_gps_locations($batch_size) {
+    global $gps_queue_file;
+    $batch = [];
+    $fp = fopen($gps_queue_file, 'c+');
+    if (flock($fp, LOCK_EX)) {
+        $queue = stream_get_contents($fp);
+        $queue = $queue ? json_decode($queue, true) : [];
+        $batch = array_splice($queue, 0, $batch_size);
+        ftruncate($fp, 0);
+        rewind($fp);
+        fwrite($fp, json_encode($queue));
+        fflush($fp);
+        flock($fp, LOCK_UN);
+    }
+    fclose($fp);
+    return $batch;
+}
+
+// Función para contar elementos en la cola
+function gps_queue_count() {
+    global $gps_queue_file;
+    $queue = json_decode(file_get_contents($gps_queue_file), true);
+    return $queue ? count($queue) : 0;
+}
+
+// Función para insertar un batch en la base de datos
+function insert_gps_batch($pdo, $batch) {
+    if (empty($batch)) return;
+    try {
+        $pdo->beginTransaction();
+        $stmt = $pdo->prepare('INSERT INTO gpslocations (
+            latitude, longitude, phoneNumber, userName, sessionID, speed, direction, distance, gpsTime, locationMethod, accuracy, extraInfo, eventType
+        ) VALUES (
+            :latitude, :longitude, :phoneNumber, :userName, :sessionID, :speed, :direction, :distance, :gpsTime, :locationMethod, :accuracy, :extraInfo, :eventType
+        )');
+        foreach ($batch as $params) {
+            $stmt->execute($params);
+        }
+        $pdo->commit();
+        log_message("Batch insertado correctamente: " . count($batch) . " registros.");
+    } catch (PDOException $e) {
+        $pdo->rollBack();
+        log_message("ERROR en batch insert: " . $e->getMessage());
+    }
+}
 
 // Bucle principal con manejo de errores
 while (true) {
@@ -193,6 +267,28 @@ while (true) {
                 @fwrite($socket, $response);
             }
         }
+
+        // Proceso batch cada $batch_interval segundos o si la cola supera $batch_size
+        if (time() - $last_batch_time >= $batch_interval || gps_queue_count() >= $batch_size) {
+            $batch = dequeue_gps_locations($batch_size);
+            if (!empty($batch)) {
+                insert_gps_batch($pdo, $batch);
+            }
+            $last_batch_time = time();
+        }
+        // --- ALERTA DE COLA ---
+        $queue_count = gps_queue_count();
+        if ($queue_count >= $queue_alert_threshold) {
+            if (!file_exists($gps_queue_alert_flag)) {
+                file_put_contents($gps_queue_alert_flag, 'ALERT');
+                log_message("ALERTA: La cola de GPS ha superado el umbral de $queue_alert_threshold registros.");
+            }
+        } else {
+            if (file_exists($gps_queue_alert_flag)) {
+                unlink($gps_queue_alert_flag);
+                log_message("ALERTA: La cola de GPS ha vuelto a un nivel seguro (<$queue_alert_threshold). Se elimina la alerta.");
+            }
+        }
     } catch (Exception $e) {
         log_message("ERROR en el bucle principal: " . $e->getMessage());
         // Esperar un poco antes de continuar
@@ -322,10 +418,11 @@ function haversine_distance($lat1, $lon1, $lat2, $lon2)
     return $distance;
 }
 
-
+// Modificar insert_location_into_db para usar la cola
 function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_kmh, $bearing, $userName = null, $sessionID = null, $locationMethod = null, $accuracy = null, $extraInfo = null, $eventType = null) {
     global $min_distance_meters;
-    
+    $max_jump_speed_kmh = 200; // Umbral para saltos imposibles
+    $min_time_diff_sec = 1; // Tiempo mínimo entre posiciones para evitar duplicados
     // Verificar si el IMEI está registrado en la tabla dispositivos
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM dispositivos WHERE imei = :imei');
     $stmt->execute([':imei' => $imei]);
@@ -334,104 +431,77 @@ function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, 
         log_message("IMEI $imei no está registrado en la tabla dispositivos. No se insertará la ubicación.");
         return 'IMEI_NOT_REGISTERED';
     }
-
     // Verificar si la latitud comienza con "0.0"
     if (strpos($latitude, '0.0') === 0) {
         log_message("Latitud inválida ($latitude), no se insertará en la base de datos");
         return;
     }
-
     // Obtener la última ubicación insertada
-    $stmt = $pdo->prepare('SELECT latitude, longitude, gpsTime FROM gpslocations WHERE phoneNumber = :imei ORDER BY GPSLocationID DESC LIMIT 1');
+    $stmt = $pdo->prepare('SELECT latitude, longitude, gpsTime, speed FROM gpslocations WHERE phoneNumber = :imei ORDER BY GPSLocationID DESC LIMIT 1');
     $stmt->execute([':imei' => $imei]);
     $last_location = $stmt->fetch(PDO::FETCH_ASSOC);
-
     $distance = 0;
     $should_insert = true;
-    
+    $jump_detected = false;
     if ($last_location) {
         $last_latitude = $last_location['latitude'];
         $last_longitude = $last_location['longitude'];
         $last_time = strtotime($last_location['gpsTime']);
         $current_time = strtotime($gps_time);
         $time_diff = $current_time - $last_time;
-
+        $last_speed = isset($last_location['speed']) ? floatval($last_location['speed']) : 0;
         // Calcular la distancia entre la última ubicación y la nueva ubicación
         $distance = haversine_distance($last_latitude, $last_longitude, $latitude, $longitude);
         log_message("Distancia desde última posición: $distance metros");
-        
-        // Verificar si la distancia es menor al mínimo y el tiempo es cercano
-        if ($distance < $min_distance_meters && $time_diff < 1) { // 1 segundo es prueba momentanaeamente 
+        // Calcular velocidad real entre puntos (en km/h)
+        if ($time_diff > 0) {
+            $real_speed_kmh = ($distance / $time_diff) * 3.6; // m/s a km/h
+        } else {
+            $real_speed_kmh = 0;
+        }
+        // Validación de salto imposible por velocidad calculada
+        if ($real_speed_kmh > $max_jump_speed_kmh) {
+            log_message("Salto imposible detectado: velocidad calculada $real_speed_kmh km/h entre posiciones. No se insertará la ubicación.");
+            $should_insert = false;
+            $jump_detected = true;
+        }
+        // Validación de salto imposible por diferencia con velocidad reportada
+        if (!$jump_detected && abs($real_speed_kmh - $speed_in_kmh) > 80 && $real_speed_kmh > 50) { // diferencia muy grande
+            log_message("Diferencia anómala entre velocidad GPS ($speed_in_kmh km/h) y calculada ($real_speed_kmh km/h). No se insertará la ubicación.");
+            $should_insert = false;
+            $jump_detected = true;
+        }
+        // Validación de distancia mínima y tiempo mínimo
+        if (!$jump_detected && $distance < $min_distance_meters && $time_diff < $min_time_diff_sec) {
             log_message("Ubicación muy similar a la última insertada, no se insertará en la base de datos");
             $should_insert = false;
         }
     }
-
     if ($should_insert) {
-        try {
-            // Asignar valores predeterminados si no se reciben
-            $userName = $userName ?? "tk103";
-            $sessionID = $sessionID ?? "1";
-            $locationMethod = $locationMethod ?? "GPS";
-            $accuracy = $accuracy ?? "10";
-            $extraInfo = $extraInfo ?? "";
-            $eventType = $eventType ?? "tk103";
-
-            // Preparar la consulta para insertar
-            $stmt = $pdo->prepare('INSERT INTO gpslocations (
-                latitude,
-                longitude,
-                phoneNumber,
-                userName,
-                sessionID,
-                speed,
-                direction,
-                distance,
-                gpsTime,
-                locationMethod,
-                accuracy,
-                extraInfo,
-                eventType
-            ) VALUES (
-                :latitude,
-                :longitude,
-                :phoneNumber,
-                :userName,
-                :sessionID,
-                :speed,
-                :direction,
-                :distance,
-                :gpsTime,
-                :locationMethod,
-                :accuracy,
-                :extraInfo,
-                :eventType
-            )');
-
-            $params = [
-                ':latitude' => $latitude,
-                ':longitude' => $longitude,
-                ':phoneNumber' => $imei,
-                ':userName' => $userName,
-                ':sessionID' => $sessionID,
-                ':speed' => $speed_in_kmh, 
-                ':direction' => $bearing,
-                ':distance' => $distance, 
-                ':gpsTime' => $gps_time,
-                ':locationMethod' => $locationMethod,
-                ':accuracy' => $accuracy,
-                ':extraInfo' => $extraInfo,
-                ':eventType' => $eventType,
-            ];
-
-            $stmt->execute($params);
-            log_message("Datos insertados correctamente en la base de datos para IMEI: $imei");
-
-        } catch (PDOException $e) {
-            log_message("ERROR al insertar en la base de datos: " . $e->getMessage());
-            // Registrar más detalles del error
-            log_message("Detalles de la consulta: " . json_encode($params));
-        }
+        // Asignar valores predeterminados si no se reciben
+        $userName = $userName ?? "tk103";
+        $sessionID = $sessionID ?? "1";
+        $locationMethod = $locationMethod ?? "GPS";
+        $accuracy = $accuracy ?? "10";
+        $extraInfo = $extraInfo ?? "";
+        $eventType = $eventType ?? "tk103";
+        $params = [
+            ':latitude' => $latitude,
+            ':longitude' => $longitude,
+            ':phoneNumber' => $imei,
+            ':userName' => $userName,
+            ':sessionID' => $sessionID,
+            ':speed' => $speed_in_kmh, 
+            ':direction' => $bearing,
+            ':distance' => $distance, 
+            ':gpsTime' => $gps_time,
+            ':locationMethod' => $locationMethod,
+            ':accuracy' => $accuracy,
+            ':extraInfo' => $extraInfo,
+            ':eventType' => $eventType,
+        ];
+        queue_gps_location($params);
+        log_message("Datos agregados a la cola persistente para IMEI: $imei");
     }
 }
 
