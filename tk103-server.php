@@ -169,7 +169,11 @@ while (true) {
                         
                         // Validar datos GPS
                         if ($gps_status == 'A' && validate_gps_data($latitude, $longitude, $speed_in_kmh)) {
-                            insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_kmh, $bearing);
+                            $result = insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_kmh, $bearing);
+                            if ($result === 'IMEI_NOT_REGISTERED') {
+                                $response = "IMEI_NOT_REGISTERED";
+                                log_message("IMEI $imei no está registrado en la tabla dispositivos. No se insertará la ubicación.");
+                            }
                         } else {
                             log_message("Datos GPS inválidos, no se insertarán en la base de datos");
                         }
@@ -322,6 +326,15 @@ function haversine_distance($lat1, $lon1, $lat2, $lon2)
 function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_kmh, $bearing, $userName = null, $sessionID = null, $locationMethod = null, $accuracy = null, $extraInfo = null, $eventType = null) {
     global $min_distance_meters;
     
+    // Verificar si el IMEI está registrado en la tabla dispositivos
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM dispositivos WHERE imei = :imei');
+    $stmt->execute([':imei' => $imei]);
+    $imei_exists = $stmt->fetchColumn();
+    if (!$imei_exists) {
+        log_message("IMEI $imei no está registrado en la tabla dispositivos. No se insertará la ubicación.");
+        return 'IMEI_NOT_REGISTERED';
+    }
+
     // Verificar si la latitud comienza con "0.0"
     if (strpos($latitude, '0.0') === 0) {
         log_message("Latitud inválida ($latitude), no se insertará en la base de datos");

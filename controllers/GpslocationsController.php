@@ -85,13 +85,18 @@ public function actionSaveGeofence()
     
     public function actionGetLocations()
     {
-        // Obtener todas las ubicaciones de la tabla gpslocations
-        $gpsLocations = Gpslocations::find()->all();
-    
-        // Crear un array para almacenar las ubicaciones
+        // Obtener solo los IMEIs registrados
+        $registeredImeis = (new \yii\db\Query())
+            ->select(['imei'])
+            ->from('dispositivos')
+            ->column();
+
+        // Obtener solo ubicaciones de dispositivos registrados
+        $gpsLocations = Gpslocations::find()
+            ->where(['phoneNumber' => $registeredImeis])
+            ->all();
+
         $locations = [];
-    
-        // Recorrer las ubicaciones y agregarlas al array
         foreach ($gpsLocations as $location) {
             $locations[] = [
                 'latitude' => $location->latitude,
@@ -108,28 +113,31 @@ public function actionSaveGeofence()
                 'eventType' => $location->eventType,
             ];
         }
-    
-        // Devolver las ubicaciones en formato JSON
         return $this->asJson($locations);
     }
 
 public function actionGetLocationsTime()
 {
-    // Obtener las ubicaciones más recientes de cada GPS por sessionID
+    // Obtener solo los IMEIs registrados
+    $registeredImeis = (new \yii\db\Query())
+        ->select(['imei'])
+        ->from('dispositivos')
+        ->column();
+
+    // Obtener las ubicaciones más recientes de cada GPS por sessionID, solo de dispositivos registrados
     $subQuery = (new \yii\db\Query())
         ->select(['sessionID', 'MAX(lastUpdate) as maxLastUpdate'])
         ->from('gpslocations')
+        ->where(['phoneNumber' => $registeredImeis])
         ->groupBy('sessionID');
 
     $gpsLocations = Gpslocations::find()
         ->innerJoin(['sub' => $subQuery], 'gpslocations.sessionID = sub.sessionID AND gpslocations.lastUpdate = sub.maxLastUpdate')
+        ->where(['gpslocations.phoneNumber' => $registeredImeis])
         ->all();
 
-    // Crear un array para almacenar las ubicaciones
     $locations = [];
     $seenSessionIDs = [];
-
-    // Recorrer las ubicaciones y agregarlas al array
     foreach ($gpsLocations as $location) {
         if (!in_array($location->sessionID, $seenSessionIDs)) {
             $locations[] = [
@@ -150,15 +158,20 @@ public function actionGetLocationsTime()
             $seenSessionIDs[] = $location->sessionID;
         }
     }
-
-    // Devolver las ubicaciones en formato JSON
     return $this->asJson($locations);
 }
 
 public function actionGetGpsOptions()
 {
+    // Solo mostrar dispositivos registrados
+    $registeredImeis = (new \yii\db\Query())
+        ->select(['imei'])
+        ->from('dispositivos')
+        ->column();
+
     $gpsOptions = Gpslocations::find()
         ->select(['phoneNumber', 'userName'])
+        ->where(['phoneNumber' => $registeredImeis])
         ->groupBy(['phoneNumber', 'userName'])
         ->all();
 
