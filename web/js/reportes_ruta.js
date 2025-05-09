@@ -178,8 +178,8 @@ async function initMap() {
         if (mapElement) {
             mapElement.innerHTML = '<div class="alert alert-info">No hay datos de ubicación disponibles para mostrar en el mapa.</div>';
         }
-        
-    
+        // Ocultar panel de estadísticas
+        document.getElementById('route-stats-cards').style.display = 'none';
         return;
     }
 
@@ -205,9 +205,44 @@ async function initMap() {
 
     if (locations.length === 0) {
         document.getElementById('map').innerHTML = '<div class="alert alert-info">No se pudieron extraer coordenadas válidas de los datos.</div>';
+        document.getElementById('route-stats-cards').style.display = 'none';
         return;
     }
 
+    // --- Calcular estadísticas ---
+    function toDate(str) {
+        // Intenta parsear como ISO o formato local
+        let d = new Date(str);
+        if (isNaN(d.getTime()) && str.includes('/')) {
+            // dd/mm/yyyy hh:mm:ss
+            const [date, time] = str.split(' ');
+            const [d_, m_, y_] = date.split('/');
+            d = new Date(`${y_}-${m_}-${d_}T${time}`);
+        }
+        return d;
+    }
+    let totalDistance = 0;
+    let totalSpeed = 0;
+    let minTime = toDate(locations[0].timestamp);
+    let maxTime = toDate(locations[locations.length-1].timestamp);
+    for (let i = 1; i < locations.length; i++) {
+        totalDistance += getDistanceFromLatLonInKm(
+            locations[i-1].lat, locations[i-1].lng,
+            locations[i].lat, locations[i].lng
+        );
+    }
+    for (let i = 0; i < locations.length; i++) {
+        totalSpeed += locations[i].speed;
+    }
+    const avgSpeed = totalSpeed / locations.length;
+    const durationMs = maxTime - minTime;
+    // Mostrar estadísticas
+    document.getElementById('route-stats-cards').style.display = 'block';
+    document.getElementById('stat-distance').textContent = totalDistance.toFixed(2) + ' km';
+    document.getElementById('stat-avg-speed').textContent = avgSpeed.toFixed(1) + ' km/h';
+    document.getElementById('stat-duration').textContent = msToHMS(durationMs);
+
+    // --- Renderizar mapa ---
     try {
         // Clear previous map if exists
         const mapContainer = document.getElementById('map');
@@ -230,15 +265,35 @@ async function initMap() {
             maxZoom: 19
         }).addTo(map);
 
-        // Create a polyline for the route
-        const routeCoordinates = locations.map(loc => [loc.lat, loc.lng]);
-        const routeLine = L.polyline(routeCoordinates, {
-            color: 'blue',
-            weight: 4,
-            opacity: 0.7
-        }).addTo(map);
+        // --- Segmentos coloreados por velocidad ---
+        // Definir rangos de velocidad y colores
+        const speedColors = [
+            { max: 10, color: '#2ecc40' },   // Verde
+            { max: 30, color: '#f1c40f' },   // Amarillo
+            { max: 60, color: '#ff9800' },   // Naranja
+            { max: 120, color: '#e74c3c' },  // Rojo
+            { max: Infinity, color: '#8e44ad' } // Morado
+        ];
+        function getColorForSpeed(speed) {
+            for (const s of speedColors) {
+                if (speed <= s.max) return s.color;
+            }
+            return '#000';
+        }
+        // Dibujar segmentos
+        for (let i = 1; i < locations.length; i++) {
+            const segColor = getColorForSpeed(locations[i].speed);
+            L.polyline([
+                [locations[i-1].lat, locations[i-1].lng],
+                [locations[i].lat, locations[i].lng]
+            ], {
+                color: segColor,
+                weight: 5,
+                opacity: 0.85
+            }).addTo(map);
+        }
 
-        // Add markers for start and end points
+        // --- Marcadores de inicio y fin ---
         const startMarker = L.marker([locations[0].lat, locations[0].lng], {
             title: 'Inicio: ' + locations[0].timestamp,
             icon: L.icon({
@@ -265,7 +320,7 @@ async function initMap() {
         }).addTo(map);
         endMarker.bindPopup(`<b>Punto final</b><br>Fecha: ${locations[locations.length - 1].timestamp}<br>Velocidad: ${locations[locations.length - 1].speed} km/h`);
 
-        // Add intermediate markers with speed info
+        // --- Marcadores intermedios (opcional, igual que antes) ---
         for (let i = 1; i < locations.length - 1; i += Math.max(1, Math.floor(locations.length / 10))) {
             const marker = L.marker([locations[i].lat, locations[i].lng], {
                 opacity: 0.7,
@@ -274,27 +329,164 @@ async function initMap() {
             marker.bindPopup(`<b>Punto intermedio</b><br>Fecha: ${locations[i].timestamp}<br>Velocidad: ${locations[i].speed} km/h`);
         }
 
-        // Fit the map to show all the route
-        map.fitBounds(routeLine.getBounds(), {
-            padding: [50, 50]
-        });
+        // --- Animación de la ruta mejorada ---
+        let animMarker = null;
+        let animIndex = 0;
+        let animating = false;
+        let animTimeout = null;
+        let animSpeed = 1; // 1x
+        let paused = false;
+        let progressBar = null;
+        let passedPolyline = null;
+        let pendingPolyline = null;
+        let infoPopup = null;
 
-        // Add a legend
-        const legend = L.control({
-            position: 'bottomright'
-        });
+        function createAnimationControls() {
+            // Evitar duplicados
+            if (document.getElementById('route-anim-controls')) return;
+            const controls = document.createElement('div');
+            controls.id = 'route-anim-controls';
+            controls.className = 'mb-2 d-flex align-items-center gap-2';
+            controls.innerHTML = `
+                <button id="btn-playpause-route" class="btn btn-outline-primary btn-sm me-1"><i class="fa fa-play"></i></button>
+                <button id="btn-restart-route" class="btn btn-outline-secondary btn-sm me-2"><i class="fa fa-undo"></i></button>
+                <label class="me-1 mb-0">Velocidad:</label>
+                <input id="slider-speed-route" type="range" min="0.25" max="3" step="0.25" value="1" style="width:90px;">
+                <span id="speed-label" class="me-2">1x</span>
+                <div class="flex-grow-1">
+                  <div class="progress" style="height: 8px;">
+                    <div id="route-anim-progress" class="progress-bar bg-info" style="width:0%"></div>
+                  </div>
+                </div>
+            `;
+            mapContainer.parentElement.insertBefore(controls, mapContainer);
+            // Eventos
+            document.getElementById('btn-playpause-route').onclick = function() {
+                if (!animating) startAnimation();
+                else paused = !paused;
+                this.querySelector('i').className = paused ? 'fa fa-play' : 'fa fa-pause';
+                if (!paused) stepAnim();
+            };
+            document.getElementById('btn-restart-route').onclick = function() {
+                stopAnimation();
+                startAnimation();
+            };
+            document.getElementById('slider-speed-route').oninput = function() {
+                animSpeed = parseFloat(this.value);
+                document.getElementById('speed-label').textContent = animSpeed + 'x';
+            };
+        }
+        function removeAnimationControls() {
+            const c = document.getElementById('route-anim-controls');
+            if (c) c.remove();
+        }
+        function stopAnimation() {
+            animating = false;
+            paused = false;
+            animIndex = 0;
+            if (animTimeout) clearTimeout(animTimeout);
+            if (animMarker) { map.removeLayer(animMarker); animMarker = null; }
+            if (passedPolyline) { map.removeLayer(passedPolyline); passedPolyline = null; }
+            if (pendingPolyline) { map.removeLayer(pendingPolyline); pendingPolyline = null; }
+            if (infoPopup) { map.closePopup(infoPopup); infoPopup = null; }
+            if (progressBar) progressBar.style.width = '0%';
+        }
+        function startAnimation() {
+            stopAnimation();
+            animating = true;
+            paused = false;
+            animIndex = 0;
+            if (!animMarker) {
+                animMarker = L.marker([locations[0].lat, locations[0].lng], {
+                    icon: L.icon({
+                        iconUrl: 'https://cdn-icons-png.flaticon.com/512/744/744465.png',
+                        iconSize: [38, 38],
+                        iconAnchor: [19, 19]
+                    })
+                }).addTo(map);
+            }
+            stepAnim();
+        }
+        function stepAnim() {
+            if (!animating || paused) return;
+            if (animIndex >= locations.length - 1) {
+                updateProgressBar(100);
+                showInfoPopup(locations[animIndex]);
+                return;
+            }
+            // Interpolación suave
+            const steps = 10;
+            let step = 0;
+            function interpolate() {
+                if (!animating || paused) return;
+                const start = locations[animIndex];
+                const end = locations[animIndex+1];
+                const lat = start.lat + (end.lat - start.lat) * (step/steps);
+                const lng = start.lng + (end.lng - start.lng) * (step/steps);
+                animMarker.setLatLng([lat, lng]);
+                map.panTo([lat, lng], {animate: true, duration: 0.2});
+                showInfoPopup({
+                    ...end,
+                    lat, lng
+                });
+                updateProgressBar(((animIndex + step/steps) / (locations.length-1)) * 100);
+                // Ruta recorrida y pendiente
+                if (passedPolyline) map.removeLayer(passedPolyline);
+                if (pendingPolyline) map.removeLayer(pendingPolyline);
+                const passedCoords = locations.slice(0, animIndex+1).map(l => [l.lat, l.lng]);
+                passedCoords.push([lat, lng]);
+                passedPolyline = L.polyline(passedCoords, {color:'#007bff',weight:6,opacity:0.9}).addTo(map);
+                const pendingCoords = locations.slice(animIndex+1).map(l => [l.lat, l.lng]);
+                if (pendingCoords.length > 1) pendingPolyline = L.polyline(pendingCoords, {color:'#bbb',weight:4,opacity:0.5,dashArray:'6,8'}).addTo(map);
+                step++;
+                if (step <= steps) {
+                    animTimeout = setTimeout(interpolate, 40/animSpeed);
+                } else {
+                    animIndex++;
+                    animTimeout = setTimeout(stepAnim, 40/animSpeed);
+                }
+            }
+            interpolate();
+        }
+        function updateProgressBar(percent) {
+            if (!progressBar) progressBar = document.getElementById('route-anim-progress');
+            if (progressBar) progressBar.style.width = percent + '%';
+        }
+        function showInfoPopup(loc) {
+            if (!animMarker) return;
+            const html = `<b>Fecha:</b> ${loc.timestamp || ''}<br><b>Velocidad:</b> ${loc.speed || ''} km/h`;
+            if (!infoPopup) {
+                infoPopup = L.popup({closeButton:false,autoPan:false,offset:[0,-20]}).setLatLng(animMarker.getLatLng()).setContent(html).openOn(map);
+            } else {
+                infoPopup.setLatLng(animMarker.getLatLng()).setContent(html);
+            }
+        }
+        // Botón y controles
+        createAnimationControls();
+        // Si ya existe el botón antiguo, lo quitamos
+        const oldBtn = document.getElementById('btn-animate-route');
+        if (oldBtn) oldBtn.remove();
+
+        // --- Leyenda mejorada ---
+        const legend = L.control({ position: 'bottomright' });
         legend.onAdd = function(map) {
-            const div = L.DomUtil.create('div', 'info legend');
+            const div = L.DomUtil.create('div', 'info legend legend-speed');
             div.innerHTML = `
-            <div style="background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2);">
-                <div><span style="color: green; font-size: 20px;">●</span> Inicio</div>
-                <div><span style="color: blue; font-size: 20px;">―</span> Ruta</div>
-                <div><span style="color: red; font-size: 20px;">●</span> Fin</div>
-            </div>
-        `;
+                <div><span class="legend-color" style="background:#2ecc40"></span> 0-10 km/h</div>
+                <div><span class="legend-color" style="background:#f1c40f"></span> 11-30 km/h</div>
+                <div><span class="legend-color" style="background:#ff9800"></span> 31-60 km/h</div>
+                <div><span class="legend-color" style="background:#e74c3c"></span> 61-120 km/h</div>
+                <div><span class="legend-color" style="background:#8e44ad"></span> >120 km/h</div>
+                <div><span style="color: green; font-size: 18px;">●</span> Inicio</div>
+                <div><span style="color: red; font-size: 18px;">●</span> Fin</div>
+            `;
             return div;
         };
         legend.addTo(map);
+
+        // Fit the map to show all the route
+        const bounds = L.latLngBounds(locations.map(l => [l.lat, l.lng]));
+        map.fitBounds(bounds, { padding: [50, 50] });
 
         // Forzar actualización del tamaño del mapa después de renderizar
         setTimeout(() => {
@@ -304,7 +496,35 @@ async function initMap() {
     } catch (error) {
         console.error('Error initializing map:', error);
         document.getElementById('map').innerHTML = `<div class="alert alert-danger">Error al inicializar el mapa: ${error.message}</div>`;
+        document.getElementById('route-stats-cards').style.display = 'none';
     }
+}
+
+// --- Utilidades para estadísticas ---
+function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
+    var R = 6371; // km
+    var dLat = deg2rad(lat2-lat1);
+    var dLon = deg2rad(lon2-lon1);
+    var a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2)
+      ;
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    var d = R * c;
+    return d;
+}
+function deg2rad(deg) {
+    return deg * (Math.PI/180);
+}
+function msToHMS(ms) {
+    if (isNaN(ms) || ms < 0) return '-';
+    let s = Math.floor(ms/1000);
+    let h = Math.floor(s/3600);
+    s = s%3600;
+    let m = Math.floor(s/60);
+    s = s%60;
+    return `${h}h ${m}m ${s}s`;
 }
 
 function confirmExport() {

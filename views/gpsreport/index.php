@@ -23,6 +23,7 @@ $registeredPhones = GpsLocations::find()
 
 ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 <link href="/vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
@@ -226,8 +227,6 @@ $registeredPhones = GpsLocations::find()
     </div>
 </div>
 
-
-
 <!-- After the table card div, add the map container -->
 <div class="custom card-container" <?= empty($locations) ? 'style="display: none;"' : '' ?>>
     <div class="custom-card-header">
@@ -235,6 +234,42 @@ $registeredPhones = GpsLocations::find()
     </div>
     <div class="custom-card-body">
         <div id="map" style="height: 500px; width: 100%; position: relative;"></div>
+    </div>
+</div>
+<br>
+<!-- Panel de estadísticas de la ruta -->
+<div id="route-stats-cards" class="mb-3" style="display:none;">
+    <div class="row">
+        <div class="col-lg-4 col-md-6 col-12 mb-3">
+            <div class="cards">
+                <dotlottie-player src="https://lottie.host/2e2e2e2e-2e2e-2e2e-2e2e-2e2e2e2e2e2e/route1.lottie" background="transparent" speed="1" style="width: 120px; height: 120px" loop autoplay></dotlottie-player>
+                <div class="card__content">
+                    <p class="card__title">Distancia Total Recorrida</p>
+                    <p class="card__description stat-value" id="stat-distance">-</p>
+                    <p class="card__description">Suma de todos los tramos recorridos en la ruta seleccionada.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 col-12 mb-3">
+            <div class="cards">
+                <dotlottie-player src="https://lottie.host/3b3b3b3b-3b3b-3b3b-3b3b-3b3b3b3b3b3b/route2.lottie" background="transparent" speed="1" style="width: 120px; height: 120px" loop autoplay></dotlottie-player>
+                <div class="card__content">
+                    <p class="card__title">Velocidad Promedio</p>
+                    <p class="card__description stat-value" id="stat-avg-speed">-</p>
+                    <p class="card__description">Promedio de velocidad durante toda la ruta.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-12 mb-3">
+            <div class="cards">
+                <dotlottie-player src="https://lottie.host/4c4c4c4c-4c4c-4c4c-4c4c-4c4c4c4c4c4c/route3.lottie" background="transparent" speed="1" style="width: 120px; height: 120px" loop autoplay></dotlottie-player>
+                <div class="card__content">
+                    <p class="card__title">Duración Total</p>
+                    <p class="card__description stat-value" id="stat-duration">-</p>
+                    <p class="card__description">Tiempo transcurrido desde el primer hasta el último punto de la ruta.</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 <?php Pjax::end(); ?>
@@ -280,7 +315,90 @@ $registeredPhones = GpsLocations::find()
         opacity: 0.7;
     }
 
-
-  
-
+    /* Estilos para el panel de estadísticas */
+    #route-stats-cards {
+        box-shadow: 0 0 10px rgba(0,0,0,0.08);
+        border-radius: 8px;
+        background: #fff;
+        margin-bottom: 20px;
+    }
+    #route-stats-cards .cards {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 15px 10px;
+        margin-bottom: 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    #route-stats-cards .card__title {
+        font-size: 0.95rem;
+        color: #888;
+        display: block;
+        margin-bottom: 4px;
+    }
+    #route-stats-cards .card__description {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #007bff;
+    }
+    /* Leyenda de velocidades */
+    .legend-speed {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.95rem;
+    }
+    .legend-speed .legend-color {
+        display: inline-block;
+        width: 18px;
+        height: 8px;
+        margin-right: 6px;
+        border-radius: 2px;
+    }
+    /* Panel de controles de animación */
+    #route-anim-controls {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+        padding: 10px 18px 10px 10px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid #e3e6f0;
+    }
+    #route-anim-controls button {
+        min-width: 32px;
+        min-height: 32px;
+        border-radius: 6px;
+        border: none;
+        background: #f4f6fb;
+        color: #007bff;
+        transition: background 0.2s;
+    }
+    #route-anim-controls button:hover {
+        background: #e3e6f0;
+    }
+    #route-anim-controls label {
+        font-weight: 500;
+        color: #555;
+        margin-bottom: 0;
+    }
+    #route-anim-controls input[type=range] {
+        accent-color: #007bff;
+        height: 4px;
+        margin: 0 6px;
+        width: 90px;
+    }
+    #route-anim-controls .progress {
+        background: #e9ecef;
+        border-radius: 4px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+    #route-anim-controls .progress-bar {
+        background: linear-gradient(90deg, #36b3ff 0%, #007bff 100%);
+        border-radius: 4px;
+        transition: width 0.2s;
+    }
 </style>
