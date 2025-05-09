@@ -7,6 +7,20 @@ use app\models\GpsLocations;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
 
+// Obtener solo los IMEIs registrados
+$registeredImeis = (new \yii\db\Query())
+    ->select(['imei'])
+    ->from('dispositivos')
+    ->column();
+
+// Obtener solo los phoneNumber de ubicaciones que estén registrados
+$registeredPhones = GpsLocations::find()
+    ->select(['phoneNumber'])
+    ->where(['phoneNumber' => $registeredImeis])
+    ->groupBy('phoneNumber')
+    ->indexBy('phoneNumber')
+    ->column();
+
 ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -55,7 +69,7 @@ use yii\widgets\Pjax;
                     <?= Html::dropDownList('gps', Yii::$app->request->get('gps', 'all'), 
                         array_merge(
                             ['all' => 'Todos los dispositivos'], 
-                            GpsLocations::find()->select(['phoneNumber'])->indexBy('phoneNumber')->column()
+                            $registeredPhones
                         ), [
                             'class' => 'form-control',
                             'id' => 'gps',

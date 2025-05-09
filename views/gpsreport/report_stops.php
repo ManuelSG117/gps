@@ -6,6 +6,20 @@ use app\models\GpsLocations;
 use yii\helpers\Url;
 use yii\widgets\Pjax;
 
+// Obtener solo los IMEIs registrados
+$registeredImeis = (new \yii\db\Query())
+    ->select(['imei'])
+    ->from('dispositivos')
+    ->column();
+
+// Obtener solo los phoneNumber de ubicaciones que estén registrados
+$registeredPhones = GpsLocations::find()
+    ->select(['phoneNumber'])
+    ->where(['phoneNumber' => $registeredImeis])
+    ->groupBy('phoneNumber')
+    ->indexBy('phoneNumber')
+    ->column();
+
 $this->registerJsFile('@web/js/stops.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 $this->registerJsFile('@web/js/stops-chart.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 ?>
@@ -54,7 +68,7 @@ $this->registerJsFile('@web/js/stops-chart.js', ['depends' => [\yii\web\JqueryAs
             <div class="col-lg-2 col-md-4 col-12">
                 <div class="form-group">
                     <label for="gps">Dispositivo:</label>
-                    <?= Html::dropDownList('gps', Yii::$app->request->get('gps', null), GpsLocations::find()->select(['phoneNumber'])->indexBy('phoneNumber')->column(), [
+                    <?= Html::dropDownList('gps', Yii::$app->request->get('gps', null), $registeredPhones, [
                         'class' => 'form-control',
                         'id' => 'gps',
                     ]) ?>
