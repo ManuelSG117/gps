@@ -29955,7 +29955,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     
     
     .sidebar {
-        position: absolute;
+        position: fixed;
         top: 126px;
         left: 0;
         margin:12px;
