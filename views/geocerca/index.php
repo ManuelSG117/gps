@@ -31,9 +31,6 @@ var geofencesData = <?= $geofencesJson ?>;
 
 <div class="geocerca-index">
 
-    <!-- <p>
-        <button id="save-polygon-changes" class="btn btn-warning" style="display: none;">Guardar Cambios</button>
-    </p> -->
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
     
@@ -43,7 +40,7 @@ var geofencesData = <?= $geofencesJson ?>;
     <div id="info"></div>
 
     <div class="sidebar">
-        <input type="text" class="search-box" placeholder="Buscar geofence..." id="searchGeofence">
+        <input type="text" class="search-box" placeholder="Buscar geofence..." id="searchGeofence" >
         <div class="gps-titles">
             <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)">
             <span>Nombre</span>
@@ -89,6 +86,15 @@ var geofencesData = <?= $geofencesJson ?>;
 
 
 <style>
+    #map {
+        position: fixed !important;
+        top: calc(var(--dz-header-height) + 4rem) !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: calc(100vh - var(--dz-header-height) - 2rem) !important;
+        z-index: 1 !important;
+    }
+
     /* Add a new class for the geofence list items */
     .geofence-item {
         display: flex;

@@ -326,10 +326,8 @@ document.getElementById('searchGeofence').addEventListener('input', function(e) 
     
     geofenceItems.forEach(item => {
         const name = item.querySelector('strong').textContent.toLowerCase();
-        const description = item.querySelector('p').textContent.toLowerCase();
-        
-        if (name.includes(searchTerm) || description.includes(searchTerm)) {
-            item.style.display = 'block';
+        if (name.includes(searchTerm)) {
+            item.style.display = 'flex';
         } else {
             item.style.display = 'none';
         }
@@ -758,3 +756,16 @@ $('.geofence-item').click(function() {
         map.fitBounds(bounds);
     }
 });
+
+
+function toggleSelectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.geofence-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+        const geofenceId = cb.getAttribute('data-id');
+        const polygon = polygonsMap[geofenceId];
+        if (polygon) {
+            polygon.setMap(checkbox.checked ? map : null);
+        }
+    });
+}
