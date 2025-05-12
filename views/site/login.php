@@ -8,47 +8,61 @@
 use yii\bootstrap5\ActiveForm;
 use yii\bootstrap5\Html;
 
+// Agregar enlace a Bootstrap Icons
+$this->registerCssFile('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css');
+
 $this->title = 'Login';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="site-login">
-    <h1><?= Html::encode($this->title) ?></h1>
+<div class="site-login d-flex align-items-center justify-content-center min-vh-100 ">
+    <div class="login-container bg-white p-5 rounded shadow-lg" style="max-width: 400px; width: 100%;">
+        <h1 class="text-center mb-4 text-primary"><?= Html::encode($this->title) ?></h1>
 
-    <p>Please fill out the following fields to login:</p>
+        <p class="text-center text-muted mb-4">Por favor, ingrese sus credenciales para acceder:</p>
 
-    <div class="row">
-        <div class="col-lg-5">
+        <?php $form = ActiveForm::begin([
+            'id' => 'login-form',
+            'fieldConfig' => [
+                'template' => "{label}\n{input}\n{error}",
+                'labelOptions' => ['class' => 'form-label'],
+                'inputOptions' => ['class' => 'form-control form-control-lg mb-3'],
+                'errorOptions' => ['class' => 'invalid-feedback'],
+            ],
+        ]); ?>
 
-            <?php $form = ActiveForm::begin([
-                'id' => 'login-form',
-                'fieldConfig' => [
-                    'template' => "{label}\n{input}\n{error}",
-                    'labelOptions' => ['class' => 'col-lg-1 col-form-label mr-lg-3'],
-                    'inputOptions' => ['class' => 'col-lg-3 form-control'],
-                    'errorOptions' => ['class' => 'col-lg-7 invalid-feedback'],
-                ],
-            ]); ?>
+        <div class="form-group position-relative mb-3">
+            <?= $form->field($model, 'username')->textInput([
+                'autofocus' => true,
+                'placeholder' => 'Ingrese su usuario',
+                'class' => 'form-control form-control-lg ps-4',
+            ])->label(false) ?>
+            <i class="bi bi-person position-absolute top-50 start-0 translate-middle-y ms-2 text-muted"></i>
+        </div>
 
-            <?= $form->field($model, 'username')->textInput(['autofocus' => true]) ?>
+        <div class="form-group position-relative mb-4">
+            <?= $form->field($model, 'password')->passwordInput([
+                'placeholder' => 'Ingrese su contraseña',
+                'class' => 'form-control form-control-lg ps-4',
+            ])->label(false) ?>
+            <i class="bi bi-lock position-absolute top-50 start-0 translate-middle-y ms-2 text-muted"></i>
+        </div>
 
-            <?= $form->field($model, 'password')->passwordInput() ?>
+        <?= $form->field($model, 'rememberMe')->checkbox([
+            'template' => "<div class=\"form-check mb-3\">{input} {label}</div>\n{error}",
+            'class' => 'form-check-input',
+            'labelOptions' => ['class' => 'form-check-label'],
+        ]) ?>
 
-            <?= $form->field($model, 'rememberMe')->checkbox([
-                'template' => "<div class=\"custom-control custom-checkbox\">{input} {label}</div>\n<div class=\"col-lg-8\">{error}</div>",
+        <div class="form-group">
+            <?= Html::submitButton('Iniciar Sesión', [
+                'class' => 'btn btn-primary btn-lg w-100 mb-3',
+                'name' => 'login-button'
             ]) ?>
-
-            <div class="form-group">
-                <div>
-                    <?= Html::submitButton('Login', ['class' => 'btn btn-primary', 'name' => 'login-button']) ?>
-                </div>
-            </div>
+        </div>
 
             <?php ActiveForm::end(); ?>
 
-            <div style="color:#999;">
-                You may login with <strong>admin/admin</strong> or <strong>demo/demo</strong>.<br>
-                To modify the username/password, please check out the code <code>app\models\User::$users</code>.
-            </div>
+          
 
         </div>
     </div>

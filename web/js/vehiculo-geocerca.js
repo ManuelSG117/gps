@@ -33,7 +33,7 @@ function initMap() {
     // Mostrar vehículos en el mapa (usando ubicaciones reales)
     displayVehicles();
     // Actualizar cada 30 segundos
-    setInterval(displayVehicles, 30000000000);
+    setInterval(displayVehicles, 300000);
 }
 
 /**
