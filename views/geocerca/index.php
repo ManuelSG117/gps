@@ -105,6 +105,7 @@ var geofencesData = <?= $geofencesJson ?>;
         background-color: #fff;
         transition: all 0.3s ease;
         margin-top: 5px;
+        gap: 15px;
     }
     
     .geofence-item:hover {
@@ -114,18 +115,23 @@ var geofencesData = <?= $geofencesJson ?>;
     }
     
     .geofence-item input[type="checkbox"] {
-        margin-right: 15px;
-        transform: scale(1.5);
+        transform: scale(1.2);
         accent-color: #222b40;
         flex: 0 0 20px;
+        margin: 0;
+        padding: 0;
     }
     
-    .geofence-item label {
+    .geofence-info {
         flex: 1;
-        font-size: 12px;
+        display: flex;
+        align-items: center;
+    }
+
+    .geofence-info strong {
+        font-size: 14px;
         color: #333;
         font-weight: 500;
-        cursor: pointer;
     }
     
     /* Add styles for the geofence list container */

@@ -104,7 +104,6 @@ function InitMap() {
     var all_overlays = [];
     // Remove this line: var selectedShape;
     var drawingManager = new google.maps.drawing.DrawingManager({
-        //drawingControl: true,
         drawingControlOptions: {
             position: google.maps.ControlPosition.TOP_CENTER,
             drawingModes: [
@@ -116,12 +115,17 @@ function InitMap() {
             clickable: true,
             draggable: true,
             editable: true,
-            // fillColor: '#ffff00',
             fillColor: '#00000',
             fillOpacity: 0.5,
-
         },
-
+        polylineOptions: {
+            clickable: true,
+            draggable: true,
+            editable: true,
+            strokeColor: '#FF0000',
+            strokeOpacity: 0.8,
+            strokeWeight: 2
+        }
     });
 
     function clearSelection() {
@@ -194,10 +198,10 @@ function InitMap() {
         console.log('getPolygonCoords called with shape:', newShape);
         coordinates.splice(0, coordinates.length);
         console.log('Coordinates array cleared:', coordinates);
-
+    
         var len = newShape.getPath().getLength();
         console.log('Path length:', len);
-
+    
         for (var i = 0; i < len; i++) {
             var point = newShape.getPath().getAt(i).toUrlValue(6);
             coordinates.push(point);
@@ -210,6 +214,32 @@ function InitMap() {
 
     google.maps.event.addListener(drawingManager, 'polygoncomplete', function (event) {
         console.log('Polygon complete event fired');
+        console.log('Initial path length:', event.getPath().getLength());
+        
+        // Call getPolygonCoords immediately to set initial coordinates
+        getPolygonCoords(event);
+        
+        google.maps.event.addListener(event, "dragend", function() {
+            console.log('Drag end event fired');
+            getPolygonCoords(event);
+        });
+
+        google.maps.event.addListener(event.getPath(), 'insert_at', function () {
+            console.log('Insert at event fired');
+            getPolygonCoords(event);
+        });
+
+        google.maps.event.addListener(event.getPath(), 'set_at', function () {
+            console.log('Set at event fired');
+            getPolygonCoords(event);
+        });
+
+        // Show the delete button when a shape is drawn
+        document.getElementById('delete-button-container').style.display = 'block';
+    });
+
+    google.maps.event.addListener(drawingManager, 'polylinecomplete', function (event) {
+        console.log('Polyline complete event fired');
         console.log('Initial path length:', event.getPath().getLength());
         
         // Call getPolygonCoords immediately to set initial coordinates
