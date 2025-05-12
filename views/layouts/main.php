@@ -135,17 +135,18 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 									</a>
 								</li>
 								<li class="nav-item dropdown notification_dropdown">
-									<a class="nav-link" href="javascript:void(0);" role="button" data-bs-toggle="dropdown">
+									<a class="nav-link" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
 										<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 											<path fill-rule="evenodd" clip-rule="evenodd" d="M17.5 12H19C19.8284 12 20.5 12.6716 20.5 13.5C20.5 14.3284 19.8284 15 19 15H6C5.17157 15 4.5 14.3284 4.5 13.5C4.5 12.6716 5.17157 12 6 12H7.5L8.05827 6.97553C8.30975 4.71226 10.2228 3 12.5 3C14.7772 3 16.6903 4.71226 16.9417 6.97553L17.5 12Z" fill="#222B40"/>
 											<path opacity="0.3" d="M14.5 18C14.5 16.8954 13.6046 16 12.5 16C11.3954 16 10.5 16.8954 10.5 18C10.5 19.1046 11.3954 20 12.5 20C13.6046 20 14.5 19.1046 14.5 18Z" fill="#222B40"/>
 										</svg>
+										<span class="badge bg-danger" id="notification-badge" style="position:absolute;top:8px;right:8px;display:none;">0</span>
 									</a>
-									<div class="dropdown-menu dropdown-menu-end">
-										<div id="DZ_W_Notification1" class="widget-media dz-scroll p-2" style="height:380px;">
-											
+									<div class="dropdown-menu dropdown-menu-end" style="min-width:350px;max-width:400px;">
+										<div id="DZ_W_Notification1" class="widget-media dz-scroll p-2" style="height:380px;max-height:380px;overflow-y:auto;">
+											<!-- Notificaciones AJAX -->
 										</div>
-										<a class="all-notification" href="javascript:void(0);">See all notifications <i class="ti-arrow-end"></i></a>
+										<a class="all-notification" href="/notificaciones/index">Ver todas las notificaciones <i class="ti-arrow-end"></i></a>
 									</div>
 								</li>
 								<li class="nav-item dropdown notification_dropdown">
@@ -427,6 +428,9 @@ function checkGpsQueueAlert() {
 setInterval(checkGpsQueueAlert, 30000); // cada 30 segundos
 checkGpsQueueAlert();
 </script>
+
+<!-- Notificaciones JS -->
+<script src="/js/notificaciones.js"></script>
 
 </body>
 </html>

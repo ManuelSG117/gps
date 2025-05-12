@@ -737,3 +737,24 @@ document.getElementById('save-polygon-changes').addEventListener('click', functi
         });
     }
 });
+
+$('.geofence-item').hover(function() {
+    const id = $(this).data('id');
+    if (polygonsMap[id]) {
+        polygonsMap[id].setOptions({ strokeColor: '#007bff', fillOpacity: 0.5 });
+    }
+}, function() {
+    const id = $(this).data('id');
+    if (polygonsMap[id]) {
+        polygonsMap[id].setOptions({ strokeColor: '#FF0000', fillOpacity: 0.35 });
+    }
+});
+
+$('.geofence-item').click(function() {
+    const id = $(this).data('id');
+    if (polygonsMap[id]) {
+        const bounds = new google.maps.LatLngBounds();
+        polygonsMap[id].getPath().forEach(function(latLng) { bounds.extend(latLng); });
+        map.fitBounds(bounds);
+    }
+});

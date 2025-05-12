@@ -271,6 +271,61 @@ class VehiculoGeocercaController extends Controller
                     ->orderBy(['lastUpdate' => SORT_DESC])
                     ->one();
             }
+            // --- Lógica de notificación de salida de geocerca ---
+            if ($ubicacion) {
+                // Obtener geocercas asignadas
+                $asignaciones = \app\models\VehiculoGeocerca::find()->where(['vehiculo_id' => $vehiculo->id, 'activo' => 1])->all();
+                foreach ($asignaciones as $asignacion) {
+                    $geocerca = $asignacion->geocerca;
+                    if ($geocerca && $geocerca->coordinates) {
+                        $coords = array_map(function($pair) {
+                            $latlng = explode(',', $pair);
+                            return [floatval($latlng[0]), floatval($latlng[1])];
+                        }, explode('|', $geocerca->coordinates));
+                        $isInside = self::pointInPolygon([$ubicacion->latitude, $ubicacion->longitude], $coords);
+                        $stateKey = 'vehiculo_' . $vehiculo->id . '_geocerca_' . $geocerca->id . '_inside';
+                        $wasInside = \Yii::$app->cache->get($stateKey);
+                        if ($isInside) {
+                            // Si está dentro, actualiza el estado
+                            \Yii::$app->cache->set($stateKey, true, 24*3600); // 1 día de cache
+                        } else {
+                            // Si está fuera y antes estaba dentro (o nunca se notificó), notifica
+                            if ($wasInside || $wasInside === null) {
+                                // Verificar si ya existe una notificación no leída igual
+                                $existe = \app\models\Notificaciones::find()
+                                    ->where([
+                                        'tipo' => 'geocerca',
+                                        'id_vehiculo' => $vehiculo->id,
+                                        'leido' => 0,
+                                    ])
+                                    ->andWhere(['like', 'mensaje', $geocerca->name])
+                                    ->one();
+                                if (!$existe) {
+                                    $not = new \app\models\Notificaciones();
+                                    $not->tipo = 'geocerca';
+                                    $not->mensaje = 'El vehículo ' . $vehiculo->placa . ' ha salido de la geocerca ' . $geocerca->name;
+                                    $not->id_vehiculo = $vehiculo->id;
+                                    $not->fecha_creacion = date('Y-m-d H:i:s');
+                                    $not->leido = 0;
+                                    $not->datos_adicionales = json_encode([
+                                        'geocerca_id' => $geocerca->id,
+                                        'vehiculo_id' => $vehiculo->id,
+                                        'ubicacion' => [
+                                            'lat' => $ubicacion->latitude,
+                                            'lng' => $ubicacion->longitude,
+                                            'fecha' => $ubicacion->lastUpdate
+                                        ]
+                                    ]);
+                                    $not->save();
+                                }
+                                // Marcar como fuera
+                                \Yii::$app->cache->set($stateKey, false, 24*3600);
+                            }
+                        }
+                    }
+                }
+            }
+            // --- Fin lógica notificación ---
             $result[] = [
                 'id' => $vehiculo->id,
                 'modelo' => $vehiculo->modelo_auto,
@@ -285,6 +340,22 @@ class VehiculoGeocercaController extends Controller
             ];
         }
         return $result;
+    }
+
+    // Algoritmo punto en polígono (ray casting)
+    public static function pointInPolygon($point, $polygon) {
+        $x = $point[0];
+        $y = $point[1];
+        $inside = false;
+        $n = count($polygon);
+        for ($i = 0, $j = $n - 1; $i < $n; $j = $i++) {
+            $xi = $polygon[$i][0]; $yi = $polygon[$i][1];
+            $xj = $polygon[$j][0]; $yj = $polygon[$j][1];
+            $intersect = (($yi > $y) != ($yj > $y)) &&
+                ($x < ($xj - $xi) * ($y - $yi) / (($yj - $yi) ?: 1e-10) + $xi);
+            if ($intersect) $inside = !$inside;
+        }
+        return $inside;
     }
 
     /**
