@@ -254,6 +254,40 @@ class VehiculoGeocercaController extends Controller
     }
 
     /**
+     * Devuelve la última ubicación de todos los vehículos (si existe) desde gpslocations.
+     * @return \yii\web\Response
+     */
+    public function actionGetVehiculosUbicacion()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $vehiculos = \app\models\Vehiculos::find()->with('dispositivo')->all();
+        $result = [];
+        foreach ($vehiculos as $vehiculo) {
+            $imei = $vehiculo->dispositivo ? $vehiculo->dispositivo->imei : null;
+            $ubicacion = null;
+            if ($imei) {
+                $ubicacion = \app\models\Gpslocations::find()
+                    ->where(['phoneNumber' => $imei])
+                    ->orderBy(['lastUpdate' => SORT_DESC])
+                    ->one();
+            }
+            $result[] = [
+                'id' => $vehiculo->id,
+                'modelo' => $vehiculo->modelo_auto,
+                'marca' => $vehiculo->marca_auto,
+                'placa' => $vehiculo->placa,
+                'imei' => $imei,
+                'latitude' => $ubicacion ? $ubicacion->latitude : null,
+                'longitude' => $ubicacion ? $ubicacion->longitude : null,
+                'lastUpdate' => $ubicacion ? $ubicacion->lastUpdate : null,
+                'speed' => $ubicacion ? $ubicacion->speed : null,
+                'direction' => $ubicacion ? $ubicacion->direction : null,
+            ];
+        }
+        return $result;
+    }
+
+    /**
      * Encuentra el modelo VehiculoGeocerca basado en su clave primaria.
      * Si no se encuentra el modelo, se lanza una excepción 404 HTTP.
      * @param int $id ID

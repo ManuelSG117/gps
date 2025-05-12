@@ -1,29 +1,16 @@
-/**
- * Archivo JavaScript para la gestión de asignaciones de geocercas a vehículos
- */
+// Variables globales
+let vehiculoMarkers = {};
+let selectedVehiculos = [];
+let selectedGeocercas = [];
 
-var map;
-var vehiculoMarkers = {};
-var selectedVehiculos = [];
-var selectedGeocercas = [];
-
-// Inicializar cuando el documento esté listo
+// Inicialización
 $(document).ready(function() {
-    // Inicializar el mapa si existe el elemento
     if (document.getElementById('map')) {
         initMap();
     }
-    
-    // Configurar eventos para expandir/minimizar secciones
     setupSectionControls();
-    
-    // Configurar eventos para búsqueda y selección
     setupSearchAndSelection();
-    
-    // Configurar eventos para los modales de asignación
     setupAssignmentModals();
-    
-    // Configurar eventos para ver asignaciones
     setupViewAssignments();
 });
 
@@ -31,27 +18,29 @@ $(document).ready(function() {
  * Inicializa el mapa de Google Maps y muestra las geocercas y vehículos
  */
 function initMap() {
-    var location = new google.maps.LatLng(19.4091657, -102.076571);
-    var mapOptions = {
+    const location = new google.maps.LatLng(19.4091657, -102.076571);
+    const mapOptions = {
         zoom: 15,
         center: location,
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     
-    map = new google.maps.Map(document.getElementById('map'), mapOptions);
+    window.map = new google.maps.Map(document.getElementById('map'), mapOptions);
     
     // Mostrar geocercas en el mapa
     displayGeofences();
     
-    // Mostrar vehículos en el mapa (simulados por ahora)
+    // Mostrar vehículos en el mapa (usando ubicaciones reales)
     displayVehicles();
+    // Actualizar cada 30 segundos
+    setInterval(displayVehicles, 30000);
 }
 
 /**
  * Muestra las geocercas en el mapa
  */
 function displayGeofences() {
-    if (!geofencesData || !map) return;
+    if (!geofencesData || !window.map) return;
     
     // Crear un array de colores para las geocercas con mejor contraste visual
     const colors = ['#E53935', '#D81B60', '#8E24AA', '#5E35B1', '#3949AB', '#1E88E5', '#039BE5', '#00ACC1', '#00897B', '#43A047'];
@@ -76,7 +65,7 @@ function displayGeofences() {
             editable: false
         });
 
-        polygon.setMap(map);
+        polygon.setMap(window.map);
         
         // Guardar referencia al polígono
         if (!window.geocercaPolygons) {
@@ -91,7 +80,7 @@ function displayGeofences() {
 
         const tooltip = new google.maps.Marker({
             position: topPoint,
-            map: map,
+            map: window.map,
             icon: {
                 path: google.maps.SymbolPath.CIRCLE,
                 scale: 0,
@@ -146,56 +135,86 @@ function displayGeofences() {
 }
 
 /**
- * Muestra los vehículos en el mapa (posiciones simuladas)
+ * Muestra los vehículos en el mapa usando ubicaciones reales
  */
-function displayVehicles() {
-    if (!vehiculosData || !map) return;
-    
-    // Crear un array de colores para los marcadores con mejor contraste visual
-    const colors = ['#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#FDD835', '#E53935', '#00ACC1', '#3949AB', '#7CB342', '#C0CA33'];
-    
-    // Para cada vehículo, crear un marcador en una posición aleatoria cerca del centro del mapa
-    vehiculosData.forEach(function(vehiculo, index) {
-        // Simular una posición aleatoria cerca del centro del mapa
-        const lat = map.getCenter().lat() + (Math.random() - 0.5) * 0.01;
-        const lng = map.getCenter().lng() + (Math.random() - 0.5) * 0.01;
-        const position = new google.maps.LatLng(lat, lng);
-        
-        // Seleccionar un color para el marcador
-        const colorIndex = index % colors.length;
-        const color = colors[colorIndex];
-        
-        // Crear el marcador con un diseño más distintivo
-        const marker = new google.maps.Marker({
-            position: position,
-            map: map,
-            title: `${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.placa})`,
-            icon: {
-                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                fillColor: color,
-                fillOpacity: 1,
-                strokeWeight: 2,
-                strokeColor: '#FFFFFF',
-                scale: 6,
-                rotation: Math.floor(Math.random() * 360) // Rotación aleatoria para simular dirección
-            },
-            animation: google.maps.Animation.DROP, // Animación al cargar
-            zIndex: 10 // Mayor z-index para que estén por encima de las geocercas
-        });
-        
-        // Guardar referencia al marcador
-        vehiculoMarkers[vehiculo.id] = marker;
-        
-        // Agregar evento de clic para mostrar información
-        google.maps.event.addListener(marker, 'click', function() {
-            showVehicleInfo(vehiculo);
-            
-            // Resaltar el vehículo en la tabla
-            highlightVehicleInTable(vehiculo.id);
-        });
+function displayVehiclesReal() {
+    if (!window.map) return;
+    // Obtener ubicaciones reales desde el backend
+    $.getJSON('/vehiculo-geocerca/get-vehiculos-ubicacion', function(data) {
+        updateVehicleMarkers(data);
     });
 }
 
+// Definir la función global displayVehicles para compatibilidad
+function displayVehicles() {
+    displayVehiclesReal();
+}
+
+/**
+ * Actualiza los marcadores de vehículos en el mapa
+ * @param {Array} vehiculosData
+ */
+function updateVehicleMarkers(vehiculosData) {
+    for (const id in vehiculoMarkers) {
+        if (!vehiculosData.find(v => v.id == id)) {
+            vehiculoMarkers[id].setMap(null);
+            delete vehiculoMarkers[id];
+        }
+    }
+    vehiculosData.forEach(function(vehiculo, index) {
+        if (vehiculo.latitude && vehiculo.longitude) {
+            const position = new google.maps.LatLng(vehiculo.latitude, vehiculo.longitude);
+            let marker = vehiculoMarkers[vehiculo.id];
+            const colorIndex = index % 10;
+            const colors = ['#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#FDD835', '#E53935', '#00ACC1', '#3949AB', '#7CB342', '#C0CA33'];
+            const color = colors[colorIndex];
+            // Validar rotation
+            let rotation = Number(vehiculo.direction);
+            if (isNaN(rotation)) rotation = 0;
+            if (!marker) {
+                marker = new google.maps.Marker({
+                    position: position,
+                    map: window.map,
+                    title: `${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.placa})`,
+                    icon: {
+                        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                        fillColor: color,
+                        fillOpacity: 1,
+                        strokeWeight: 2,
+                        strokeColor: '#FFFFFF',
+                        scale: 6,
+                        rotation: rotation
+                    },
+                    animation: google.maps.Animation.DROP,
+                    zIndex: 10
+                });
+                marker.vehiculoId = vehiculo.id;
+                marker.addListener('click', function() {
+                    showVehicleInfo(vehiculo);
+                    highlightVehicleInTable(vehiculo.id);
+                });
+                vehiculoMarkers[vehiculo.id] = marker;
+            } else {
+                const oldPos = marker.getPosition();
+                if (!oldPos || oldPos.lat() !== vehiculo.latitude || oldPos.lng() !== vehiculo.longitude) {
+                    marker.setPosition(position);
+                    // Validar rotation
+                    let newRotation = Number(vehiculo.direction);
+                    if (isNaN(newRotation)) newRotation = 0;
+                    marker.setIcon({
+                        ...marker.getIcon(),
+                        rotation: newRotation
+                    });
+                }
+            }
+        } else {
+            if (vehiculoMarkers[vehiculo.id]) {
+                vehiculoMarkers[vehiculo.id].setMap(null);
+                delete vehiculoMarkers[vehiculo.id];
+            }
+        }
+    });
+}
 
 /**
  * Muestra información de una geocerca al hacer clic en ella
@@ -244,7 +263,7 @@ function highlightGeofenceOnMap(geocercaId, isHover = false) {
         polygon.getPath().forEach(function(latLng) {
             bounds.extend(latLng);
         });
-        map.fitBounds(bounds);
+        window.map.fitBounds(bounds);
     }
 }
 
@@ -522,7 +541,7 @@ function highlightVehicleOnMap(vehiculoId, isHover = false) {
     
     // Centrar el mapa en el vehículo si no es solo hover
     if (!isHover) {
-        map.panTo(marker.getPosition());
+        window.map.panTo(marker.getPosition());
     }
 }
 
@@ -620,7 +639,7 @@ function setupAssignmentModals() {
         // Mostrar el modal
         const modal = new bootstrap.Modal(document.getElementById('asignarGeocercasModal'));
         modal.show();
-    });}
+    });
     
     // Abrir modal para asignar vehículos a geocercas
     $('#asignarVehiculosBtn').on('click', function() {
@@ -946,7 +965,7 @@ function setupAssignmentModals() {
                 });
             });
     });
-
+}
 
 /**
  * Configura los eventos para ver asignaciones existentes
