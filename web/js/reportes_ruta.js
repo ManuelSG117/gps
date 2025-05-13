@@ -360,6 +360,7 @@ async function initMap() {
                 </div>
             `;
             mapContainer.parentElement.insertBefore(controls, mapContainer);
+            
             // Eventos
             document.getElementById('btn-playpause-route').onclick = function() {
                 if (!animating) startAnimation();
@@ -367,6 +368,7 @@ async function initMap() {
                 this.querySelector('i').className = paused ? 'fa fa-play' : 'fa fa-pause';
                 if (!paused) stepAnim();
             };
+            
             document.getElementById('btn-restart-route').onclick = function() {
                 stopAnimation();
                 // Crear el marcador en la posición inicial pero sin iniciar la animación
@@ -387,10 +389,92 @@ async function initMap() {
                     playPauseBtn.querySelector('i').className = 'fa fa-play';
                 }
             };
+            
             document.getElementById('slider-speed-route').oninput = function() {
                 animSpeed = parseFloat(this.value);
                 document.getElementById('speed-label').textContent = animSpeed + 'x';
             };
+            
+            // Hacer la barra de progreso interactiva
+            const progressContainer = document.querySelector('.progress');
+            if (progressContainer) {
+                // Estilo para indicar que es interactivo
+                progressContainer.style.cursor = 'pointer';
+                
+                // Función para manejar el clic o arrastre en la barra de progreso
+                function handleProgressBarInteraction(e) {
+                    // Calcular la posición relativa del clic dentro de la barra de progreso
+                    const rect = progressContainer.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    const percentClicked = (clickX / rect.width) * 100;
+                    
+                    // Calcular el índice correspondiente en el array de ubicaciones
+                    const totalPoints = locations.length - 1;
+                    let targetIndex = Math.floor((percentClicked / 100) * totalPoints);
+                    
+                    // Asegurar que el índice esté dentro de los límites
+                    targetIndex = Math.max(0, Math.min(targetIndex, totalPoints));
+                    
+                    // Pausar la animación actual si está en curso
+                    if (animating && !paused) {
+                        paused = true;
+                        const playPauseBtn = document.getElementById('btn-playpause-route');
+                        if (playPauseBtn) {
+                            playPauseBtn.querySelector('i').className = 'fa fa-play';
+                        }
+                    }
+                    
+                    // Detener cualquier animación en curso
+                    if (animTimeout) clearTimeout(animTimeout);
+                    
+                    // Actualizar el índice de animación
+                    animIndex = targetIndex;
+                    
+                    // Mover el marcador a la posición correspondiente
+                    if (animMarker) {
+                        const position = locations[targetIndex];
+                        animMarker.setLatLng([position.lat, position.lng]);
+                        map.panTo([position.lat, position.lng], {animate: true, duration: 0.2});
+                        showInfoPopup(position);
+                    }
+                    
+                    // Actualizar la barra de progreso
+                    updateProgressBar((targetIndex / totalPoints) * 100);
+                    
+                    // Actualizar las líneas de ruta
+                    if (passedPolyline) map.removeLayer(passedPolyline);
+                    if (pendingPolyline) map.removeLayer(pendingPolyline);
+                    
+                    const passedCoords = locations.slice(0, targetIndex + 1).map(l => [l.lat, l.lng]);
+                    passedPolyline = L.polyline(passedCoords, {color:'#007bff',weight:6,opacity:0.9}).addTo(map);
+                    
+                    const pendingCoords = locations.slice(targetIndex).map(l => [l.lat, l.lng]);
+                    if (pendingCoords.length > 1) {
+                        pendingPolyline = L.polyline(pendingCoords, {color:'#bbb',weight:4,opacity:0.5,dashArray:'6,8'}).addTo(map);
+                    }
+                }
+                
+                // Evento de clic en la barra de progreso
+                progressContainer.addEventListener('click', handleProgressBarInteraction);
+                
+                // Eventos para arrastrar en la barra de progreso
+                let isDragging = false;
+                
+                progressContainer.addEventListener('mousedown', function(e) {
+                    isDragging = true;
+                    handleProgressBarInteraction(e);
+                });
+                
+                document.addEventListener('mousemove', function(e) {
+                    if (isDragging) {
+                        handleProgressBarInteraction(e);
+                    }
+                });
+                
+                document.addEventListener('mouseup', function() {
+                    isDragging = false;
+                });
+            }
         }
         function removeAnimationControls() {
             const c = document.getElementById('route-anim-controls');
@@ -685,6 +769,39 @@ document.addEventListener('DOMContentLoaded', function() {
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Estilos para la barra de progreso interactiva */
+        #route-anim-controls .progress {
+            cursor: pointer;
+            position: relative;
+            overflow: visible;
+            transition: height 0.2s;
+        }
+        
+        #route-anim-controls .progress:hover {
+            height: 12px;
+        }
+        
+        #route-anim-controls .progress:hover::before {
+            content: 'Haz clic o arrastra para navegar por la ruta';
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0.9;
+            z-index: 1000;
+        }
+        
+        #route-anim-controls .progress-bar {
+            transition: width 0.1s ease-out;
         }
     `;
     document.head.appendChild(style);
