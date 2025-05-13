@@ -369,7 +369,23 @@ async function initMap() {
             };
             document.getElementById('btn-restart-route').onclick = function() {
                 stopAnimation();
-                startAnimation();
+                // Crear el marcador en la posición inicial pero sin iniciar la animación
+                if (!animMarker) {
+                    animMarker = L.marker([locations[0].lat, locations[0].lng], {
+                        icon: L.icon({
+                            iconUrl: 'https://cdn-icons-png.flaticon.com/512/744/744465.png',
+                            iconSize: [38, 38],
+                            iconAnchor: [19, 19]
+                        })
+                    }).addTo(map);
+                    // Mostrar información del punto inicial
+                    showInfoPopup(locations[0]);
+                }
+                // Asegurar que el botón de play/pause muestre el icono de play
+                const playPauseBtn = document.getElementById('btn-playpause-route');
+                if (playPauseBtn) {
+                    playPauseBtn.querySelector('i').className = 'fa fa-play';
+                }
             };
             document.getElementById('slider-speed-route').oninput = function() {
                 animSpeed = parseFloat(this.value);
@@ -385,11 +401,16 @@ async function initMap() {
             paused = false;
             animIndex = 0;
             if (animTimeout) clearTimeout(animTimeout);
-            if (animMarker) { map.removeLayer(animMarker); animMarker = null; }
+            // No eliminamos el marcador, solo las líneas de la ruta
             if (passedPolyline) { map.removeLayer(passedPolyline); passedPolyline = null; }
             if (pendingPolyline) { map.removeLayer(pendingPolyline); pendingPolyline = null; }
             if (infoPopup) { map.closePopup(infoPopup); infoPopup = null; }
             if (progressBar) progressBar.style.width = '0%';
+            
+            // Si existe el marcador, lo movemos a la posición inicial
+            if (animMarker && locations && locations.length > 0) {
+                animMarker.setLatLng([locations[0].lat, locations[0].lng]);
+            }
         }
         function startAnimation() {
             stopAnimation();
@@ -404,7 +425,12 @@ async function initMap() {
                         iconAnchor: [19, 19]
                     })
                 }).addTo(map);
+            } else {
+                // Si el marcador ya existe, asegurarse de que esté en la posición inicial
+                animMarker.setLatLng([locations[0].lat, locations[0].lng]);
             }
+            // Mostrar información del punto inicial antes de comenzar
+            showInfoPopup(locations[0]);
             stepAnim();
         }
         function stepAnim() {
