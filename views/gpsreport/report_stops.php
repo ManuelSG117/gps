@@ -355,16 +355,6 @@ $this->registerJsFile('@web/js/stops-chart.js', ['depends' => [\yii\web\JqueryAs
     }
     </script>
     <br>
-   <!-- Switch para mostrar/ocultar tarjetas --> 
-   <div id="toggle-container" <?= empty($stops) ? 'style="display: none;"' : '' ?>>
-    <input type="checkbox" id="label-check" class="label-check" />
-    <label class="hamburger-label" for="label-check">
-        <div class="line1"></div>
-        <div class="line2"></div>
-        <div class="line3"></div>
-        <label></label
-    ></label>
-    </div>
     <br>
  <!-- Render the cards partial view -->
 <?= $this->render('_stops_cards', [
@@ -373,25 +363,7 @@ $this->registerJsFile('@web/js/stops-chart.js', ['depends' => [\yii\web\JqueryAs
 ]) ?>
 
 <br> <br>
-<script>
-document.getElementById('label-check').addEventListener('change', function() {
-    let cardsContainer = document.getElementById("cards-container");
-
-    if (this.checked) {
-        cardsContainer.style.display = "block"; 
-        requestAnimationFrame(() => {
-            cardsContainer.classList.add("show");
-        });
-    } else {
-        cardsContainer.classList.remove("show");
-        setTimeout(() => {
-            if (!cardsContainer.classList.contains("show")) {
-                cardsContainer.style.display = "none";  
-            }
-        }, 500);
-    }
-});
-</script>
+<!-- El script para controlar la visibilidad de las tarjetas ha sido eliminado ya que ahora siempre se muestran -->
 <script>
 // Initialize chart when show button is clicked
 $('#showinfo').on('click', function () {
@@ -435,34 +407,31 @@ $(document).ready(function() {
 <script>
 $(document).ready(function () {
     let cardContainer = $(".custom-card-container");
-    let toggleContainer = $("#toggle-container");
-
-    // Ocultar la card y el toggle al inicio
     cardContainer.hide();
-    toggleContainer.hide();
 
-    // Manejar el envío del formulario sin recargar la página
     $('#gps-report-form').on('submit', function (event) {
-        event.preventDefault(); // Evita la recarga
+        event.preventDefault();
         $.pjax.submit(event, '#gps-report-pjax', {timeout: 5000});
     });
 
-    // Detectar la actualización completa de PJAX
-    $(document).off('pjax:complete').on('pjax:complete', function () {
-        // Esperar un momento para asegurarse de que el DOM se haya actualizado
-        setTimeout(function () {
-            let newTableBody = $("#projects-tbls tbody");
-            let numRows = newTableBody.find("tr").length;
+    function updateCardsVisibility() {
+        if (typeof stops !== 'undefined' && stops.length > 0) {
+            cardContainer.fadeIn(500);
+            $("#cards-container").fadeIn(500);
+            $("#loading-animation").hide();
+        } else {
+            cardContainer.hide();
+            $("#cards-container").hide();
+            $("#loading-animation").show();
+        }
+    }
 
-            if (numRows > 0 && !newTableBody.find("tr td[colspan]").length) {
-                cardContainer.fadeIn(500);
-                toggleContainer.fadeIn(500);
-            } else {
-                cardContainer.hide();
-                toggleContainer.hide();
-            }
-        }, 100); // Ajusta el tiempo de espera según sea necesario
+    $(document).off('pjax:complete').on('pjax:complete', function () {
+        setTimeout(updateCardsVisibility, 100);
     });
+
+    // Ejecutar la verificación inicial
+    updateCardsVisibility();
 });
 </script>
 

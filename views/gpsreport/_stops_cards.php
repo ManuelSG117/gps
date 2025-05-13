@@ -5,9 +5,12 @@
  * @var array $stops All stops data
  * @var array $stopsPerDay Stops grouped by day
  */
+
+// Hacer disponible la variable stops para JavaScript
+$this->registerJs("var stops = " . json_encode($stops) . ";", yii\web\View::POS_HEAD);
 ?>
 
-<div id="cards-container">
+<div id="cards-container" class="show">
     <div class="row">
         <div class="col-lg-4 col-md-6 col-12">
             <div class="cards">
