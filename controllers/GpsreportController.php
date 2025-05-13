@@ -35,6 +35,69 @@ class GpsreportController extends Controller
         ];
     }
     
+    /**
+     * Endpoint para obtener todos los datos de ubicación sin paginación
+     * Este método es llamado vía AJAX desde el frontend para mostrar la ruta completa en el mapa
+     */
+    public function actionGetAllLocations()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        
+        $filter = Yii::$app->request->get('filter', 'today');
+        $gps = Yii::$app->request->get('gps', 'all');
+        $startDate = Yii::$app->request->get('startDate', null);
+        $endDate = Yii::$app->request->get('endDate', null);
+    
+        // Consulta principal
+        $query = GpsLocations::find();
+    
+        // Solo aplicar filtro de dispositivo si no es 'all'
+        if ($gps && $gps !== 'all') {
+            $query->andWhere(['phoneNumber' => $gps]);
+        }
+    
+        // Filtrado según el filtro seleccionado
+        switch ($filter) {
+            case 'today':
+                $query->andWhere(['DATE(lastUpdate)' => date('Y-m-d')]);
+                break;
+            case 'yesterday':
+                $query->andWhere(['DATE(lastUpdate)' => date('Y-m-d', strtotime('-1 day'))]);
+                break;
+            case 'current_week':
+                $query->andWhere(['>=', 'DATE(lastUpdate)', date('Y-m-d', strtotime('monday this week'))]);
+                break;
+            case 'last_week':
+                $query->andWhere(['between', 'DATE(lastUpdate)', date('Y-m-d', strtotime('monday last week')), date('Y-m-d', strtotime('sunday last week'))]);
+                break;
+            case 'current_month':
+                $query->andWhere(['>=', 'DATE(lastUpdate)', date('Y-m-01')]);
+                break;
+            case 'last_month':
+                $query->andWhere(['between', 'DATE(lastUpdate)', date('Y-m-d', strtotime('first day of last month')), date('Y-m-d', strtotime('last day of last month'))]);
+                break;
+            case 'custom':
+                if ($startDate && $endDate) {
+                    $query->andWhere(['between', 'DATE(lastUpdate)', $startDate, $endDate]);
+                } else if ($startDate) {
+                    // If only start date is provided
+                    $query->andWhere(['>=', 'DATE(lastUpdate)', $startDate]);
+                } else if ($endDate) {
+                    // If only end date is provided
+                    $query->andWhere(['<=', 'DATE(lastUpdate)', $endDate]);
+                }
+                break;
+        }
+    
+        // Order by timestamp to ensure proper route display
+        $query->orderBy(['lastUpdate' => SORT_ASC]);
+        
+        // Obtener todos los datos sin paginación
+        $locations = $query->all();
+        
+        return $locations;
+    }
+    
     public function actionIndex()
     {
         $filter = Yii::$app->request->get('filter', 'today');

@@ -1,3 +1,36 @@
+// Función para calcular la distancia entre dos puntos geográficos en kilómetros
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+              Math.sin(dLon/2) * Math.sin(dLon/2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    const d = R * c; // Distancia en km
+    return d;
+}
+
+// Convertir grados a radianes
+function deg2rad(deg) {
+    return deg * (Math.PI/180);
+}
+
+// Convertir milisegundos a formato horas:minutos:segundos
+function msToHMS(ms) {
+    // Convertir a segundos
+    let seconds = Math.floor(ms / 1000);
+    // Extraer horas
+    const hours = Math.floor(seconds / 3600);
+    seconds = seconds % 3600;
+    // Extraer minutos
+    const minutes = Math.floor(seconds / 60);
+    // Mantener segundos
+    seconds = seconds % 60;
+    // Formatear resultado
+    return `${hours}h ${minutes}m ${seconds}s`;
+}
+
 // Inicialización cuando el documento está listo
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Flatpickr
@@ -171,9 +204,9 @@ function setupFilterChangeEvent() {
 }
 
 async function initMap() {
-    // Check if we have location data
-    const tableRows = document.querySelectorAll('#projects-tbl tbody tr');
-    if (tableRows.length === 0 || tableRows[0].cells.length <= 1) {
+    // Verificar si hay datos de ubicación disponibles
+    const allTableRows = document.querySelectorAll('#projects-tbl tbody tr');
+    if (allTableRows.length === 0 || allTableRows[0].cells.length <= 1) {
         const mapElement = document.getElementById('map');
         if (mapElement) {
             mapElement.innerHTML = '<div class="alert alert-info">No hay datos de ubicación disponibles para mostrar en el mapa.</div>';
@@ -183,25 +216,110 @@ async function initMap() {
         return;
     }
 
-    // Extract location data from the table
+    // Obtener todos los datos de ubicación (no solo los de la página actual)
     const locations = [];
-    tableRows.forEach(row => {
-        if (row.cells.length >= 3) {
-            const lat = parseFloat(row.cells[1].textContent.trim());
-            const lng = parseFloat(row.cells[2].textContent.trim());
-            const timestamp = row.cells[0].textContent.trim();
-            const speed = parseFloat(row.cells[3].textContent.trim());
+    
+    // Primero intentamos obtener todos los datos de la tabla completa (incluyendo datos ocultos por paginación)
+    const totalCountElement = document.querySelector('.text-center.text-muted');
+    let hasPagination = false;
+    
+    if (totalCountElement) {
+        const totalCountText = totalCountElement.textContent;
+        const match = totalCountText.match(/de (\d+) registros/);
+        if (match && parseInt(match[1]) > allTableRows.length) {
+            hasPagination = true;
+            console.log('La tabla tiene paginación, hay más datos que los mostrados actualmente');
+        }
+    }
+    
+    // Si hay paginación, intentamos obtener todos los datos de la tabla
+    if (hasPagination) {
+        // Extraer datos de todas las filas visibles primero
+        allTableRows.forEach(row => {
+            if (row.cells.length >= 3) {
+                const lat = parseFloat(row.cells[1].textContent.trim());
+                const lng = parseFloat(row.cells[2].textContent.trim());
+                const timestamp = row.cells[0].textContent.trim();
+                const speed = parseFloat(row.cells[3].textContent.trim());
 
-            if (!isNaN(lat) && !isNaN(lng)) {
-                locations.push({
-                    lat: lat,
-                    lng: lng,
-                    timestamp: timestamp,
-                    speed: speed
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    locations.push({
+                        lat: lat,
+                        lng: lng,
+                        timestamp: timestamp,
+                        speed: speed
+                    });
+                }
+            }
+        });
+        
+        // Intentar obtener el resto de los datos mediante una solicitud AJAX
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            // Crear una URL para obtener todos los datos sin paginación
+            const ajaxUrl = `/gpsreport/get-all-locations?filter=${urlParams.get('filter') || 'today'}&gps=${urlParams.get('gps') || 'all'}&startDate=${urlParams.get('startDate') || ''}&endDate=${urlParams.get('endDate') || ''}`;
+            
+            const response = await fetch(ajaxUrl);
+            if (response.ok) {
+                const allLocations = await response.json();
+                if (Array.isArray(allLocations) && allLocations.length > 0) {
+                    // Reemplazar los datos con todos los puntos
+                    locations.length = 0; // Limpiar el array
+                    allLocations.forEach(loc => {
+                        locations.push({
+                            lat: parseFloat(loc.latitude),
+                            lng: parseFloat(loc.longitude),
+                            timestamp: loc.lastUpdate,
+                            speed: parseFloat(loc.speed)
+                        });
+                    });
+                    console.log(`Datos completos cargados: ${locations.length} puntos`);
+                }
+            }
+        } catch (error) {
+            console.error('Error al obtener todos los datos:', error);
+            // Si falla, continuamos con los datos de la página actual
+            if (locations.length === 0) {
+                // Si no tenemos datos, extraemos de la tabla visible
+                allTableRows.forEach(row => {
+                    if (row.cells.length >= 3) {
+                        const lat = parseFloat(row.cells[1].textContent.trim());
+                        const lng = parseFloat(row.cells[2].textContent.trim());
+                        const timestamp = row.cells[0].textContent.trim();
+                        const speed = parseFloat(row.cells[3].textContent.trim());
+
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            locations.push({
+                                lat: lat,
+                                lng: lng,
+                                timestamp: timestamp,
+                                speed: speed
+                            });
+                        }
+                    }
                 });
             }
         }
-    });
+    } else {
+        // No hay paginación, simplemente extraemos los datos de la tabla visible
+        allTableRows.forEach(row => {
+            if (row.cells.length >= 3) {
+                const lat = parseFloat(row.cells[1].textContent.trim());
+                const lng = parseFloat(row.cells[2].textContent.trim());
+                const timestamp = row.cells[0].textContent.trim();
+                const speed = parseFloat(row.cells[3].textContent.trim());
+
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    locations.push({
+                        lat: lat,
+                        lng: lng,
+                        timestamp: timestamp,
+                        speed: speed
+                    });
+                }
+            }
+        });
+    }
 
     if (locations.length === 0) {
         document.getElementById('map').innerHTML = '<div class="alert alert-info">No se pudieron extraer coordenadas válidas de los datos.</div>';
@@ -264,6 +382,21 @@ async function initMap() {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 19
         }).addTo(map);
+        
+        // Agregar mensaje informativo sobre la ruta completa
+        if (hasPagination) {
+            const infoControl = L.control({position: 'topright'});
+            infoControl.onAdd = function() {
+                const div = L.DomUtil.create('div', 'info-control');
+                div.innerHTML = `
+                    <div class="alert alert-info p-2 m-0" style="font-size: 0.9rem; opacity: 0.9;">
+                        <i class="fa fa-info-circle"></i> Mostrando la ruta completa (${locations.length} puntos)
+                    </div>
+                `;
+                return div;
+            };
+            infoControl.addTo(map);
+        }
 
         // --- Segmentos coloreados por velocidad ---
         // Definir rangos de velocidad y colores

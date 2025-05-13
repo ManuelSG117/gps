@@ -11,6 +11,8 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\Json;
+use app\models\Notificaciones;
+use app\components\WhatsappService;
 
 /**
  * VehiculoGeocercaController implementa las acciones CRUD para el modelo VehiculoGeocerca.
