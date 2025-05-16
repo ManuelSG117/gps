@@ -80,6 +80,7 @@ class VehiculoGeocercaController extends Controller
             $vehiculoIds = $data['vehiculo_ids'];
             $exito = true;
             $mensaje = '';
+            $asignacionesCreadas = 0;
             
             // Eliminar asignaciones existentes para esta geocerca si se especifica
             if (isset($data['eliminar_existentes']) && $data['eliminar_existentes']) {
@@ -105,13 +106,16 @@ class VehiculoGeocercaController extends Controller
                         $exito = false;
                         $mensaje .= 'Error al asignar vehículo ID ' . $vehiculoId . ': ' . 
                                    Json::encode($asignacion->getErrors()) . '\n';
+                    } else {
+                        $asignacionesCreadas++;
                     }
                 }
             }
             
             return [
                 'success' => $exito,
-                'message' => $exito ? 'Vehículos asignados correctamente' : $mensaje
+                'message' => $exito ? 'Vehículos asignados correctamente (' . $asignacionesCreadas . ' nuevas asignaciones)' : $mensaje,
+                'asignaciones_creadas' => $asignacionesCreadas
             ];
         }
         
@@ -143,6 +147,7 @@ class VehiculoGeocercaController extends Controller
             $geocercaIds = $data['geocerca_ids'];
             $exito = true;
             $mensaje = '';
+            $asignacionesCreadas = 0;
             
             // Eliminar asignaciones existentes para este vehículo si se especifica
             if (isset($data['eliminar_existentes']) && $data['eliminar_existentes']) {
@@ -168,13 +173,16 @@ class VehiculoGeocercaController extends Controller
                         $exito = false;
                         $mensaje .= 'Error al asignar geocerca ID ' . $geocercaId . ': ' . 
                                    Json::encode($asignacion->getErrors()) . '\n';
+                    } else {
+                        $asignacionesCreadas++;
                     }
                 }
             }
             
             return [
                 'success' => $exito,
-                'message' => $exito ? 'Geocercas asignadas correctamente' : $mensaje
+                'message' => $exito ? 'Geocercas asignadas correctamente (' . $asignacionesCreadas . ' nuevas asignaciones)' : $mensaje,
+                'asignaciones_creadas' => $asignacionesCreadas
             ];
         }
         
@@ -205,6 +213,71 @@ class VehiculoGeocercaController extends Controller
                 'message' => 'Error al eliminar la asignación: ' . $e->getMessage()
             ];
         }
+    }
+    
+    /**
+     * Asigna o desasigna rápidamente un vehículo a una geocerca con un solo clic.
+     * @return \yii\web\Response
+     */
+    public function actionToggleAsignacion()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
+        if (Yii::$app->request->isPost) {
+            $data = Yii::$app->request->post();
+            
+            if (empty($data['vehiculo_id']) || empty($data['geocerca_id'])) {
+                return [
+                    'success' => false,
+                    'message' => 'Se requieren IDs de vehículo y geocerca'
+                ];
+            }
+            
+            $vehiculoId = $data['vehiculo_id'];
+            $geocercaId = $data['geocerca_id'];
+            
+            // Verificar si ya existe la asignación
+            $asignacionExistente = VehiculoGeocerca::findOne([
+                'vehiculo_id' => $vehiculoId,
+                'geocerca_id' => $geocercaId,
+                'activo' => 1
+            ]);
+            
+            if ($asignacionExistente) {
+                // Si existe, eliminarla
+                $asignacionExistente->delete();
+                return [
+                    'success' => true,
+                    'action' => 'removed',
+                    'message' => 'Asignación eliminada correctamente'
+                ];
+            } else {
+                // Si no existe, crearla
+                $asignacion = new VehiculoGeocerca();
+                $asignacion->vehiculo_id = $vehiculoId;
+                $asignacion->geocerca_id = $geocercaId;
+                $asignacion->created_at = date('Y-m-d H:i:s');
+                $asignacion->activo = 1;
+                
+                if ($asignacion->save()) {
+                    return [
+                        'success' => true,
+                        'action' => 'added',
+                        'message' => 'Asignación creada correctamente'
+                    ];
+                } else {
+                    return [
+                        'success' => false,
+                        'message' => 'Error al crear la asignación: ' . Json::encode($asignacion->getErrors())
+                    ];
+                }
+            }
+        }
+        
+        return [
+            'success' => false,
+            'message' => 'Método no válido'
+        ];
     }
 
     /**

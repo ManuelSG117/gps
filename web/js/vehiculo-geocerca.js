@@ -12,7 +12,33 @@ $(document).ready(function() {
     setupSearchAndSelection();
     setupAssignmentModals();
     setupViewAssignments();
+    marcarElementosConAsignaciones();
 });
+
+/**
+ * Marca visualmente los elementos que ya tienen asignaciones
+ */
+function marcarElementosConAsignaciones() {
+    // Marcar vehículos con geocercas asignadas
+    $('.vehiculo-item').each(function() {
+        const vehiculoId = $(this).data('id');
+        $.getJSON(`/vehiculo-geocerca/get-geocercas-vehiculo?vehiculoId=${vehiculoId}`, function(data) {
+            if (data.success && data.geocerca_ids.length > 0) {
+                $(`.vehiculo-item[data-id="${vehiculoId}"]`).addClass('has-assignments');
+            }
+        });
+    });
+    
+    // Marcar geocercas con vehículos asignados
+    $('.geocerca-item').each(function() {
+        const geocercaId = $(this).data('id');
+        $.getJSON(`/vehiculo-geocerca/get-vehiculos-geocerca?geocercaId=${geocercaId}`, function(data) {
+            if (data.success && data.vehiculo_ids.length > 0) {
+                $(`.geocerca-item[data-id="${geocercaId}"]`).addClass('has-assignments');
+            }
+        });
+    });
+}
 
 /**
  * Inicializa el mapa de Google Maps y muestra las geocercas y vehículos
@@ -641,6 +667,258 @@ function setupAssignmentModals() {
         modal.show();
     });
     
+    // Implementar asignación rápida con un solo clic en las filas de vehículos/geocercas
+    $('.vehiculo-item').on('dblclick', function() {
+        const vehiculoId = $(this).data('id');
+        mostrarAsignacionRapida(vehiculoId, 'vehiculo');
+    });
+    
+    $('.geocerca-item').on('dblclick', function() {
+        const geocercaId = $(this).data('id');
+        mostrarAsignacionRapida(geocercaId, 'geocerca');
+    });
+    
+    // Añadir botones de asignación rápida a las filas
+    $('.vehiculo-item').each(function() {
+        const vehiculoId = $(this).data('id');
+        const $acciones = $(this).find('td:last-child');
+        $acciones.prepend(`
+            <button class="btn btn-sm btn-success asignar-rapido mr-1" data-id="${vehiculoId}" data-tipo="vehiculo">
+                <i class="fas fa-link"></i>
+            </button>
+        `);
+    });
+    
+    $('.geocerca-item').each(function() {
+        const geocercaId = $(this).data('id');
+        const $acciones = $(this).find('td:last-child');
+        $acciones.prepend(`
+            <button class="btn btn-sm btn-success asignar-rapido mr-1" data-id="${geocercaId}" data-tipo="geocerca">
+                <i class="fas fa-link"></i>
+            </button>
+        `);
+    });
+    
+    // Evento para botones de asignación rápida
+    $(document).on('click', '.asignar-rapido', function(e) {
+        e.stopPropagation();
+        const id = $(this).data('id');
+        const tipo = $(this).data('tipo');
+        mostrarAsignacionRapida(id, tipo);
+    });
+    
+    // Función para mostrar la asignación rápida
+    function mostrarAsignacionRapida(id, tipo) {
+        let titulo, mensaje;
+        
+        if (tipo === 'vehiculo') {
+            const vehiculo = vehiculosData.find(v => v.id == id);
+            if (!vehiculo) return;
+            
+            titulo = `Asignar geocercas a ${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.placa})`;
+            mensaje = 'Seleccione las geocercas que desea asignar a este vehículo:';
+            
+            // Obtener geocercas asignadas al vehículo
+            $.getJSON(`/vehiculo-geocerca/get-geocercas-vehiculo?vehiculoId=${id}`, function(data) {
+                if (data.success) {
+                    mostrarSelectorRapido(id, 'vehiculo', data.geocerca_ids, titulo, mensaje);
+                }
+            });
+        } else if (tipo === 'geocerca') {
+            const geocerca = geofencesData.find(g => g.id == id);
+            if (!geocerca) return;
+            
+            titulo = `Asignar vehículos a ${geocerca.name}`;
+            mensaje = 'Seleccione los vehículos que desea asignar a esta geocerca:';
+            
+            // Obtener vehículos asignados a la geocerca
+            $.getJSON(`/vehiculo-geocerca/get-vehiculos-geocerca?geocercaId=${id}`, function(data) {
+                if (data.success) {
+                    mostrarSelectorRapido(id, 'geocerca', data.vehiculo_ids, titulo, mensaje);
+                }
+            });
+        }
+    }
+    
+    // Función para mostrar el selector rápido
+    function mostrarSelectorRapido(id, tipo, asignacionesActuales, titulo, mensaje) {
+        let html = `<p>${mensaje}</p><div class="quick-assign-container" style="max-height: 300px; overflow-y: auto;">`;
+        
+        if (tipo === 'vehiculo') {
+            // Mostrar lista de geocercas
+            geofencesData.forEach(function(geocerca) {
+                const checked = asignacionesActuales.includes(geocerca.id) ? 'checked' : '';
+                html += `
+                <div class="form-check mb-2">
+                    <input class="form-check-input quick-assign-checkbox" type="checkbox" id="quick-geocerca-${geocerca.id}" 
+                           data-id="${geocerca.id}" ${checked}>
+                    <label class="form-check-label" for="quick-geocerca-${geocerca.id}">
+                        ${geocerca.name} - ${geocerca.description}
+                    </label>
+                </div>`;
+            });
+        } else if (tipo === 'geocerca') {
+            // Mostrar lista de vehículos
+            vehiculosData.forEach(function(vehiculo) {
+                const checked = asignacionesActuales.includes(vehiculo.id) ? 'checked' : '';
+                html += `
+                <div class="form-check mb-2">
+                    <input class="form-check-input quick-assign-checkbox" type="checkbox" id="quick-vehiculo-${vehiculo.id}" 
+                           data-id="${vehiculo.id}" ${checked}>
+                    <label class="form-check-label" for="quick-vehiculo-${vehiculo.id}">
+                        ${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.placa})
+                    </label>
+                </div>`;
+            });
+        }
+        
+        html += '</div>';
+        
+        Swal.fire({
+            title: titulo,
+            html: html,
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
+            cancelButtonText: 'Cancelar',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                return new Promise((resolve) => {
+                    const seleccionados = [];
+                    $('.quick-assign-checkbox:checked').each(function() {
+                        seleccionados.push($(this).data('id'));
+                    });
+                    
+                    if (tipo === 'vehiculo') {
+                        // Asignar geocercas al vehículo
+                        $.ajax({
+                            url: '/vehiculo-geocerca/asignar-geocercas',
+                            type: 'POST',
+                            data: {
+                                vehiculo_id: id,
+                                geocerca_ids: seleccionados,
+                                eliminar_existentes: true
+                            },
+                            success: function(response) {
+                                resolve(response);
+                            },
+                            error: function() {
+                                Swal.showValidationMessage('Error al procesar la solicitud');
+                                resolve({success: false});
+                            }
+                        });
+                    } else if (tipo === 'geocerca') {
+                        // Asignar vehículos a la geocerca
+                        $.ajax({
+                            url: '/vehiculo-geocerca/asignar-vehiculos',
+                            type: 'POST',
+                            data: {
+                                geocerca_id: id,
+                                vehiculo_ids: seleccionados,
+                                eliminar_existentes: true
+                            },
+                            success: function(response) {
+                                resolve(response);
+                            },
+                            error: function() {
+                                Swal.showValidationMessage('Error al procesar la solicitud');
+                                resolve({success: false});
+                            }
+                        });
+                    }
+                });
+            }
+        }).then((result) => {
+            if (result.isConfirmed && result.value.success) {
+                Swal.fire({
+                    title: 'Éxito',
+                    text: result.value.message,
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                });
+                
+                // Actualizar indicadores visuales después de guardar
+                setTimeout(function() {
+                    marcarElementosConAsignaciones();
+                }, 500);
+            }
+        });
+    }
+    
+    // Implementar asignación directa con un solo clic
+    $(document).on('click', '.quick-assign-checkbox', function() {
+        const itemId = $(this).data('id');
+        const isChecked = $(this).prop('checked');
+        const parentModal = $(this).closest('.swal2-container');
+        const tipo = parentModal.find('.quick-assign-container').parent().prev().text().includes('vehículo') ? 'geocerca' : 'vehiculo';
+        
+        // Obtener el ID del elemento principal (vehículo o geocerca)
+        let principalId;
+        if (tipo === 'geocerca') {
+            // Estamos en el modal de asignar geocercas a un vehículo
+            principalId = $('.vehiculo-item.active-highlight').data('id');
+        } else {
+            // Estamos en el modal de asignar vehículos a una geocerca
+            principalId = $('.geocerca-item.active-highlight').data('id');
+        }
+        
+        if (!principalId) return;
+        
+        // Realizar la asignación/desasignación directa
+        $.ajax({
+            url: '/vehiculo-geocerca/toggle-asignacion',
+            type: 'POST',
+            data: {
+                vehiculo_id: tipo === 'geocerca' ? principalId : itemId,
+                geocerca_id: tipo === 'geocerca' ? itemId : principalId
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Mostrar notificación pequeña
+                    const toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                    
+                    toast.fire({
+                         icon: 'success',
+                         title: response.action === 'added' ? 'Asignación creada' : 'Asignación eliminada'
+                     });
+                     
+                     // Actualizar indicadores visuales
+                     if (tipo === 'geocerca') {
+                         // Si se asignó una geocerca a un vehículo
+                         if (response.action === 'added') {
+                             $(`.vehiculo-item[data-id="${principalId}"]`).addClass('has-assignments');
+                         } else {
+                             // Verificar si el vehículo aún tiene geocercas asignadas
+                             $.getJSON(`/vehiculo-geocerca/get-geocercas-vehiculo?vehiculoId=${principalId}`, function(data) {
+                                 if (data.success && data.geocerca_ids.length === 0) {
+                                     $(`.vehiculo-item[data-id="${principalId}"]`).removeClass('has-assignments');
+                                 }
+                             });
+                         }
+                     } else {
+                         // Si se asignó un vehículo a una geocerca
+                         if (response.action === 'added') {
+                             $(`.geocerca-item[data-id="${principalId}"]`).addClass('has-assignments');
+                         } else {
+                             // Verificar si la geocerca aún tiene vehículos asignados
+                             $.getJSON(`/vehiculo-geocerca/get-vehiculos-geocerca?geocercaId=${principalId}`, function(data) {
+                                 if (data.success && data.vehiculo_ids.length === 0) {
+                                     $(`.geocerca-item[data-id="${principalId}"]`).removeClass('has-assignments');
+                                 }
+                             });
+                         }
+                     }
+                }
+            }
+        });
+    });}
+    
+    
     // Abrir modal para asignar vehículos a geocercas
     $('#asignarVehiculosBtn').on('click', function() {
         // Obtener geocercas seleccionadas
@@ -964,8 +1242,7 @@ function setupAssignmentModals() {
                     confirmButtonText: 'Aceptar'
                 });
             });
-    });
-}
+    })
 
 /**
  * Configura los eventos para ver asignaciones existentes

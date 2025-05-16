@@ -95,6 +95,43 @@ var vehiculosData = <?= $vehiculosJson ?>;
     border-bottom: none;
 }
 
+/* Estilos para asignación rápida */
+.asignar-rapido {
+    margin-right: 5px;
+    transition: all 0.3s ease;
+}
+
+.asignar-rapido:hover {
+    transform: scale(1.1);
+}
+
+.quick-assign-container {
+    border: 1px solid #eee;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.quick-assign-checkbox {
+    cursor: pointer;
+}
+
+/* Indicador de asignación */
+.has-assignments {
+    position: relative;
+}
+
+.has-assignments:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 8px;
+    background-color: #28a745;
+    border-radius: 50%;
+}
+
 /* Mejoras para la visualización en dispositivos móviles */
 @media (max-width: 768px) {
     .section {
@@ -103,6 +140,16 @@ var vehiculosData = <?= $vehiculosJson ?>;
     
     #map {
         height: 300px !important;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    .btn-group .btn {
+        flex: 1 0 auto;
+        margin-bottom: 5px;
     }
 }
 </style>
@@ -113,6 +160,10 @@ var vehiculosData = <?= $vehiculosJson ?>;
 
 <div class="vehiculo-geocerca-index">
     <h1><?= Html::encode($this->title) ?></h1>
+    
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Utilice el botón <i class="fas fa-link"></i> para asignaciones rápidas o haga doble clic en un elemento para ver todas sus asignaciones.
+    </div>
     
     <div class="row">
         <!-- Controles para expandir/minimizar secciones -->
@@ -179,8 +230,9 @@ var vehiculosData = <?= $vehiculosJson ?>;
                     </div>
                     <div class="mb-3">
                         <button type="button" class="btn btn-primary" id="asignarGeocercasBtn">
-                            Asignar Geocercas a Vehículos Seleccionados
+                            <i class="fas fa-link"></i> Asignar Geocercas
                         </button>
+                        <small class="text-muted ml-2">Seleccione vehículos y haga clic para asignar geocercas</small>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-striped table-bordered">
@@ -238,8 +290,9 @@ var vehiculosData = <?= $vehiculosJson ?>;
                     </div>
                     <div class="mb-3">
                         <button type="button" class="btn btn-primary" id="asignarVehiculosBtn">
-                            Asignar Vehículos a Geocercas Seleccionadas
+                            <i class="fas fa-link"></i> Asignar Vehículos
                         </button>
+                        <small class="text-muted ml-2">Seleccione geocercas y haga clic para asignar vehículos</small>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-striped table-bordered">
