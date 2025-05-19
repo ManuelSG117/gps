@@ -16,6 +16,10 @@ use Yii;
  * @property string|null $tecnico
  * @property string|null $notas
  * @property int $estatus
+ * @property int|null $estado_servicio
+ * @property string|null $motivo_pausa
+ * @property string|null $requisitos_reanudar
+ * @property string|null $fecha_finalizacion
  *
  * @property Vehiculos $vehiculo
  */
@@ -37,12 +41,12 @@ class ReparacionVehiculo extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['costo', 'tecnico', 'notas'], 'default', 'value' => null],
+            [['costo', 'tecnico', 'notas', 'estado_servicio', 'motivo_pausa', 'requisitos_reanudar', 'fecha_finalizacion'], 'default', 'value' => null],
             [['estatus'], 'default', 'value' => 1],
             [['vehiculo_id', 'fecha', 'tipo_servicio', 'descripcion'], 'required'],
-            [['vehiculo_id', 'estatus'], 'integer'],
-            [['fecha'], 'safe'],
-            [['descripcion', 'notas'], 'string'],
+            [['vehiculo_id', 'estatus', 'estado_servicio'], 'integer'],
+            [['fecha', 'fecha_finalizacion'], 'safe'],
+            [['descripcion', 'notas', 'motivo_pausa', 'requisitos_reanudar'], 'string'],
             [['costo'], 'number'],
             [['tipo_servicio'], 'string', 'max' => 50],
             [['tecnico'], 'string', 'max' => 100],
@@ -65,6 +69,10 @@ class ReparacionVehiculo extends \yii\db\ActiveRecord
             'tecnico' => 'Tecnico',
             'notas' => 'Notas',
             'estatus' => 'Estatus',
+            'estado_servicio' => 'Estado Servicio',
+            'motivo_pausa' => 'Motivo Pausa',
+            'requisitos_reanudar' => 'Requisitos Reanudar',
+            'fecha_finalizacion' => 'Fecha Finalizacion',
         ];
     }
 
