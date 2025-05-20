@@ -143,12 +143,19 @@ use app\models\Vehiculos;
 
         <div class="row mb-3">
             <div class="col-md-12">
-                <label class="form-label">Imágenes del Servicio</label>
-                <div class="image-upload-container">
-                    <div class="image-preview-container d-flex flex-wrap gap-2 mb-2"></div>
-                    <div class="upload-controls">
-                        <input type="file" id="imagen-servicio" name="imagenes[]" class="form-control" accept="image/*" multiple>
-                        <small class="text-muted">Puede seleccionar múltiples imágenes. Formatos permitidos: JPG, PNG</small>
+                <div class="view-mode-gallery" style="display: none;">
+                    <h6 class="mb-3">Imágenes del Servicio</h6>
+                    <div class="image-gallery d-flex flex-wrap gap-3"></div>
+                </div>
+                
+                <div class="edit-mode-upload">
+                    <label class="form-label">Imágenes del Servicio</label>
+                    <div class="image-upload-container">
+                        <div class="image-preview-container d-flex flex-wrap gap-2 mb-2"></div>
+                        <div class="upload-controls">
+                            <input type="file" id="imagen-servicio" name="imagenes[]" class="form-control" accept="image/*" multiple>
+                            <small class="text-muted">Puede seleccionar múltiples imágenes. Formatos permitidos: JPG, PNG</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -261,5 +268,86 @@ use app\models\Vehiculos;
 .image-preview .remove-image:hover {
     background: rgba(255, 255, 255, 1);
     color: #bd2130;
+}
+
+/* Estilos para la galería de imágenes en modo vista */
+.image-gallery {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.gallery-item {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover {
+    transform: scale(1.05);
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Estilos para el lightbox */
+.lightbox {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 1050;
+    padding: 40px;
+}
+
+.lightbox img {
+    max-width: 90%;
+    max-height: 90vh;
+    margin: auto;
+    display: block;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
+    font-size: 30px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 10px;
+}
+
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    padding: 20px 15px;
+    border-radius: 5px;
+}
+
+.lightbox-prev {
+    left: 20px;
+}
+
+.lightbox-next {
+    right: 20px;
 }
 </style>

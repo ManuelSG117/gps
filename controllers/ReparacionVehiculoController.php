@@ -61,13 +61,15 @@ class ReparacionVehiculoController extends Controller
             \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             
             try {
+                // Get the vehicle information
+                $vehiculo = $model->vehiculo;
+                $vehiculoInfo = $vehiculo ? $vehiculo->marca_auto . ' ' . $vehiculo->modelo_auto . ' (' . $vehiculo->placa . ')' : '';
+                
                 return [
                     'success' => true,
-                    'content' => $this->renderAjax('_modal', [
-                        'model' => $model,
-                        'isView' => true,
-                        'readonly' => true
-                    ])
+                    'data' => array_merge($model->attributes, ['vehiculo_info' => $vehiculoInfo]),
+                    'imagenes' => [], // Here you would add any images associated with the repair
+                    'isViewMode' => true
                 ];
             } catch (\Exception $e) {
                 return [
