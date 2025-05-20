@@ -83,6 +83,7 @@
             }
         });
 
+        // Fetch repair data
         $.ajax({
             url: url,
             type: 'GET',
@@ -93,38 +94,39 @@
                     // Actualizar título del modal
                     $('#reparacionModalLabel').text('Ver Reparación de Vehículo');
                     
+                    // Llenar los campos con los datos
+                    $('#reparacionvehiculo-vehiculo_id').val(data.vehiculo_id).trigger('change');
+                    $('#reparacionvehiculo-fecha').val(data.fecha);
+                    $('#reparacionvehiculo-tipo_servicio').val(data.tipo_servicio);
+                    $('#reparacionvehiculo-descripcion').val(data.descripcion);
+                    $('#reparacionvehiculo-costo').val(data.costo);
+                    $('#reparacionvehiculo-tecnico').val(data.tecnico);
+                    $('#reparacionvehiculo-notas').val(data.notas);
+                    $('#reparacionvehiculo-estado_servicio').val(data.estado_servicio);
+                    $('#reparacionvehiculo-motivo_pausa').val(data.motivo_pausa);
+                    $('#reparacionvehiculo-requisitos_reanudar').val(data.requisitos_reanudar);
+                    $('#reparacionvehiculo-fecha_finalizacion').val(data.fecha_finalizacion);
+                    
                     // Deshabilitar todos los campos
                     $('#create-reparacion-form').find('input, select, textarea').prop('disabled', true);
                     
-                    // Ocultar botones de navegación y guardar
-                    $('.next-step, .prev-step, button[type="submit"]').hide();
+                    // Mostrar botones de navegación pero ocultar guardar
+                    $('.next-step, .prev-step').show();
+                    $('button[type="submit"]').hide();
                     
-                    // Llenar los campos con los datos
-                    Object.keys(data).forEach(key => {
-                        $(`#reparacionvehiculo-${key}`).val(data[key]);
-                    });
+                    // Mostrar el primer paso y ocultar los demás
+                    $('.step-content').not('#step-content-1').hide();
+                    $('#step-content-1').show();
+                    $('.step-indicators').show();
                     
                     // Mostrar imágenes si existen
-                    const galleryContainer = $('.image-gallery');
-                    galleryContainer.empty();
-                    
-                    if (data.imagenes && data.imagenes.length > 0) {
+                    if (response.imagenes && response.imagenes.length > 0) {
                         $('.view-mode-gallery').show();
                         $('.edit-mode-upload').hide();
-                        
-                        data.imagenes.forEach((imagen, index) => {
-                            const galleryItem = $(`
-                                <div class="gallery-item" data-index="${index}">
-                                    <img src="${imagen.url}" alt="Imagen ${index + 1}">
-                                </div>
-                            `);
-                            galleryContainer.append(galleryItem);
-                        });
+                        displayImages(response.imagenes);
+                    } else {
+                        $('.view-mode-gallery, .edit-mode-upload').hide();
                     }
-                    
-                    // Mostrar todos los pasos
-                    $('.step-content').show();
-                    $('.step-indicators').hide();
                     
                     // Mostrar el modal
                     $('#reparacionModal').modal('show');
@@ -231,88 +233,7 @@
         $('.edit-mode-upload').show();
         $('.image-gallery').empty();
     });    // Handler for view button click
-    $(document).on('click', '.ajax-view', function(e) {
-        e.preventDefault();
-        var url = $(this).data('url');
 
-        // Show loading indicator
-        Swal.fire({
-            title: 'Cargando...',
-            text: 'Por favor espera.',
-            icon: 'info',
-            showConfirmButton: false,
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        // Fetch repair data
-        $.ajax({
-            url: url,
-            type: 'GET',
-            success: function(response) {
-                if (response.success) {
-                    const data = response.data;
-
-                    // Update modal title
-                    $('#reparacionModalLabel').text('Ver Reparación de Vehículo');
-
-                    // Fill form fields
-                    $('#reparacionvehiculo-vehiculo_id').val(data.vehiculo_id).trigger('change');
-                    $('#reparacionvehiculo-fecha').val(data.fecha);
-                    $('#reparacionvehiculo-tipo_servicio').val(data.tipo_servicio);
-                    $('#reparacionvehiculo-descripcion').val(data.descripcion);
-                    $('#reparacionvehiculo-costo').val(data.costo);
-                    $('#reparacionvehiculo-tecnico').val(data.tecnico);
-                    $('#reparacionvehiculo-notas').val(data.notas);
-                    $('#reparacionvehiculo-estado_servicio').val(data.estado_servicio);
-                    $('#reparacionvehiculo-motivo_pausa').val(data.motivo_pausa);
-                    $('#reparacionvehiculo-requisitos_reanudar').val(data.requisitos_reanudar);
-                    $('#reparacionvehiculo-fecha_finalizacion').val(data.fecha_finalizacion);
-
-                    // Disable all form fields
-                    $('#create-reparacion-form').find('input, select, textarea').prop('disabled', true);
-                      // Show navigation buttons but hide submit button
-                    $('.next-step, .prev-step').show();
-                    $('button[type="submit"]').hide();
-                    
-                    // Show first step and hide others
-                    $('.step-content').not('#step-content-1').hide();
-                    $('#step-content-1').show();
-                    $('.step-indicators').show();
-
-                    // Show images if any
-                    if (response.imagenes && response.imagenes.length > 0) {
-                        $('.view-mode-gallery').show();
-                        $('.edit-mode-upload').hide();
-                        displayImages(response.imagenes);
-                    } else {
-                        $('.view-mode-gallery, .edit-mode-upload').hide();
-                    }
-
-                    // Show the modal
-                    $('#reparacionModal').modal('show');
-
-                    // Close loading indicator
-                    Swal.close();
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: response.message || 'No se pudo cargar la reparación'
-                    });
-                }
-            },
-            error: function() {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error de conexión al cargar la reparación'
-                });
-            }
-        });
-    });
 
     function displayImages(images) {
         const galleryContainer = $('.image-gallery');

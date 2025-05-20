@@ -53,21 +53,26 @@ class ReparacionVehiculoController extends Controller
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
+    
+        
     public function actionView($id)
     {
         $model = $this->findModel($id);
-
+    
         if ($this->request->isAjax) {
             \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
+    
             try {
                 $vehiculo = $model->vehiculo;
-                $vehiculoInfo = $vehiculo ? str_replace([' ', '/', '\\'], '_', $vehiculo->marca_auto . '_' . $vehiculo->modelo_auto . '_' . $vehiculo->placa) : 'vehiculo_' . $vehiculo->id;
-                $dateFolder = date('Y-m-d', strtotime($model->fecha));
-                $folderName = $vehiculoInfo . '-' . $dateFolder;
-                $uploadDir = \Yii::getAlias('@webroot/uploads/reparacion_vehiculo/') . $folderName . '/';
-                $webPath = '/uploads/reparacion_vehiculo/' . $folderName . '/';
-
+                $marca = $vehiculo ? $vehiculo->marca_auto : 'vehiculo';
+                $modelo = $vehiculo ? $vehiculo->modelo_auto : '';
+                $placa = $vehiculo ? $vehiculo->placa : '';
+                $fecha = $model->fecha ?? date('Y-m-d');
+                $carpeta = preg_replace('/[^a-zA-Z0-9_\-]/', '_', "{$marca}_{$modelo}_{$placa}_{$fecha}_{$model->id}");
+    
+                $uploadDir = \Yii::getAlias('@webroot/uploads/reparacion_vehiculo/') . $carpeta . '/';
+                $webPath = '/uploads/reparacion_vehiculo/' . $carpeta . '/';
+    
                 $images = [];
                 if (file_exists($uploadDir)) {
                     $files = glob($uploadDir . '*.*');
@@ -80,22 +85,34 @@ class ReparacionVehiculoController extends Controller
                         }
                     }
                 }
-
+    
                 return [
                     'success' => true,
                     'data' => [
-                        // ...otros campos...
-                    ],
+                        'id' => $model->id,
+                        'vehiculo_id' => $model->vehiculo_id,
+                        'fecha' => $model->fecha,
+                        'tipo_servicio' => $model->tipo_servicio,
+                        'descripcion' => $model->descripcion,
+                        'costo' => $model->costo,
+                        'tecnico' => $model->tecnico,
+                        'notas' => $model->notas,
+                        'estado_servicio' => $model->estado_servicio,
+                        'motivo_pausa' => $model->motivo_pausa,
+                        'requisitos_reanudar' => $model->requisitos_reanudar,
+                        'fecha_finalizacion' => $model->fecha_finalizacion, 
+                        ],
                     'imagenes' => $images,
                 ];
             } catch (\Exception $e) {
                 return [
                     'success' => false,
                     'message' => $e->getMessage(),
+                    'images' => $images,
                 ];
             }
         }
-
+    
         return $this->render('view', [
             'model' => $model,
         ]);
@@ -263,40 +280,44 @@ class ReparacionVehiculoController extends Controller
      * @param ReparacionVehiculo $model
      * @return array saved image paths
      */
-    protected function saveRepairImages($model)
-    {
-        $savedImages = [];
-        $uploadedFiles = \yii\web\UploadedFile::getInstancesByName('imagenes');
-        
-        if (empty($uploadedFiles)) {
-            return $savedImages;
-        }
 
-        // Get vehicle info for folder name
-        $vehiculo = $model->vehiculo;
-        $vehiculoInfo = $vehiculo ? str_replace([' ', '/', '\\'], '_', $vehiculo->marca_auto . '_' . $vehiculo->modelo_auto . '_' . $vehiculo->placa) : 'vehiculo_' . $vehiculo->id;
-        $dateFolder = date('Y-m-d', strtotime($model->fecha));
-
-        // Create single folder: reparacion_vehiculo/VEHICULO_FECHA/
-        $folderName = $vehiculoInfo . '-' . $dateFolder;
-        $uploadDir = \Yii::getAlias('@webroot/uploads/reparacion_vehiculo/') . $folderName . '/';
-        if (!file_exists($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-
-        // Save each image
-        foreach ($uploadedFiles as $file) {
-            if ($file->type && strpos($file->type, 'image/') === 0) {
-                $fileName = time() . '_' . uniqid() . '.' . $file->extension;
-                $filePath = $uploadDir . $fileName;
-                if ($file->saveAs($filePath)) {
-                    $savedImages[] = [
-                        'fileName' => $fileName,
-                        'filePath' => str_replace(\Yii::getAlias('@webroot'), '', $filePath),
-                    ];
-                }
-            }
-        }
+   protected function saveRepairImages($model)
+{
+    $savedImages = [];
+    $uploadedFiles = \yii\web\UploadedFile::getInstancesByName('imagenes');
+    if (empty($uploadedFiles)) {
         return $savedImages;
     }
+
+    // Obtener datos del vehículo
+    $vehiculo = $model->vehiculo;
+    $marca = $vehiculo ? $vehiculo->marca_auto : 'vehiculo';
+    $modelo = $vehiculo ? $vehiculo->modelo_auto : '';
+    $placa = $vehiculo ? $vehiculo->placa : '';
+    $fecha = $model->fecha ?? date('Y-m-d');
+
+    // Limpiar datos para el nombre de la carpeta
+    $carpeta = preg_replace('/[^a-zA-Z0-9_\-]/', '_', "{$marca}_{$modelo}_{$placa}_{$fecha}_{$model->id}");
+
+    // Carpeta final: reparacion_vehiculo/MARCA_MODELO_PLACA_FECHA_ID/
+    $uploadDir = \Yii::getAlias('@webroot/uploads/reparacion_vehiculo/') . $carpeta . '/';
+    if (!file_exists($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    // Guardar cada imagen
+    foreach ($uploadedFiles as $file) {
+        if ($file->type && strpos($file->type, 'image/') === 0) {
+            $fileName = time() . '_' . uniqid() . '.' . $file->extension;
+            $filePath = $uploadDir . $fileName;
+            if ($file->saveAs($filePath)) {
+                $savedImages[] = [
+                    'fileName' => $fileName,
+                    'filePath' => str_replace(\Yii::getAlias('@webroot'), '', $filePath),
+                ];
+            }
+        }
+    }
+    return $savedImages;
+}
 }
