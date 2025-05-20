@@ -391,58 +391,7 @@
             showStep(1);
         });
 
-        // Manejo del formulario AJAX
-        $('#create-reparacion-form').on('beforeSubmit', function(e) {
-            e.preventDefault();
-            
-            var form = $(this);
-            var formData = new FormData(form[0]);
-            
-            // Mostrar indicador de carga
-            Swal.fire({
-                title: 'Cargando...',
-                text: 'Por favor espera.',
-                icon: 'info',
-                showConfirmButton: false,
-                allowOutsideClick: false
-            });
-            
-            $.ajax({
-                url: form.attr('action'),
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Éxito!',
-                            text: response.message
-                        }).then((result) => {
-                            $('#reparacionModal').modal('hide');
-                            // Recargar solo la grilla usando pjax
-                            $.pjax.reload({container: '#reparaciones-grid'});
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message || 'Error al guardar la reparación'
-                        });
-                    }
-                },
-                error: function() {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Error de conexión al guardar la reparación'
-                    });
-                }
-            });
-            
-            return false;
-        });
+       
 
         // Manejo de carga de imágenes
         function handleImageUpload() {
@@ -499,18 +448,15 @@
         // Modificar el manejo del formulario para incluir las imágenes
         $('#create-reparacion-form').on('beforeSubmit', function(e) {
             e.preventDefault();
-            
             var form = $(this);
             var formData = new FormData(form[0]);
-            
             // Agregar las imágenes al FormData
             const imageInput = document.getElementById('imagen-servicio');
-            if (imageInput.files.length > 0) {
+            if (imageInput && imageInput.files.length > 0) {
                 Array.from(imageInput.files).forEach((file, index) => {
                     formData.append(`imagenes[${index}]`, file);
                 });
             }
-            
             // Mostrar indicador de carga
             Swal.fire({
                 title: 'Cargando...',
@@ -522,7 +468,6 @@
                     Swal.showLoading();
                 }
             });
-            
             $.ajax({
                 url: form.attr('action'),
                 type: 'POST',
@@ -537,7 +482,6 @@
                             text: response.message
                         }).then((result) => {
                             $('#reparacionModal').modal('hide');
-                            // Recargar solo la grilla usando pjax
                             $.pjax.reload({container: '#reparaciones-grid'});
                         });
                     } else {
@@ -556,7 +500,6 @@
                     });
                 }
             });
-            
             return false;
         });
     });

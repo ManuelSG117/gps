@@ -56,29 +56,46 @@ class ReparacionVehiculoController extends Controller
     public function actionView($id)
     {
         $model = $this->findModel($id);
-        
+
         if ($this->request->isAjax) {
             \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-            
+
             try {
-                // Get the vehicle information
                 $vehiculo = $model->vehiculo;
-                $vehiculoInfo = $vehiculo ? $vehiculo->marca_auto . ' ' . $vehiculo->modelo_auto . ' (' . $vehiculo->placa . ')' : '';
-                
+                $vehiculoInfo = $vehiculo ? str_replace([' ', '/', '\\'], '_', $vehiculo->marca_auto . '_' . $vehiculo->modelo_auto . '_' . $vehiculo->placa) : 'vehiculo_' . $vehiculo->id;
+                $dateFolder = date('Y-m-d', strtotime($model->fecha));
+                $folderName = $vehiculoInfo . '-' . $dateFolder;
+                $uploadDir = \Yii::getAlias('@webroot/uploads/reparacion_vehiculo/') . $folderName . '/';
+                $webPath = '/uploads/reparacion_vehiculo/' . $folderName . '/';
+
+                $images = [];
+                if (file_exists($uploadDir)) {
+                    $files = glob($uploadDir . '*.*');
+                    foreach ($files as $file) {
+                        if (is_file($file)) {
+                            $fileName = basename($file);
+                            $images[] = [
+                                'url' => $webPath . $fileName,
+                            ];
+                        }
+                    }
+                }
+
                 return [
                     'success' => true,
-                    'data' => array_merge($model->attributes, ['vehiculo_info' => $vehiculoInfo]),
-                    'imagenes' => [], // Here you would add any images associated with the repair
-                    'isViewMode' => true
+                    'data' => [
+                        // ...otros campos...
+                    ],
+                    'imagenes' => $images,
                 ];
             } catch (\Exception $e) {
                 return [
                     'success' => false,
-                    'message' => 'Error al cargar los datos: ' . $e->getMessage()
+                    'message' => $e->getMessage(),
                 ];
             }
         }
-        
+
         return $this->render('view', [
             'model' => $model,
         ]);
@@ -104,11 +121,15 @@ class ReparacionVehiculoController extends Controller
                 }
                 
                 if ($model->save()) {
+                    // Save uploaded images
+                    $savedImages = $this->saveRepairImages($model);
+                    
                     return [
                         'success' => true,
                         'message' => 'Reparación creada exitosamente.',
                         'closeModal' => true,
-                        'model' => $model->attributes
+                        'model' => $model->attributes,
+                        'images' => $savedImages
                     ];
                 } else {
                     return [
@@ -235,5 +256,47 @@ class ReparacionVehiculoController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+    
+    /**
+     * Saves uploaded images for a repair record
+     * @param ReparacionVehiculo $model
+     * @return array saved image paths
+     */
+    protected function saveRepairImages($model)
+    {
+        $savedImages = [];
+        $uploadedFiles = \yii\web\UploadedFile::getInstancesByName('imagenes');
+        
+        if (empty($uploadedFiles)) {
+            return $savedImages;
+        }
+
+        // Get vehicle info for folder name
+        $vehiculo = $model->vehiculo;
+        $vehiculoInfo = $vehiculo ? str_replace([' ', '/', '\\'], '_', $vehiculo->marca_auto . '_' . $vehiculo->modelo_auto . '_' . $vehiculo->placa) : 'vehiculo_' . $vehiculo->id;
+        $dateFolder = date('Y-m-d', strtotime($model->fecha));
+
+        // Create single folder: reparacion_vehiculo/VEHICULO_FECHA/
+        $folderName = $vehiculoInfo . '-' . $dateFolder;
+        $uploadDir = \Yii::getAlias('@webroot/uploads/reparacion_vehiculo/') . $folderName . '/';
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        // Save each image
+        foreach ($uploadedFiles as $file) {
+            if ($file->type && strpos($file->type, 'image/') === 0) {
+                $fileName = time() . '_' . uniqid() . '.' . $file->extension;
+                $filePath = $uploadDir . $fileName;
+                if ($file->saveAs($filePath)) {
+                    $savedImages[] = [
+                        'fileName' => $fileName,
+                        'filePath' => str_replace(\Yii::getAlias('@webroot'), '', $filePath),
+                    ];
+                }
+            }
+        }
+        return $savedImages;
     }
 }
