@@ -190,17 +190,44 @@ class ReparacionVehiculoController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-
+    
         if ($this->request->isAjax && $model->load($this->request->post())) {
             \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             
             try {
                 if ($model->save()) {
+                    // Guardar imágenes nuevas si se suben
+                    $savedImages = $this->saveRepairImages($model);
+    
+                    // Obtener imágenes existentes (igual que en actionView)
+                    $vehiculo = $model->vehiculo;
+                    $marca = $vehiculo ? $vehiculo->marca_auto : 'vehiculo';
+                    $modelo = $vehiculo ? $vehiculo->modelo_auto : '';
+                    $placa = $vehiculo ? $vehiculo->placa : '';
+                    $fecha = $model->fecha ?? date('Y-m-d');
+                    $carpeta = preg_replace('/[^a-zA-Z0-9_\-]/', '_', "{$marca}_{$modelo}_{$placa}_{$fecha}_{$model->id}");
+                    $uploadDir = \Yii::getAlias('@webroot/uploads/reparacion_vehiculo/') . $carpeta . '/';
+                    $webPath = '/uploads/reparacion_vehiculo/' . $carpeta . '/';
+    
+                    $images = [];
+                    if (file_exists($uploadDir)) {
+                        $files = glob($uploadDir . '*.*');
+                        foreach ($files as $file) {
+                            if (is_file($file)) {
+                                $fileName = basename($file);
+                                $images[] = [
+                                    'url' => $webPath . $fileName,
+                                ];
+                            }
+                        }
+                    }
+    
                     return [
                         'success' => true,
                         'message' => 'Reparación actualizada exitosamente.',
                         'closeModal' => true,
-                        'model' => $model->attributes
+                        'model' => $model->attributes,
+                        'imagenes' => $images
                     ];
                 } else {
                     return [
@@ -218,13 +245,65 @@ class ReparacionVehiculoController extends Controller
                 ];
             }
         }
-
+    
         if ($this->request->isAjax) {
+            if ($this->request->isGet) {
+                \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                try {
+                    $vehiculo = $model->vehiculo;
+                    $marca = $vehiculo ? $vehiculo->marca_auto : 'vehiculo';
+                    $modelo = $vehiculo ? $vehiculo->modelo_auto : '';
+                    $placa = $vehiculo ? $vehiculo->placa : '';
+                    $fecha = $model->fecha ?? date('Y-m-d');
+                    $carpeta = preg_replace('/[^a-zA-Z0-9_\-]/', '_', "{$marca}_{$modelo}_{$placa}_{$fecha}_{$model->id}");
+    
+                    $uploadDir = \Yii::getAlias('@webroot/uploads/reparacion_vehiculo/') . $carpeta . '/';
+                    $webPath = '/uploads/reparacion_vehiculo/' . $carpeta . '/';
+    
+                    $images = [];
+                    if (file_exists($uploadDir)) {
+                        $files = glob($uploadDir . '*.*');
+                        foreach ($files as $file) {
+                            if (is_file($file)) {
+                                $fileName = basename($file);
+                                $images[] = [
+                                    'url' => $webPath . $fileName,
+                                ];
+                            }
+                        }
+                    }
+    
+                    return [
+                        'success' => true,
+                        'data' => [
+                            'id' => $model->id,
+                            'vehiculo_id' => $model->vehiculo_id,
+                            'fecha' => $model->fecha,
+                            'tipo_servicio' => $model->tipo_servicio,
+                            'descripcion' => $model->descripcion,
+                            'costo' => $model->costo,
+                            'tecnico' => $model->tecnico,
+                            'notas' => $model->notas,
+                            'estado_servicio' => $model->estado_servicio,
+                            'motivo_pausa' => $model->motivo_pausa,
+                            'requisitos_reanudar' => $model->requisitos_reanudar,
+                            'fecha_finalizacion' => $model->fecha_finalizacion,
+                        ],
+                        'imagenes' => $images
+                    ];
+                } catch (\Exception $e) {
+                    return [
+                        'success' => false,
+                        'message' => $e->getMessage()
+                    ];
+                }
+            }
+
             return $this->renderAjax('_modal', [
                 'model' => $model,
             ]);
         }
-
+    
         return $this->render('update', [
             'model' => $model,
         ]);

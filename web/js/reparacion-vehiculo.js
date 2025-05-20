@@ -1,3 +1,29 @@
+
+function bindStepNavigation() {
+    // Desasocia primero para evitar duplicados
+    $(document).off('click', '.next-step');
+    $(document).off('click', '.prev-step');
+
+    $(document).on('click', '.next-step', function() {
+        var currentStep = parseInt($(this).closest('.step-content').data('step'));
+        showStep(currentStep + 1);
+    });
+
+    $(document).on('click', '.prev-step', function() {
+        var currentStep = parseInt($(this).closest('.step-content').data('step'));
+        showStep(currentStep - 1);
+    });
+}
+
+
+function showStep(stepNumber) {
+    $('.step-content').hide();
+    $(`#step-content-${stepNumber}`).show();
+    $('.step-indicator').removeClass('active');
+    $(`.step-indicator[data-step="${stepNumber}"]`).addClass('active');
+}
+
+
 // Manejo del click en el botón eliminar
     $(document).on('click', '.ajax-delete', function(e) {
         e.preventDefault();
@@ -364,64 +390,155 @@
         }
 
         // Inicializar el manejo de imágenes
-        handleImageUpload();
+        handleImageUpload();        // Asociar el manejador del formulario
+        bindAjaxFormSubmit();
+    });
 
-        // Modificar el manejo del formulario para incluir las imágenes
-        $('#create-reparacion-form').on('beforeSubmit', function(e) {
-            e.preventDefault();
-            var form = $(this);
-            var formData = new FormData(form[0]);
-            // Agregar las imágenes al FormData
-            const imageInput = document.getElementById('imagen-servicio');
-            if (imageInput && imageInput.files.length > 0) {
-                Array.from(imageInput.files).forEach((file, index) => {
-                    formData.append(`imagenes[${index}]`, file);
-                });
-            }
-            // Mostrar indicador de carga
-            Swal.fire({
-                title: 'Cargando...',
-                text: 'Por favor espera mientras se suben las imágenes.',
-                icon: 'info',
-                showConfirmButton: false,
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+function bindAjaxFormSubmit() {
+    $('#create-reparacion-form').off('beforeSubmit').on('beforeSubmit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var formData = new FormData(form[0]);
+        // Agregar las imágenes al FormData
+        const imageInput = document.getElementById('imagen-servicio');
+        if (imageInput && imageInput.files.length > 0) {
+            Array.from(imageInput.files).forEach((file, index) => {
+                formData.append(`imagenes[${index}]`, file);
             });
-            $.ajax({
-                url: form.attr('action'),
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Éxito!',
-                            text: response.message
-                        }).then((result) => {
-                            $('#reparacionModal').modal('hide');
-                            $.pjax.reload({container: '#reparaciones-grid'});
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message || 'Error al guardar la reparación'
-                        });
-                    }
-                },
-                error: function() {
+        }
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Cargando...',
+            text: 'Por favor espera mientras se suben las imágenes.',
+            icon: 'info',
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: response.message
+                    }).then((result) => {
+                        $('#reparacionModal').modal('hide');
+                        $.pjax.reload({container: '#reparaciones-grid'});
+                    });
+                } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Error de conexión al guardar la reparación'
+                        text: response.message || 'Error al guardar la reparación'
                     });
                 }
-            });
-            return false;
+            },
+            error: function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error de conexión al guardar la reparación'
+                });
+            }
         });
+        return false;
     });
+}
 
+
+// Handler para el botón editar (puede ser .ajax-update o similar)
+$(document).on('click', '.ajax-update', function(e) {
+    e.preventDefault();
+    var url = $(this).data('url'); // Debe ser la URL de update, ej: /reparacion-vehiculo/update?id=XX
+
+    // Mostrar indicador de carga
+    Swal.fire({
+        title: 'Cargando...',
+        text: 'Por favor espera.',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });    // Obtener datos del registro
+    $.ajax({
+        url: url,
+        type: 'GET',
+        success: function(response) {
+            if (response.success) {
+                const data = response.data;
+                
+                // Llenar los campos con los datos
+                $('#reparacionvehiculo-vehiculo_id').val(data.vehiculo_id).trigger('change');
+                $('#reparacionvehiculo-fecha').val(data.fecha);
+                $('#reparacionvehiculo-tipo_servicio').val(data.tipo_servicio);
+                $('#reparacionvehiculo-descripcion').val(data.descripcion);
+                $('#reparacionvehiculo-costo').val(data.costo);
+                $('#reparacionvehiculo-tecnico').val(data.tecnico);
+                $('#reparacionvehiculo-notas').val(data.notas);
+                $('#reparacionvehiculo-estado_servicio').val(data.estado_servicio);
+                $('#reparacionvehiculo-motivo_pausa').val(data.motivo_pausa);
+                $('#reparacionvehiculo-requisitos_reanudar').val(data.requisitos_reanudar);
+                $('#reparacionvehiculo-fecha_finalizacion').val(data.fecha_finalizacion);
+                
+                // Volver a asociar los eventos de navegación y submit
+                bindStepNavigation();
+                bindAjaxFormSubmit();
+
+                // Configurar el modal para edición
+                $('#reparacionModalLabel').text('Editar Reparación de Vehículo');
+                $('#create-reparacion-form').attr('action', url);
+                $('#create-reparacion-form').find('input, select, textarea').prop('disabled', false);
+                $('#create-reparacion-form').find('button[type="submit"]').show();
+                $('.next-step, .prev-step').show();
+
+                // Mostrar imágenes existentes si hay
+                if (response.imagenes && response.imagenes.length > 0) {
+                    $('.view-mode-gallery').show();
+                    displayImages(response.imagenes);
+                } else {
+                    $('.view-mode-gallery').hide();
+                }
+                
+                // Mostrar la sección de carga de nuevas imágenes
+                $('.edit-mode-upload').show();
+                
+                // Mostrar el modal
+                $('#reparacionModal').modal('show');
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message || 'No se pudo cargar la reparación'
+                });
+            }
+            
+            Swal.close();
+        },
+        error: function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo cargar la reparación para editar'
+            });
+        }
+    });
+});
+
+// ...existing code...
+
+// Al cargar el modal por crear, también asocia el submit AJAX
+$(document).ready(function() {
+    // ...existing code...
+    bindAjaxFormSubmit();
+    // ...existing code...
+});
