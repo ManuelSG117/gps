@@ -336,7 +336,19 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 						<li><a href="/poliza-seguro/create">Crear Póliza</a></li>
 					</ul>
 					</li>
-				
+					<li><a class="has-arrow " href="javascript:void(0);" aria-expanded="false">
+						<div class="menu-icon">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z" fill="#90959F"/>
+							</svg>
+						</div>    
+						<span class="nav-text">Servicio</span>
+					</a>
+					<ul aria-expanded="false">
+						<li><a href="/reparacion-vehiculo/index">Ver servicios</a></li>
+						<li><a href="/reparacion-vehiculo/index">Crear servicio</a></li>
+					</ul>
+					</li>
 					<li><a class="has-arrow " href="javascript:void(0);" aria-expanded="false">
 						<div class="menu-icon">
 							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
