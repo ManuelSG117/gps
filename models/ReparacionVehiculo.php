@@ -85,5 +85,57 @@ class ReparacionVehiculo extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Vehiculos::class, ['id' => 'vehiculo_id']);
     }
+    
+    /**
+     * Gets query for [[EstadoHistorial]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getEstadoHistorial()
+    {
+        return $this->hasMany(EstadoReparacionHistorial::class, ['reparacion_id' => 'id'])->orderBy(['fecha_cambio' => SORT_DESC]);
+    }
+    
+    /**
+     * Cambia el estado de la reparación y registra el cambio en el historial
+     * 
+     * @param int $nuevoEstado
+     * @param string $comentario
+     * @return bool
+     */
+    public function cambiarEstado($nuevoEstado, $comentario = '')
+    {
+        // Si el estado actual es Completado (4), no permitir cambios
+        if ($this->estado_servicio == 4) {
+            return false;
+        }
+        
+        // Guardar el estado anterior
+        $estadoAnterior = $this->estado_servicio;
+        
+        // Actualizar el estado
+        $this->estado_servicio = $nuevoEstado;
+        
+        // Si el nuevo estado es Completado, establecer la fecha de finalización
+        if ($nuevoEstado == 4 && empty($this->fecha_finalizacion)) {
+            $this->fecha_finalizacion = date('Y-m-d');
+        }
+        
+        // Guardar el modelo
+        if ($this->save()) {
+            // Registrar en el historial
+            $historial = new EstadoReparacionHistorial();
+            $historial->reparacion_id = $this->id;
+            $historial->estado_anterior = $estadoAnterior;
+            $historial->estado_nuevo = $nuevoEstado;
+            $historial->fecha_cambio = date('Y-m-d H:i:s');
+            $historial->comentario = $comentario;
+            $historial->usuario_id = Yii::$app->user->isGuest ? 0 : Yii::$app->user->id;
+            
+            return $historial->save();
+        }
+        
+        return false;
+    }
 
 }

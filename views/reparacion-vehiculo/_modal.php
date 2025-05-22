@@ -74,12 +74,21 @@ use app\models\Vehiculos;
                 ], ['prompt' => 'Seleccione tipo de servicio']) ?>
             </div>
             <div class="col-md-6">
-                <?= $form->field($model, 'estado_servicio')->dropDownList([
-                    1 => 'Pendiente',
-                    2 => 'En Proceso',
-                    3 => 'Pausado',
-                    4 => 'Completado'
-                ], ['prompt' => 'Seleccione estado']) ?>
+                <?php if (!$model->isNewRecord): ?>
+                    <?= $form->field($model, 'estado_servicio')->dropDownList([
+                        1 => 'Pendiente',
+                        2 => 'En Proceso',
+                        3 => 'Pausado',
+                        4 => 'Completado'
+                    ], ['prompt' => 'Seleccione estado']) ?>
+                <?php else: ?>
+                    <?= $form->field($model, 'estado_servicio')->hiddenInput(['value' => 2])->label(false) ?>
+                    <div class="form-group field-reparacionvehiculo-estado_servicio">
+                        <label class="control-label">Estado del Servicio</label>
+                        <div class="form-control disabled" style="background-color: #e9ecef;">En Proceso</div>
+                        <div class="help-block"><small class="text-muted">Estado inicial por defecto</small></div>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -169,6 +178,11 @@ use app\models\Vehiculos;
 </div>
 
 <?php ActiveForm::end(); ?>
+
+<!-- Footer del modal con botones -->
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary btn-close" data-bs-dismiss="modal">Cerrar</button>
+</div>
 
 <style>
 .step-indicators {
@@ -349,5 +363,98 @@ use app\models\Vehiculos;
 
 .lightbox-next {
     right: 20px;
+}
+
+/* Estilos para la línea de tiempo del historial de estados */
+.timeline-container {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.widget-timeline .timeline {
+    list-style: none;
+    position: relative;
+    padding: 0;
+    margin-bottom: 0;
+}
+
+.widget-timeline .timeline:before {
+    content: "";
+    position: absolute;
+    left: 7px;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background: #eee;
+}
+
+.widget-timeline .timeline > li {
+    position: relative;
+    padding-left: 40px;
+    margin-bottom: 20px;
+}
+
+.widget-timeline .timeline > li:last-child {
+    margin-bottom: 0;
+}
+
+.widget-timeline .timeline > li .timeline-badge {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #ddd;
+}
+
+.widget-timeline .timeline > li .timeline-badge.primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.widget-timeline .timeline > li .timeline-badge.success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.widget-timeline .timeline > li .timeline-badge.warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+.widget-timeline .timeline > li .timeline-badge.danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.widget-timeline .timeline > li .timeline-badge.info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.widget-timeline .timeline > li .timeline-panel {
+    background: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.widget-timeline .timeline > li .timeline-panel h6 {
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.widget-timeline .timeline > li .timeline-panel small {
+    color: #6c757d;
+    font-size: 85%;
+}
+
+.widget-timeline .timeline > li .timeline-panel p {
+    margin-top: 10px;
+    margin-bottom: 0;
+    font-size: 14px;
 }
 </style>

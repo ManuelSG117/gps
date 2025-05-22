@@ -40,8 +40,8 @@ $this->registerJsFile('@web/js/reparacion-vehiculo.js', [
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
 
-            'id',
-            'vehiculo_id',
+            // 'id',
+            // 'vehiculo_id',
             'fecha',
             'tipo_servicio',
             'descripcion:ntext',
@@ -49,13 +49,13 @@ $this->registerJsFile('@web/js/reparacion-vehiculo.js', [
             //'tecnico',
             //'notas:ntext',
             //'estatus',
-            //'estado_servicio',
+            'estado_servicio',
             //'motivo_pausa:ntext',
             //'requisitos_reanudar:ntext',
             //'fecha_finalizacion',
             [
                 'class' => ActionColumn::className(),
-                'template' => '{view} {update} {delete}',
+                'template' => '{view} {update} {delete} {change_status}',
                 'buttons' => [
                     'view' => function ($url, $model, $key) {
                         return Html::a('<i class="fas fa-eye"></i>', '#', [
@@ -76,6 +76,15 @@ $this->registerJsFile('@web/js/reparacion-vehiculo.js', [
                             'class' => 'btn btn-sm btn-danger ajax-delete',
                             'title' => 'Eliminar',
                             'data-url' => Url::to(['delete', 'id' => $model->id]),
+                        ]);
+                    },
+                    'change_status' => function ($url, $model, $key) {
+                        return Html::a('<i class="fas fa-exchange-alt"></i>', '#', [
+                            'class' => 'btn btn-sm btn-warning ajax-change-status',
+                            'title' => 'Cambiar Estado',
+                            'data-id' => $model->id,
+                            'data-estado-actual' => $model->estado_servicio,
+                            'onclick' => 'mostrarModalCambioEstado(' . $model->id . ', ' . $model->estado_servicio . '); return false;',
                         ]);
                     },
                 ],
