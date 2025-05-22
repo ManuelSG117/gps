@@ -403,24 +403,22 @@ function mostrarModalCambioEstado(id, estadoActual) {
             const nuevoEstado = document.getElementById('nuevo-estado').value;
             const comentarioElement = document.getElementById('comentario-estado');
             const comentario = comentarioElement ? comentarioElement.value : '';
-            
+            const imagenesInput = document.getElementById('imagenes-estado');
+            const archivos = imagenesInput ? Array.from(imagenesInput.files) : [];
             if (!nuevoEstado) {
                 Swal.showValidationMessage('Por favor seleccione un estado');
                 return false;
             }
-            
-            console.log('Comentario capturado:', comentario);
-            
-            return { estado: nuevoEstado, comentario: comentario };
+            return { estado: nuevoEstado, comentario: comentario, archivos: archivos };
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            cambiarEstadoReparacion(id, result.value.estado, result.value.comentario);
+            cambiarEstadoReparacion(id, result.value.estado, result.value.comentario, result.value.archivos);
         }
     });
 }
 
-function cambiarEstadoReparacion(id, estado, comentario) {
+function cambiarEstadoReparacion(id, estado, comentario, archivos) {
     Swal.fire({
         title: 'Actualizando estado...',
         text: 'Por favor espera.',
@@ -435,7 +433,6 @@ function cambiarEstadoReparacion(id, estado, comentario) {
     const formData = new FormData();
     formData.append('id', id);
     formData.append('estado', estado);
-    
     if (comentario !== undefined && comentario !== null) {
         formData.append('comentario', comentario);
     } else {
@@ -446,34 +443,24 @@ function cambiarEstadoReparacion(id, estado, comentario) {
             formData.append('comentario', '');
         }
     }
-    
-    const imageInput = document.getElementById('imagenes-estado');
-    if (imageInput && imageInput.files && imageInput.files.length > 0) {
-        console.log('Imágenes encontradas para subir:', imageInput.files.length);
-        
-        const validFiles = Array.from(imageInput.files).filter(file => {
-            const isValid = file.type.startsWith('image/');
-            if (!isValid) {
-                console.warn('Archivo no válido detectado:', file.name, file.type);
-            }
-            return isValid;
-        });
-        
-        console.log('Imágenes válidas para subir:', validFiles.length);
-        
-        validFiles.forEach((file, index) => {
-            formData.append(`imagenes[${index}]`, file);
-            console.log(`Imagen ${index} agregada al FormData:`, file.name, file.type, file.size);
+    if (archivos && archivos.length > 0) {
+        console.log('ID de reparación para carpeta destino:', id);
+        console.log('Archivos seleccionados para cambio de estado:', archivos.length);
+        archivos.forEach((file, index) => {
+            console.log(`Archivo [${index}]:`, file.name, '-', file.size, 'bytes');
+            formData.append('imagenes[]', file);
         });
     } else {
         console.log('No se encontraron imágenes para subir');
     }
-    
-    console.log('Contenido del FormData:');
+    // Mostrar el contenido del FormData (solo nombres, no los binarios)
     for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1] instanceof File ? `${pair[1].name} (${pair[1].size} bytes)` : pair[1]);
+        if (pair[1] instanceof File) {
+            console.log('FormData:', pair[0], pair[1].name, pair[1].size + ' bytes');
+        } else {
+            console.log('FormData:', pair[0], pair[1]);
+        }
     }
-    
     $.ajax({
         url: '/reparacion-vehiculo/cambiar-estado',
         type: 'POST',
@@ -483,7 +470,6 @@ function cambiarEstadoReparacion(id, estado, comentario) {
         success: function(response) {
             Swal.close();
             console.log('Respuesta del servidor:', response);
-            
             if (response.success) {
                 Swal.fire({
                     icon: 'success',
@@ -493,15 +479,12 @@ function cambiarEstadoReparacion(id, estado, comentario) {
                     showConfirmButton: false
                 }).then(() => {
                     $.pjax.reload({container: '#reparaciones-grid'});
-                    
                     if ($('#reparacionModal').hasClass('show')) {
                         $('#reparacionvehiculo-estado_servicio').val(response.estado_actual);
-                        
                         if (response.historial && response.historial.length > 0) {
                             window.historialEstados = response.historial;
                             mostrarHistorialEstados(response.historial);
                         }
-                        
                         if (response.imagenes && response.imagenes.length > 0) {
                             $('.view-mode-gallery').show();
                             console.log('Recibidas nuevas imágenes después del cambio de estado:', response.imagenes.length);
