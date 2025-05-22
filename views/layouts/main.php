@@ -473,17 +473,28 @@ checkGpsQueueAlert();
     justify-content: center !important; /* Centra el contenido horizontalmente */
     align-items: center !important; /* Centra el contenido verticalmente */
 }
-
-</style>
-<script>
-
-	
-</script>
-
-<style>
-	.brand-title {
+.brand-title {
     margin-top: 25px;
     margin-left: 3.9375rem !important;
+}
+
+#notification-badge {
+    position: relative;
+    top: -8px !important;
+    right: -8px !important;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    background: #e74c3c;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 </style>
