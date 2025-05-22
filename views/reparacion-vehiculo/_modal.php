@@ -179,10 +179,6 @@ use app\models\Vehiculos;
 
 <?php ActiveForm::end(); ?>
 
-<!-- Footer del modal con botones -->
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary btn-close" data-bs-dismiss="modal">Cerrar</button>
-</div>
 
 <style>
 .step-indicators {
