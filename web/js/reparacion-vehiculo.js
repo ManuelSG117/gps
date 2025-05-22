@@ -210,6 +210,7 @@ $(document).on('click', '.ajax-view', function(e) {
         type: 'GET',
         success: function(response) {
             if (response.success) {
+                window.allImages = [];
                 const data = response.data;
                 $('#reparacionModalLabel').text('Ver Reparación de Vehículo');
                 $('#reparacionvehiculo-vehiculo_id').val(data.vehiculo_id).trigger('change');
@@ -258,6 +259,12 @@ $(document).ready(function() {
     $('#reparacionModal').on('shown.bs.modal', function() {
         initializeFlatpickr();
         showStep(1);
+        if ($('#reparacionModalLabel').text().includes('Nueva Reparación')) {
+            window.historialEstados = undefined;
+            window.allImages = [];
+            $('#historial-estados-timeline').empty();
+            $('.image-gallery').empty();
+        }
     });
     $('#reparacionvehiculo-estado_servicio').change(function() {
         if ($(this).val() == '3') {
@@ -296,13 +303,11 @@ function mostrarModalCambioEstado(id, estadoActual) {
         3: 'Pausado',
         4: 'Completado'
     };
-    
     for (const [value, label] of Object.entries(estados)) {
         if (parseInt(value) !== estadoActual) {
             estadoOptions += `<option value="${value}">${label}</option>`;
         }
     }
-    
     const modalContent = `
         <div id="cambio-estado-container">
             <div class="form-group mb-3">
@@ -316,6 +321,14 @@ function mostrarModalCambioEstado(id, estadoActual) {
                 <label for="comentario-estado">Comentario:</label>
                 <textarea class="form-control" id="comentario-estado" name="comentario" rows="3" placeholder="Agregue un comentario sobre el cambio de estado" style="width: 100%; min-height: 80px; z-index: 9999; position: relative; display: block !important;"></textarea>
             </div>
+            <div class="form-group mb-3 pause-extra-fields" style="display:none;">
+                <label for="motivo-pausa">Motivo de Pausa:</label>
+                <textarea class="form-control" id="motivo-pausa" name="motivo_pausa" rows="2" placeholder="Motivo de la pausa"></textarea>
+            </div>
+            <div class="form-group mb-3 pause-extra-fields" style="display:none;">
+                <label for="requisitos-reanudar">Requisitos para Reanudar:</label>
+                <textarea class="form-control" id="requisitos-reanudar" name="requisitos_reanudar" rows="2" placeholder="Requisitos para reanudar"></textarea>
+            </div>
             <div class="form-group mb-3">
                 <label for="imagenes-estado">Imágenes del cambio de estado:</label>
                 <div class="image-upload-container">
@@ -328,7 +341,6 @@ function mostrarModalCambioEstado(id, estadoActual) {
             </div>
         </div>
     `;
-    
     const style = document.createElement('style');
     style.textContent = `
         #comentario-estado {
@@ -342,7 +354,6 @@ function mostrarModalCambioEstado(id, estadoActual) {
         }
     `;
     document.head.appendChild(style);
-    
     Swal.fire({
         title: 'Cambiar Estado de la Reparación',
         html: modalContent,
@@ -356,19 +367,26 @@ function mostrarModalCambioEstado(id, estadoActual) {
             if (comentarioTextarea) {
                 comentarioTextarea.disabled = false;
                 comentarioTextarea.readOnly = false;
-                
                 setTimeout(() => {
                     comentarioTextarea.focus();
                     comentarioTextarea.blur();
                 }, 100);
             }
-            
+            // Mostrar/ocultar campos de pausa según el estado seleccionado
+            const estadoSelect = document.getElementById('nuevo-estado');
+            const pauseFields = document.querySelectorAll('.pause-extra-fields');
+            estadoSelect.addEventListener('change', function() {
+                if (this.value == '3') {
+                    pauseFields.forEach(f => f.style.display = 'block');
+                } else {
+                    pauseFields.forEach(f => f.style.display = 'none');
+                }
+            });
+            // Inicializar la previsualización de imágenes
             const input = document.getElementById('imagenes-estado');
             const previewContainer = document.querySelector('.image-preview-container');
-            
             input.addEventListener('change', function(e) {
                 const newFiles = Array.from(e.target.files);
-                
                 newFiles.forEach(file => {
                     if (!file.type.startsWith('image/')) {
                         Swal.fire({
@@ -378,7 +396,6 @@ function mostrarModalCambioEstado(id, estadoActual) {
                         });
                         return;
                     }
-
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         const previewDiv = document.createElement('div');
@@ -390,7 +407,6 @@ function mostrarModalCambioEstado(id, estadoActual) {
                             </button>
                         `;
                         previewContainer.appendChild(previewDiv);
-
                         previewDiv.querySelector('.remove-image').addEventListener('click', function() {
                             previewDiv.remove();
                         });
@@ -405,20 +421,40 @@ function mostrarModalCambioEstado(id, estadoActual) {
             const comentario = comentarioElement ? comentarioElement.value : '';
             const imagenesInput = document.getElementById('imagenes-estado');
             const archivos = imagenesInput ? Array.from(imagenesInput.files) : [];
+            let motivoPausa = '';
+            let requisitosReanudar = '';
+            if (nuevoEstado == '3') {
+                motivoPausa = document.getElementById('motivo-pausa').value.trim();
+                requisitosReanudar = document.getElementById('requisitos-reanudar').value.trim();
+                if (!motivoPausa) {
+                    Swal.showValidationMessage('Debe ingresar el motivo de la pausa');
+                    return false;
+                }
+                if (!requisitosReanudar) {
+                    Swal.showValidationMessage('Debe ingresar los requisitos para reanudar');
+                    return false;
+                }
+            }
             if (!nuevoEstado) {
                 Swal.showValidationMessage('Por favor seleccione un estado');
                 return false;
             }
-            return { estado: nuevoEstado, comentario: comentario, archivos: archivos };
+            return {
+                estado: nuevoEstado,
+                comentario: comentario,
+                archivos: archivos,
+                motivo_pausa: motivoPausa,
+                requisitos_reanudar: requisitosReanudar
+            };
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            cambiarEstadoReparacion(id, result.value.estado, result.value.comentario, result.value.archivos);
+            cambiarEstadoReparacion(id, result.value.estado, result.value.comentario, result.value.archivos, result.value.motivo_pausa, result.value.requisitos_reanudar);
         }
     });
 }
 
-function cambiarEstadoReparacion(id, estado, comentario, archivos) {
+function cambiarEstadoReparacion(id, estado, comentario, archivos, motivo_pausa, requisitos_reanudar) {
     Swal.fire({
         title: 'Actualizando estado...',
         text: 'Por favor espera.',
@@ -429,19 +465,19 @@ function cambiarEstadoReparacion(id, estado, comentario, archivos) {
             Swal.showLoading();
         }
     });
-    
     const formData = new FormData();
     formData.append('id', id);
     formData.append('estado', estado);
     if (comentario !== undefined && comentario !== null) {
         formData.append('comentario', comentario);
     } else {
-        const comentarioElement = document.getElementById('comentario-estado');
-        if (comentarioElement) {
-            formData.append('comentario', comentarioElement.value);
-        } else {
-            formData.append('comentario', '');
-        }
+        formData.append('comentario', '');
+    }
+    if (motivo_pausa !== undefined) {
+        formData.append('motivo_pausa', motivo_pausa);
+    }
+    if (requisitos_reanudar !== undefined) {
+        formData.append('requisitos_reanudar', requisitos_reanudar);
     }
     if (archivos && archivos.length > 0) {
         console.log('ID de reparación para carpeta destino:', id);
@@ -453,7 +489,6 @@ function cambiarEstadoReparacion(id, estado, comentario, archivos) {
     } else {
         console.log('No se encontraron imágenes para subir');
     }
-    // Mostrar el contenido del FormData (solo nombres, no los binarios)
     for (let pair of formData.entries()) {
         if (pair[1] instanceof File) {
             console.log('FormData:', pair[0], pair[1].name, pair[1].size + ' bytes');
@@ -486,6 +521,7 @@ function cambiarEstadoReparacion(id, estado, comentario, archivos) {
                             mostrarHistorialEstados(response.historial);
                         }
                         if (response.imagenes && response.imagenes.length > 0) {
+                            window.allImages = [];
                             $('.view-mode-gallery').show();
                             console.log('Recibidas nuevas imágenes después del cambio de estado:', response.imagenes.length);
                             displayImages(response.imagenes);
@@ -574,6 +610,14 @@ function mostrarHistorialEstados(historial) {
             }
         }
         
+        let pausaHtml = '';
+        if (item.motivo_pausa) {
+            pausaHtml += `<div class="mt-2"><strong>Motivo de Pausa:</strong> ${item.motivo_pausa}</div>`;
+        }
+        if (item.requisitos_reanudar) {
+            pausaHtml += `<div><strong>Requisitos para Reanudar:</strong> ${item.requisitos_reanudar}</div>`;
+        }
+        
         const timelineItem = $(`
             <li>
                 <div class="timeline-badge ${item.clase_estado}"></div>
@@ -583,6 +627,7 @@ function mostrarHistorialEstados(historial) {
                             <h6 class="mb-1">${item.estado_nuevo_nombre}</h6>
                             <small class="d-block">${fechaFormateada}</small>
                             ${item.comentario ? `<p class="mb-0 mt-2">${item.comentario}</p>` : ''}
+                            ${pausaHtml}
                             ${item.estado_anterior ? `<small class="text-muted">Cambio desde: ${item.estado_anterior_nombre}</small>` : ''}
                             ${imagenesHtml}
                         </div>
@@ -718,6 +763,7 @@ $(document).on('click', '.ajax-update', function(e) {
         success: function(response) {
             Swal.close();
             if (response.success) {
+                window.allImages = [];
                 const data = response.data;
                 $('#reparacionvehiculo-vehiculo_id').val(data.vehiculo_id).trigger('change');
                 $('#reparacionvehiculo-fecha').val(data.fecha);

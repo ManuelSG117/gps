@@ -99,7 +99,9 @@ class ReparacionVehiculoController extends Controller
                         'estado_nuevo_nombre' => \app\models\EstadoReparacionHistorial::getNombreEstado($item->estado_nuevo),
                         'fecha_cambio' => $item->fecha_cambio,
                         'comentario' => $item->comentario,
-                        'clase_estado' => \app\models\EstadoReparacionHistorial::getClaseEstado($item->estado_nuevo)
+                        'clase_estado' => \app\models\EstadoReparacionHistorial::getClaseEstado($item->estado_nuevo),
+                        'motivo_pausa' => property_exists($item, 'motivo_pausa') ? $item->motivo_pausa : (isset($item->motivo_pausa) ? $item->motivo_pausa : null),
+                        'requisitos_reanudar' => property_exists($item, 'requisitos_reanudar') ? $item->requisitos_reanudar : (isset($item->requisitos_reanudar) ? $item->requisitos_reanudar : null),
                     ];
                 }
                 
@@ -421,7 +423,9 @@ class ReparacionVehiculoController extends Controller
                         'estado_nuevo_nombre' => \app\models\EstadoReparacionHistorial::getNombreEstado($item->estado_nuevo),
                         'fecha_cambio' => $item->fecha_cambio,
                         'comentario' => $item->comentario,
-                        'clase_estado' => \app\models\EstadoReparacionHistorial::getClaseEstado($item->estado_nuevo)
+                        'clase_estado' => \app\models\EstadoReparacionHistorial::getClaseEstado($item->estado_nuevo),
+                        'motivo_pausa' => property_exists($item, 'motivo_pausa') ? $item->motivo_pausa : (isset($item->motivo_pausa) ? $item->motivo_pausa : null),
+                        'requisitos_reanudar' => property_exists($item, 'requisitos_reanudar') ? $item->requisitos_reanudar : (isset($item->requisitos_reanudar) ? $item->requisitos_reanudar : null),
                     ];
                 }
                 
