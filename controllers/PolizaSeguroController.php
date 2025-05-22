@@ -264,4 +264,52 @@ class PolizaSeguroController extends Controller
             }
         }
     }
+
+    /**
+     * Acción para checar vencimientos de pólizas y crear notificaciones si corresponde
+     */
+    public function actionCheckVencimientos()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $hoy = new \DateTime(date('Y-m-d')); // Solo fecha, sin hora
+        $notificaciones = [];
+
+        $polizas = \app\models\PolizaSeguro::find()->all();
+        foreach ($polizas as $poliza) {
+            if (!$poliza->fecha_vencimiento) continue;
+            $vencimiento = new \DateTime($poliza->fecha_vencimiento);
+            $diff = $hoy->diff($vencimiento);
+            $dias = (int)$diff->format('%r%a');
+            \Yii::info("Poliza {$poliza->id} vence en {$poliza->fecha_vencimiento}, días: $dias", 'app');
+
+            $vehiculo = \app\models\Vehiculos::findOne(['poliza_id' => $poliza->id]);
+
+            $mensaje = "La póliza de seguro del vehículo " . ($vehiculo ? $vehiculo->placa : 'desconocido') . " vence en " . ($dias == 1 ? '1 día' : ($dias == 7 ? '1 semana' : '1 mes')) . " (" . $poliza->fecha_vencimiento . ")";
+            $yaExiste = \app\models\Notificaciones::find()
+                ->where([
+                    'tipo' => 'poliza_vencimiento',
+                    'mensaje' => $mensaje,
+                ])->exists();
+
+            if (!$yaExiste) {
+                $n = new \app\models\Notificaciones();
+                $n->tipo = 'poliza_vencimiento';
+                $n->mensaje = $mensaje;
+                $n->fecha_creacion = date('Y-m-d H:i:s');
+                $n->leido = 0;
+                $n->id_vehiculo = $vehiculo ? $vehiculo->id : null;
+                if (!$n->save()) {
+                    \Yii::error('No se pudo guardar la notificación: ' . json_encode($n->errors), 'app');
+                }
+            }
+
+            $notificaciones[] = [
+                'vehiculo' => $vehiculo ? $vehiculo->placa : '',
+                'dias' => $dias,
+                'fecha_vencimiento' => $poliza->fecha_vencimiento,
+                'mensaje' => $mensaje,
+            ];
+        }
+        return ['success' => true, 'notificaciones' => $notificaciones];
+    }
 }

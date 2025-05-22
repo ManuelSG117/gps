@@ -29,6 +29,23 @@ function loadNotifications() {
     });
 }
 $(function(){
+    // Consulta vencimientos de pólizas solo una vez por día
+    var hoy = (new Date()).toISOString().slice(0,10);
+    if (localStorage.getItem('polizaCheck') !== hoy) {
+        $.get('/poliza-seguro/check-vencimientos', function(resp){
+            if(resp.success && resp.notificaciones && resp.notificaciones.length > 0){
+                resp.notificaciones.forEach(function(n){
+                    Swal.fire({
+                        icon: 'warning',
+                        title: '¡Atención! Póliza por vencer',
+                        html: `La póliza de seguro del vehículo <b>${n.vehiculo}</b> vence en <b>${n.dias == 1 ? '1 día' : (n.dias == 7 ? '1 semana' : '1 mes')}</b> (${n.fecha_vencimiento})`,
+                        timer: 10000
+                    });
+                });
+            }
+        });
+        localStorage.setItem('polizaCheck', hoy);
+    }
     loadNotifications();
     setInterval(loadNotifications, 60000);
     $(document).on('click', '.mark-read-dot', function(){

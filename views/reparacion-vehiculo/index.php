@@ -11,7 +11,7 @@ use yii\widgets\Pjax;
 /** @var app\models\ReparacionVehiculoSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
 
-$this->title = 'Reparacion Vehiculos';
+$this->title = 'Mantenimiento Vehicular';
 $this->params['breadcrumbs'][] = $this->title;
 
 
@@ -27,7 +27,7 @@ $this->registerJsFile('@web/js/reparacion-vehiculo.js', [
 
     <p>
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#reparacionModal">
-            Crear Reparación
+            Crear mantenimiento
         </button>
     </p>
 
