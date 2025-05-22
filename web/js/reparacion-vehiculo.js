@@ -802,3 +802,89 @@ $(document).on('click', '.ajax-update', function(e) {
         }
     });
 });
+
+function generarHistorialEstadosHtml(historial) {
+    if (!historial || historial.length === 0) return '<div class="text-center text-muted">Sin historial disponible.</div>';
+    let html = '<div class="widget-timeline"><ul class="timeline">';
+    historial.forEach((item, index) => {
+        const fecha = new Date(item.fecha_cambio);
+        const fechaFormateada = fecha.toLocaleString('es-ES');
+        let imagenesHtml = '';
+        if (window.allImages && window.allImages.length > 0) {
+            const estadoAntNormalizado = item.estado_anterior_nombre.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+            const estadoNuevoNormalizado = item.estado_nuevo_nombre.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+            const patronCambio = `cambio_${estadoAntNormalizado}_a_${estadoNuevoNormalizado}`;
+            const imagenesEstado = window.allImages.filter(img => {
+                const fileName = img.url.split('/').pop();
+                return fileName.toLowerCase().includes(patronCambio);
+            });
+            if (imagenesEstado.length > 0) {
+                imagenesHtml = `<div class='timeline-images mt-2'><h6 class='text-muted mb-2'>Imágenes del cambio de estado:</h6><div class='d-flex flex-wrap gap-2'>`;
+                imagenesEstado.forEach((img, imgIndex) => {
+                    imagenesHtml += `<div class='timeline-image-item' data-index='${imgIndex}' data-estado='${index}'><img src='${img.url}' alt='Imagen cambio estado' class='img-thumbnail' style='width: 80px; height: 80px; object-fit: cover; cursor: pointer;'></div>`;
+                });
+                imagenesHtml += `</div></div>`;
+            }
+        }
+        let pausaHtml = '';
+        if (item.motivo_pausa) {
+            pausaHtml += `<div class='mt-2'><strong>Motivo de Pausa:</strong> ${item.motivo_pausa}</div>`;
+        }
+        if (item.requisitos_reanudar) {
+            pausaHtml += `<div><strong>Requisitos para Reanudar:</strong> ${item.requisitos_reanudar}</div>`;
+        }
+        html += `<li><div class='timeline-badge ${item.clase_estado}'></div><div class='timeline-panel'><div class='media'><div class='media-body'><h6 class='mb-1'>${item.estado_nuevo_nombre}</h6><small class='d-block'>${fechaFormateada}</small>${item.comentario ? `<p class='mb-0 mt-2'>${item.comentario}</p>` : ''}${pausaHtml}${item.estado_anterior ? `<small class='text-muted'>Cambio desde: ${item.estado_anterior_nombre}</small>` : ''}${imagenesHtml}</div></div></div></li>`;
+    });
+    html += '</ul></div>';
+    return html;
+}
+
+$(document).on('click', '.btn-timeline', function(e) {
+    e.preventDefault();
+    var url = $(this).data('url');
+    Swal.fire({
+        title: 'Cargando historial...',
+        text: 'Por favor espera.',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+    $.ajax({
+        url: url,
+        type: 'GET',
+        success: function(response) {
+            Swal.close();
+            if (response.success && response.historial && response.historial.length > 0) {
+                window.allImages = [];
+                if (response.imagenes && response.imagenes.length > 0) {
+                    displayImages(response.imagenes);
+                }
+                var timelineHtml = generarHistorialEstadosHtml(response.historial);
+                Swal.fire({
+                    title: 'Historial de Estados',
+                    html: `<div style='max-height:60vh;overflow-y:auto;'>${timelineHtml}</div>`,
+                    width: 800,
+                    showCloseButton: true,
+                    showCancelButton: false,
+                    showConfirmButton: false,
+                    focusConfirm: false,
+                });
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sin historial',
+                    text: 'Este registro no tiene historial de estados.'
+                });
+            }
+        },
+        error: function() {
+            Swal.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo cargar el historial.'
+            });
+        }
+    });
+});

@@ -55,7 +55,7 @@ $this->registerJsFile('@web/js/reparacion-vehiculo.js', [
             //'fecha_finalizacion',
             [
                 'class' => ActionColumn::className(),
-                'template' => '{view} {update} {delete} {change_status}',
+                'template' => '{view} {update} {delete} {change_status} {timeline}',
                 'buttons' => [
                     'view' => function ($url, $model, $key) {
                         return Html::a('<i class="fas fa-eye"></i>', '#', [
@@ -85,6 +85,14 @@ $this->registerJsFile('@web/js/reparacion-vehiculo.js', [
                             'data-id' => $model->id,
                             'data-estado-actual' => $model->estado_servicio,
                             'onclick' => 'mostrarModalCambioEstado(' . $model->id . ', ' . $model->estado_servicio . '); return false;',
+                        ]);
+                    },
+                    'timeline' => function ($url, $model, $key) {
+                        return Html::a('<i class="fas fa-history"></i>', '#', [
+                            'class' => 'btn btn-sm btn-secondary btn-timeline',
+                            'title' => 'Ver Historial',
+                            'data-id' => $model->id,
+                            'data-url' => Url::to(['view', 'id' => $model->id]),
                         ]);
                     },
                 ],
