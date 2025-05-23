@@ -239,6 +239,9 @@ $(document).on('click', '.ajax-update', function (e) {
 
                 // Cambiar la acción del formulario para actualizar
                 $('#create-poliza-form').attr('action', url);
+                
+                // Mostrar el botón de guardar
+                $('#btn-save-poliza-footer').show();
             }
         },
         error: function () {
