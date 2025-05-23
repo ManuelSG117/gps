@@ -102,11 +102,24 @@ $('#create-poliza-form').on('beforeSubmit', function (e) {
     return false;
 });
 
-// Update the modal reset function
+// Cuando se oculta el modal, resetear el formulario
 $('#polizaModal').on('hidden.bs.modal', function () {
-    $('#create-poliza-form').find('input, select, textarea').prop('disabled', false).val('');
-    $('#create-poliza-form .btn-success').show();  // Mostrar el botón "Guardar"
+    $('#create-poliza-form')[0].reset();
+    $('#create-poliza-form').attr('action', baseUrl + '/poliza-seguro/create');
     $('#polizaModalTitle').text('Crear Póliza de Seguro');
+    $('#create-poliza-form').find('input, select, textarea').prop('disabled', false);
+    
+    // Mostrar el botón de guardar en el footer
+    $('#btn-save-poliza-footer').show();
+    
+    // Limpiar las previsualizaciones de imágenes
+    $('.image-preview-container').empty();
+    
+    // Limpiar el input de archivos
+    $('#imagen-poliza').val('');
+    
+    // Mostrar los controles de carga de archivos
+    $('.upload-controls').show();
 });
 
 $(document).on('click', '.ajax-view', function (e) {
@@ -141,11 +154,32 @@ $(document).on('click', '.ajax-view', function (e) {
 
                 // Deshabilitar los campos
                 $('#create-poliza-form').find('input, select, textarea').prop('disabled', true);
+                
+                // Ocultar el control de carga de archivos y mostrar las imágenes
+                $('.upload-controls').hide();
+                
+                // Limpiar el contenedor de previsualizaciones
+                var previewContainer = $('.image-preview-container');
+                previewContainer.empty();
+                
+                // Mostrar las imágenes si existen
+                if (response.images && response.images.length > 0) {
+                    response.images.forEach(function(imageSrc) {
+                        var previewDiv = document.createElement('div');
+                        previewDiv.className = 'image-preview';
+                        previewDiv.innerHTML = `<img src="${imageSrc}" alt="Imagen de póliza">`;
+                        previewContainer.append(previewDiv);
+                    });
+                } else {
+                    previewContainer.html('<p class="text-muted">No hay imágenes disponibles para esta póliza.</p>');
+                }
 
                 // Cambiar el título del modal y mostrarlo
                 $('#polizaModalTitle').text('Ver Póliza de Seguro');
                 $('#polizaModal').modal('show');
-                $('#create-poliza-form').find('.btn-success').hide();
+                
+                // Ocultar el botón de guardar en el footer
+                $('#btn-save-poliza-footer').hide();
             }
         },
         error: function () {

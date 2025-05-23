@@ -65,9 +65,41 @@ class PolizaSeguroController extends Controller
         
         if (Yii::$app->request->isAjax) {
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            
+            // Buscar imágenes de la póliza
+            $baseUploadDir = Yii::getAlias('@webroot') . '/uploads/polizas/';
+            $images = [];
+            
+            // Buscar en todas las carpetas que contengan la aseguradora y número de póliza
+            if (file_exists($baseUploadDir) && is_dir($baseUploadDir)) {
+                // Sanitizar los nombres para la búsqueda, similar a como se hace en savePolizaImages
+                $aseguradora = preg_replace('/[^A-Za-z0-9_\-]/', '_', $model->aseguradora);
+                $noPoliza = preg_replace('/[^A-Za-z0-9_\-]/', '_', $model->no_poliza);
+                
+                // Buscar carpetas que coincidan con el patrón
+                $pattern = $baseUploadDir . $aseguradora . '_' . $noPoliza . '_*';
+                $folders = glob($pattern);
+                
+                if (empty($folders)) {
+                    // Si no encuentra con el patrón exacto, intentar una búsqueda más flexible
+                    $folders = glob($baseUploadDir . '*' . $aseguradora . '*' . $noPoliza . '*');
+                }
+                
+                foreach ($folders as $folder) {
+                    if (is_dir($folder)) {
+                        $files = glob($folder . '/*.{jpg,jpeg,png,gif}', GLOB_BRACE);
+                        foreach ($files as $file) {
+                            $relativePath = str_replace(Yii::getAlias('@webroot'), '', $file);
+                            $images[] = Yii::getAlias('@web') . $relativePath;
+                        }
+                    }
+                }
+            }
+            
             return [
                 'success' => true,
                 'data' => $model->attributes,
+                'images' => $images,
             ];
         }
         
