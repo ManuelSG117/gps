@@ -35,8 +35,15 @@ $(document).on('click', '.ajax-delete', function (e) {
                             '¡Eliminado!',
                             response.message,
                             'success'
+                        ).then((result) => {
+                            $.pjax.reload({ container: '#poliza-grid' });
+                        });
+                    } else {
+                        Swal.fire(
+                            'Error',
+                            response.message || 'No se pudo eliminar la póliza.',
+                            'error'
                         );
-                        $.pjax.reload({ container: '#poliza-grid' });
                     }
                 },
                 error: function () {
@@ -84,10 +91,17 @@ $('#create-poliza-form').on('beforeSubmit', function (e) {
                     icon: 'success',
                     title: '¡Éxito!',
                     text: response.message,
+                }).then((result) => {
+                    // Close modal and refresh grid
+                    $('#polizaModal').modal('hide');
+                    $.pjax.reload({ container: '#poliza-grid' }); // Recarga el GridView
                 });
-                // Update this line to use Bootstrap 5 syntax
-                $('#polizaModal').modal('hide');
-                $.pjax.reload({ container: '#poliza-grid' }); // Recarga el GridView
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message || 'Error al crear la póliza'
+                });
             }
         },
         error: function () {
@@ -120,6 +134,9 @@ $('#polizaModal').on('hidden.bs.modal', function () {
     
     // Mostrar los controles de carga de archivos
     $('.upload-controls').show();
+    
+    // Limpiar las previsualizaciones de imágenes
+    $('.image-preview-container').empty();
 });
 
 $(document).on('click', '.ajax-view', function (e) {
@@ -193,12 +210,7 @@ $(document).on('click', '.ajax-view', function (e) {
     });
 });
 
-// Restablecer el formulario al cerrar el modal
-$('#polizaModal').on('hidden.bs.modal', function () {
-    $('#create-poliza-form').find('input, select, textarea').prop('disabled', false).val('');
-    $('#create-poliza-form .btn-success').show();  // Mostrar el botón "Guardar"
-    $('#polizaModalTitle').text('Crear Póliza de Seguro');
-});
+
 
 $(document).on('click', '.ajax-update', function (e) {
     e.preventDefault();

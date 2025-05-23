@@ -17,6 +17,9 @@ $this->params['breadcrumbs'][] = $this->title;
 
 // Register JS file
 $this->registerJsFile('@web/js/poliza-seguro.js', ['depends' => [\yii\web\JqueryAsset::class]]);
+
+// Define baseUrl for JavaScript
+$this->registerJs('var baseUrl = "' . Url::base() . '";', \yii\web\View::POS_HEAD);
 ?>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- Flatpickr CSS and JS -->
