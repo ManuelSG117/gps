@@ -138,27 +138,9 @@ class PolizaSeguroController extends Controller
         $model = $this->findModel($id);
     
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            // Handle file uploads
-            $uploadedFiles = \yii\web\UploadedFile::getInstancesByName('poliza_images');
-            
-            if (!empty($uploadedFiles)) {
-                // Create upload directory if it doesn't exist
-                $uploadDir = Yii::getAlias('@webroot/uploads/polizas/');
-                if (!file_exists($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-                
-                $today = date('Ymd');
-                $aseguradora = preg_replace('/[^a-zA-Z0-9]/', '', $model->aseguradora);
-                
-                foreach ($uploadedFiles as $index => $file) {
-                    if ($index < 2) { // Limit to 2 images
-                        $fileName = $model->id . '_' . $today . '_' . $aseguradora . '_' . ($index + 1) . '.' . $file->extension;
-                        $filePath = $uploadDir . $fileName;
-                        $file->saveAs($filePath);
-                    }
-                }
-            }
+            // Handle file uploads using the same method as create
+            $this->savePolizaImages($model);
+
             
             if (Yii::$app->request->isAjax) {
                 Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -250,7 +232,15 @@ class PolizaSeguroController extends Controller
         $uploadedFiles = \yii\web\UploadedFile::getInstancesByName('poliza_images');
         
         if (!empty($uploadedFiles)) {
+            // Contador para limitar a 2 imágenes como máximo (consistente con la UI)
+            $count = 0;
             foreach ($uploadedFiles as $index => $file) {
+                // Limitar a 2 imágenes como máximo
+                if ($count >= 2) {
+                    Yii::info("Skipping additional images beyond limit of 2 for poliza {$model->id}", 'app');
+                    break;
+                }
+                
                 // Generate a unique filename
                 $fileName = 'poliza_' . ($index + 1) . '_' . time() . '.' . $file->extension;
                 $filePath = $uploadDir . $fileName;
@@ -258,6 +248,7 @@ class PolizaSeguroController extends Controller
                 // Save the file
                 if ($file->saveAs($filePath)) {
                     Yii::info("Saved poliza image {$index} for poliza {$model->id} to {$filePath}", 'app');
+                    $count++;
                 } else {
                     Yii::error("Failed to save poliza image {$index} for poliza {$model->id}", 'app');
                 }

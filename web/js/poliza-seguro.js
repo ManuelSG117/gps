@@ -57,11 +57,16 @@ $(document).on('click', '.ajax-delete', function (e) {
 $('#create-poliza-form').on('beforeSubmit', function (e) {
     e.preventDefault();
     var form = $(this);
+    var formData = new FormData(form[0]);
+    
+    // No es necesario agregar manualmente las imágenes al FormData
+    // ya que el input tiene el nombre correcto 'poliza_images[]'
+    // y FormData las captura automáticamente
 
     // Mostrar el modal de carga
     Swal.fire({
         title: 'Cargando...',
-        text: 'Por favor espera.',
+        text: 'Por favor espera mientras se suben las imágenes.',
         icon: 'info',
         showConfirmButton: false,
         allowOutsideClick: false
@@ -70,7 +75,9 @@ $('#create-poliza-form').on('beforeSubmit', function (e) {
     $.ajax({
         url: form.attr('action'),
         type: 'POST',
-        data: form.serialize(),
+        data: formData,
+        processData: false,
+        contentType: false,
         success: function (response) {
             if (response.success) {
                 Swal.fire({
@@ -210,11 +217,90 @@ $(document).on('click', '.ajax-update', function (e) {
         }
     });});
 
+function handleImageUpload() {
+    const input = document.getElementById('imagen-poliza');
+    const previewContainer = document.querySelector('.image-preview-container');
+    let files = [];
+    if (!input) return;
+    
+    // Función para actualizar el input de archivos con los archivos actuales
+    function updateFileInput() {
+        // Crear un nuevo DataTransfer para manipular los archivos
+        const dataTransfer = new DataTransfer();
+        
+        // Agregar cada archivo al DataTransfer
+        files.forEach(file => {
+            dataTransfer.items.add(file);
+        });
+        
+        // Asignar los archivos al input
+        input.files = dataTransfer.files;
+    }
+    
+    input.addEventListener('change', function(e) {
+        // Limpiar previsualizaciones existentes
+        previewContainer.innerHTML = '';
+        files = [];
+        
+        const newFiles = Array.from(e.target.files);
+        
+        // Check file limit (maximum 2 images for poliza)
+        if (newFiles.length > 2) {
+            Swal.fire({ 
+                icon: 'error', 
+                title: 'Error', 
+                text: 'Solo puede subir un máximo de 2 imágenes para la póliza' 
+            });
+            return;
+        }
+        
+        newFiles.forEach(file => {
+            if (!file.type.startsWith('image/')) {
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Error', 
+                    text: 'Por favor, seleccione solo archivos de imagen' 
+                });
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'image-preview';
+                previewDiv.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview">
+                    <button type="button" class="remove-image"><i class="fas fa-times"></i></button>
+                `;
+                previewContainer.appendChild(previewDiv);
+                
+                previewDiv.querySelector('.remove-image').addEventListener('click', function() {
+                    previewDiv.remove();
+                    files = files.filter(f => f !== file);
+                    updateFileInput(); // Actualizar el input de archivos
+                });
+            };
+            reader.readAsDataURL(file);
+            files.push(file);
+        });
+    });
+    
+    $('#polizaModal').on('hidden.bs.modal', function() {
+        previewContainer.innerHTML = '';
+        files = [];
+        input.value = ''; // Limpiar el input de archivos
+    });
+}
+
 // Handle save button click in modal footer
 $(document).on('click', '#btn-save-poliza-footer', function() {
     // Submit the form when the footer save button is clicked
     var form = $('#create-poliza-form');
     var formData = new FormData(form[0]);
+    
+    // No es necesario agregar manualmente las imágenes al FormData
+    // ya que el input tiene el nombre correcto 'poliza_images[]'
+    // y FormData las captura automáticamente
     
     // Show loading indicator
     Swal.fire({
@@ -261,4 +347,9 @@ $(document).on('click', '#btn-save-poliza-footer', function() {
             });
         }
     });
+});
+
+// Initialize image upload handling when document is ready
+$(document).ready(function() {
+    handleImageUpload();
 });

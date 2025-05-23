@@ -2,7 +2,6 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
-use kartik\file\FileInput;
 use yii\helpers\Url;
 
 /** @var yii\web\View $this */
@@ -57,29 +56,14 @@ use yii\helpers\Url;
 
                     <div class="row mt-3">
                         <div class="col-12">
-                            <label class="control-label">Imágenes de la Póliza (Frente y Reverso)</label>
-                            <?= FileInput::widget([
-                                'name' => 'poliza_images[]',
-                                'options' => [
-                                    'multiple' => true,
-                                    'accept' => 'image/*',
-                                ],
-                                'pluginOptions' => [
-                                    'initialPreview' => [],
-                                    'initialPreviewAsData' => true,
-                                    'initialPreviewConfig' => [],
-                                    'overwriteInitial' => false,
-                                    'maxFileCount' => 2,
-                                    'showCaption' => true,
-                                    'showRemove' => true,
-                                    'showUpload' => false,
-                                    'browseClass' => 'btn btn-primary',
-                                    'browseIcon' => '<i class="fa fa-camera"></i> ',
-                                    'browseLabel' => 'Seleccionar Imágenes',
-                                    'msgFilesTooMany' => 'Solo puede subir un máximo de {n} imágenes',
-                                ]
-                            ]); ?>
-                            <small class="text-muted">Formatos permitidos: JPG, PNG, GIF. Máximo 2 imágenes.</small>
+                            <label class="form-label">Imágenes de la Póliza (Frente y Reverso)</label>
+                            <div class="image-upload-container">
+                                <div class="image-preview-container d-flex flex-wrap gap-2 mb-2"></div>
+                                <div class="upload-controls">
+                                    <input type="file" id="imagen-poliza" name="poliza_images[]" class="form-control" accept="image/*" multiple>
+                                    <small class="text-muted">Puede seleccionar múltiples imágenes. Formatos permitidos: JPG, PNG. Máximo 2 imágenes.</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -93,6 +77,50 @@ use yii\helpers\Url;
         </div>
     </div>
 </div>
+
+<style>
+.image-preview-container {
+    min-height: 100px;
+}
+
+.image-preview {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-preview .remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    padding: 5px;
+    cursor: pointer;
+    color: #dc3545;
+    border: none;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-preview .remove-image:hover {
+    background: rgba(255, 255, 255, 1);
+    color: #bd2130;
+}
+</style>
 
 <script>
 // Initialize Flatpickr immediately when this file is loaded
