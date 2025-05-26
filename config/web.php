@@ -19,7 +19,14 @@ $config = [
         'admin' => [
             'class' => 'mdm\admin\Module',
             'layout' => 'left-menu', 
-        ]
+        ],
+          'dynagrid' => [
+        'class' => '\kartik\dynagrid\Module',
+        // Opcional: configuración adicional
+        // 'dbSettings' => [
+        //     'tableName' => 'dynagrid_settings',
+        // ],
+    ],
     ],
     'components' => [
 
