@@ -741,6 +741,24 @@ async function initMap() {
         document.getElementById('map').innerHTML = `<div class="alert alert-danger">Error al inicializar el mapa: ${error.message}</div>`;
         document.getElementById('route-stats-cards').style.display = 'none';
     }
+
+    // --- Después de cargar locations y antes de renderizar el mapa ---
+    // Obtener horas de entrada/salida a la geocerca "capasu"
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const capasuUrl = `/gpsreport/capasu-times?filter=${urlParams.get('filter') || 'today'}&gps=${urlParams.get('gps') || ''}&startDate=${urlParams.get('startDate') || ''}&endDate=${urlParams.get('endDate') || ''}`;
+        const capasuResp = await fetch(capasuUrl);
+        if (capasuResp.ok) {
+            const capasuTimes = await capasuResp.json();
+            console.log('Entradas y salidas a la geocerca "capasu":', capasuTimes);
+        } else {
+            console.warn('No se pudo obtener la información de entrada/salida a capasu');
+        }
+    } catch (e) {
+        console.error('Error al consultar capasu-times:', e);
+    }
+
+    // ...resto del código de initMap...
 }
 
 // --- Utilidades para estadísticas ---
