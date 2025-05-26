@@ -258,33 +258,23 @@ async function initStopsMap() {
         stopCoordinates.push([lat, lng]);
         bounds.extend([lat, lng]);
     });
-    
-    // Crear una polilínea para conectar las paradas
-    if (stopCoordinates.length > 1) {
-        const routeLine = L.polyline(stopCoordinates, {
-            color: 'blue',
-            weight: 3,
-            opacity: 0.7,
-            lineJoin: 'round'
-        }).addTo(map);
-    }
-    
+
+
     // Ajustar el mapa a los límites de las paradas
     if (stopCoordinates.length > 0) {
         map.fitBounds(bounds, {padding: [50, 50]});
     }
-    
-    // Agregar leyenda
+
+    // Agregar leyenda (solo marcadores)
     const legend = L.control({position: 'bottomright'});
     legend.onAdd = function(map) {
         const div = L.DomUtil.create('div', 'info legend');
         div.innerHTML = 
-            '<img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png" height="20"> Paradas<br>' +
-            '<i style="background: blue; height: 2px; width: 30px; display: inline-block;"></i> Ruta';
+            '<img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png" height="20"> Paradas';
         return div;
     };
     legend.addTo(map);
-    
+
     // Agregar mensaje informativo sobre la ruta completa si hay paginación
     if (hasPagination) {
         const infoControl = L.control({position: 'topright'});
