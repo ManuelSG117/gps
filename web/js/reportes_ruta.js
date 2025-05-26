@@ -761,6 +761,104 @@ async function initMap() {
     // ...resto del código de initMap...
 }
 
+// --- FUNCIONES MOVIDAS DESDE index.php ---
+
+function formatDateTimeToDayAndTime(datetime) {
+    if (!datetime) return { day: '', time: '' };
+    const d = new Date(datetime.replace(' ', 'T'));
+    if (isNaN(d)) return { day: '', time: '' };
+    const day = d.toISOString().slice(0, 10);
+    const time = d.toTimeString().slice(0, 8);
+    return { day, time };
+}
+
+function fetchCapasuTimes() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const filter = urlParams.get('filter') || 'today';
+    const gps = urlParams.get('gps') || '';
+    const startDate = urlParams.get('startDate') || '';
+    const endDate = urlParams.get('endDate') || '';
+
+    fetch(`/gpsreport/capasu-times?filter=${filter}&gps=${gps}&startDate=${startDate}&endDate=${endDate}`)
+        .then(resp => resp.json())
+        .then(data => {
+            const card = document.getElementById('capasu-card');
+            const content = document.getElementById('capasu-times-content');
+            card.style.display = 'block';
+
+            if (data.capasu_times && data.capasu_times.length > 0) {
+                let html = `
+                    <div class="mb-3">
+                        <span class="badge badge-pill badge-primary" style="font-size:1rem;">
+                            <i class="fa fa-crosshairs"></i> Coordenadas revisadas: <b>${data.coordenadas_revisadas}</b>
+                        </span>
+                    </div>
+                    <div class="row">
+                `;
+                // Agrupar por día (como antes)
+                const grouped = {};
+                data.capasu_times.forEach(item => {
+                    const entrada = formatDateTimeToDayAndTime(item.entrada);
+                    const salida = formatDateTimeToDayAndTime(item.salida);
+                    const day = entrada.day || salida.day || '-';
+                    if (!grouped[day]) {
+                        grouped[day] = { entrada: entrada.time, salida: salida.time, salidaRaw: item.salida };
+                    } else {
+                        if (entrada.time && (!grouped[day].entrada || entrada.time < grouped[day].entrada)) {
+                            grouped[day].entrada = entrada.time;
+                        }
+                        if (salida.time && (!grouped[day].salida || salida.time > grouped[day].salida)) {
+                            grouped[day].salida = salida.time;
+                            grouped[day].salidaRaw = item.salida;
+                        }
+                        if (!item.salida) {
+                            grouped[day].salida = null;
+                            grouped[day].salidaRaw = null;
+                        }
+                    }
+                });
+
+                html += `<div class="table-responsive"><table class="table table-hover table-borderless mb-0" style="font-size:1.08rem;">
+                    <thead class="thead-light">
+                        <tr>
+                            <th><i class="fa fa-calendar"></i> Día</th>
+                            <th><i class="fa fa-sign-in"></i> Entrada</th>
+                            <th><i class="fa fa-sign-out"></i> Salida</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                Object.keys(grouped).sort().forEach(day => {
+                    html += `<tr>
+                        <td><span class="badge badge-info" style="font-size:1rem;">${day}</span></td>
+                        <td>
+                            <span class="badge badge-success" style="font-size:1rem;">
+                                <i class="fa fa-arrow-circle-down"></i> ${grouped[day].entrada || '-'}
+                            </span>
+                        </td>
+                        <td>
+                            ${
+                                grouped[day].salidaRaw
+                                ? `<span class="badge badge-danger" style="font-size:1rem;"><i class="fa fa-arrow-circle-up"></i> ${grouped[day].salida}</span>`
+                                : `<span class="badge badge-warning" style="font-size:1rem;"><i class="fa fa-clock-o"></i> En curso</span>`
+                            }
+                        </td>
+                    </tr>`;
+                });
+                html += `</tbody></table></div>`;
+                content.innerHTML = html;
+            } else {
+                content.innerHTML = `<div class="alert alert-info mb-0">No hubo entradas a la geocerca CAPASU en el periodo seleccionado.<br><small>Coordenadas revisadas: ${data.coordenadas_revisadas}</small></div>`;
+            }
+        })
+        .catch(() => {
+            document.getElementById('capasu-times-content').innerHTML = '<div class="alert alert-warning mb-0">No se pudo obtener la información de la geocerca CAPASU.</div>';
+        });
+}
+
+// Inicializar fetchCapasuTimes en los eventos necesarios
+document.addEventListener('DOMContentLoaded', fetchCapasuTimes);
+$(document).on('pjax:success', fetchCapasuTimes);
+
 // --- Utilidades para estadísticas ---
 function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
     var R = 6371; // km
