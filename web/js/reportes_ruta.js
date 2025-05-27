@@ -413,17 +413,102 @@ async function initMap() {
             }
             return '#000';
         }
-        // Dibujar segmentos
+        // Función para calcular el ángulo entre dos puntos para las flechas de dirección
+        function getAngle(latLng1, latLng2, coef) {
+            var dy = latLng2.lat - latLng1.lat;
+            var dx = Math.cos(Math.PI / 180 * latLng1.lat) * (latLng2.lng - latLng1.lng);
+            var ang = ((Math.atan2(dy, dx) / Math.PI) * 180 * coef);
+            return (ang).toFixed(2);
+        }
+        
+        // Función para calcular el punto medio entre dos coordenadas
+        function calculateMidPoint(latlng1, latlng2, percentage, map) {
+            if (!map) return null;
+        
+            var p1 = map.project(L.latLng(latlng1));
+            var p2 = map.project(L.latLng(latlng2));
+        
+            var distance = distanceBetweenPoints(p1, p2);
+            var targetDistance = distance * percentage;
+        
+            if (distance === 0) return map.unproject(p1);
+        
+            var ratio = (distance - targetDistance) / distance;
+            var result = map.unproject(new L.Point(
+                p2.x - ratio * (p2.x - p1.x),
+                p2.y - ratio * (p2.y - p1.x)
+            ));
+        
+            return result;
+        }
+        
+        // Función para calcular la distancia entre dos puntos
+        function distanceBetweenPoints(p1, p2) {
+            var x = p2.x - p1.x;
+            var y = p2.y - p1.y;
+            return Math.sqrt(x * x + y * y);
+        }
+        
+        // Función para crear flechas de dirección en la ruta
+        function createDirectionArrows(locations, map, color) {
+            if (!locations || locations.length < 2) return [];
+        
+            var arrows = [];
+            var arrowCount = Math.min(5, Math.floor(locations.length / 2)); // Máximo 5 flechas o menos si hay pocos puntos
+            
+            // Crear flechas en puntos equidistantes a lo largo de la ruta
+            for (var i = 1; i < locations.length; i += Math.max(1, Math.floor(locations.length / arrowCount))) {
+                var icon = L.divIcon({
+                    className: 'arrow-icon',
+                    html: `<div style="color:${color};transform: rotate(${getAngle(
+                        {lat: locations[i-1].lat, lng: locations[i-1].lng},
+                        {lat: locations[i].lat, lng: locations[i].lng},
+                        -1
+                    )}deg)">▶</div>`,
+                    iconSize: [14, 14],
+                    iconAnchor: [7, 7]
+                });
+        
+                // Calcular punto medio para colocar la flecha
+                var midPoint = [
+                    (locations[i-1].lat + locations[i].lat) / 2,
+                    (locations[i-1].lng + locations[i].lng) / 2
+                ];
+        
+                var arrow = L.marker(midPoint, { icon: icon });
+                arrows.push(arrow);
+            }
+        
+            return arrows;
+        }
+
+        // --- Dibujar segmentos de ruta con flechas direccionales ---
+        // Crear segmentos de ruta coloreados por velocidad
         for (let i = 1; i < locations.length; i++) {
-            const segColor = getColorForSpeed(locations[i].speed);
-            L.polyline([
+            const segment = [
                 [locations[i-1].lat, locations[i-1].lng],
                 [locations[i].lat, locations[i].lng]
-            ], {
-                color: segColor,
+            ];
+            const speed = (locations[i-1].speed + locations[i].speed) / 2;
+            const color = getColorForSpeed(speed);
+            
+            // Dibujar el segmento
+            const polyline = L.polyline(segment, {
+                color: color,
                 weight: 5,
-                opacity: 0.85
+                opacity: 0.8
             }).addTo(map);
+            
+            // Agregar información al segmento
+            polyline.bindTooltip(`Velocidad: ${speed.toFixed(1)} km/h`);
+            
+            // Crear flechas direccionales para este segmento
+            const segmentLocations = [
+                {lat: locations[i-1].lat, lng: locations[i-1].lng},
+                {lat: locations[i].lat, lng: locations[i].lng}
+            ];
+            const arrows = createDirectionArrows(segmentLocations, map, color);
+            arrows.forEach(arrow => arrow.addTo(map));
         }
 
         // --- Marcadores de inicio y fin ---

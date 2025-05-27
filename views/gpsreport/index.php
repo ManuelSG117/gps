@@ -384,4 +384,18 @@ $registeredPhones = GpsLocations::find()
         border-radius: 4px;
         transition: width 0.2s;
     }
+    /* Estilos para las flechas direccionales */
+    .direction-arrow {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        background-color: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        text-align: center;
+        line-height: 12px;
+        font-size: 10px;
+        font-weight: bold;
+        transform: rotate(0deg);
+    }
 </style>
