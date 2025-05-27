@@ -484,6 +484,8 @@ async function initMap() {
 
         // --- Dibujar segmentos de ruta con flechas direccionales ---
         // Crear segmentos de ruta coloreados por velocidad
+        let arrowMarkers = []; // Array para almacenar las flechas direccionales
+        
         for (let i = 1; i < locations.length; i++) {
             const segment = [
                 [locations[i-1].lat, locations[i-1].lng],
@@ -502,14 +504,31 @@ async function initMap() {
             // Agregar información al segmento
             polyline.bindTooltip(`Velocidad: ${speed.toFixed(1)} km/h`);
             
-            // Crear flechas direccionales para este segmento
+            // Crear flechas direccionales para este segmento (pero no agregarlas al mapa todavía)
             const segmentLocations = [
                 {lat: locations[i-1].lat, lng: locations[i-1].lng},
                 {lat: locations[i].lat, lng: locations[i].lng}
             ];
             const arrows = createDirectionArrows(segmentLocations, map, color);
-            arrows.forEach(arrow => arrow.addTo(map));
+            arrowMarkers = arrowMarkers.concat(arrows);
         }
+        
+        // Función para mostrar/ocultar flechas direccionales
+        function toggleDirectionArrows(show) {
+            if (show) {
+                arrowMarkers.forEach(arrow => arrow.addTo(map));
+            } else {
+                arrowMarkers.forEach(arrow => map.removeLayer(arrow));
+            }
+        }
+        
+        // Escuchar cambios en el switch de flechas direccionales
+        $(document).on('change', '#showDirectionArrows', function() {
+            toggleDirectionArrows($(this).is(':checked'));
+        });
+        
+        // Por defecto, las flechas no se muestran
+        toggleDirectionArrows(false);
 
         // --- Marcadores de inicio y fin ---
         const startMarker = L.marker([locations[0].lat, locations[0].lng], {

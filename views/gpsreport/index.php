@@ -233,6 +233,11 @@ $registeredPhones = GpsLocations::find()
         <h4 class="custom-card-title">Mapa de Ruta</h4>
     </div>
     <div class="custom-card-body">
+        <!-- Agregar switch para mostrar/ocultar flechas direccionales -->
+        <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="showDirectionArrows">
+            <label class="form-check-label" for="showDirectionArrows">Mostrar flechas direccionales</label>
+        </div>
         <div id="map" style="height: 500px; width: 100%; position: relative;"></div>
     </div>
 </div>
