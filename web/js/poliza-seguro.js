@@ -59,6 +59,160 @@ $(document).on('click', '.ajax-delete', function (e) {
     });
 });
 
+// Función para mostrar el modal de cambio de estado
+function mostrarModalCambioEstado(id) {
+    // Limpiar el formulario
+    $('#form-cambio-estado')[0].reset();
+    $('#poliza-id').val(id);
+    
+    // Ocultar el historial inicialmente
+    $('#historial-estados-container').addClass('d-none');
+    $('#historial-estados-lista').empty();
+    
+    // Cargar el historial de estados
+    $.ajax({
+        url: '/poliza-seguro/view',
+        type: 'GET',
+        data: { id: id, format: 'json' },
+        success: function(response) {
+            if (response.historial && response.historial.length > 0) {
+                mostrarHistorialEstados(response.historial);
+            }
+        }
+    });
+    
+    // Mostrar el modal
+    $('#cambioEstadoModal').modal('show');
+}
+
+// Función para cambiar el estado de la póliza
+function cambiarEstadoPoliza() {
+    // Obtener los datos del formulario
+    const id = $('#poliza-id').val();
+    const estado = $('#nuevo-estado').val();
+    const motivo = $('#motivo').val();
+    const comentario = $('#comentario').val();
+    
+    // Validar campos requeridos
+    if (!estado) {
+        Swal.fire('Error', 'Por favor seleccione un estado', 'error');
+        return;
+    }
+    
+    if (!motivo) {
+        Swal.fire('Error', 'Por favor seleccione un motivo', 'error');
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    Swal.fire({
+        title: 'Actualizando estado...',
+        text: 'Por favor espera.',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    // Obtener el formulario completo para incluir las imágenes
+    const formData = new FormData(document.getElementById('form-cambio-estado'));
+    
+    $.ajax({
+        url: '/poliza-seguro/cambiar-estado?id=' + id,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            Swal.close();
+            
+            if (response.success) {
+                // Cerrar el modal de cambio de estado
+                $('#cambioEstadoModal').modal('hide');
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: response.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    // Recargar la tabla de pólizas
+                    $.pjax.reload({container: '#poliza-grid'});
+                    
+                    // Si estamos viendo la póliza, actualizar la información
+                    if ($('#polizaModal').hasClass('show')) {
+                        // Actualizar el estado en el formulario si existe
+                        if ($('#polizaseguro-estado').length) {
+                            $('#polizaseguro-estado').val(response.estado_actual);
+                        }
+                        
+                        // Actualizar el historial si está disponible
+                        if (response.historial && response.historial.length > 0) {
+                            mostrarHistorialEstados(response.historial);
+                        }
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message
+                });
+            }
+        },
+        error: function() {
+            Swal.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error de conexión al actualizar el estado'
+            });
+        }
+    });
+}
+
+// Función para mostrar el historial de estados
+function mostrarHistorialEstados(historial) {
+    if (!historial || historial.length === 0) return;
+    
+    // Mostrar el contenedor del historial
+    $('#historial-estados-container').removeClass('d-none');
+    
+    // Obtener la lista donde se mostrará el historial
+    const timelineList = $('#historial-estados-lista');
+    timelineList.empty();
+    
+    historial.forEach((item) => {
+        const fecha = new Date(item.fecha_cambio);
+        const fechaFormateada = fecha.toLocaleString('es-ES');
+        
+        const timelineItem = $(`
+            <li>
+                <div class="timeline-badge ${item.clase_estado}"></div>
+                <div class="timeline-panel">
+                    <div class="media">
+                        <div class="media-body">
+                            <h6 class="mb-1">${item.estado_nuevo_nombre}</h6>
+                            <small class="d-block">${fechaFormateada}</small>
+                            ${item.comentario ? `<p class="mb-0 mt-2">${item.comentario}</p>` : ''}
+                            ${item.motivo ? `<div class="mt-2"><strong>Motivo:</strong> ${item.motivo}</div>` : ''}
+                            ${item.estado_anterior ? `<small class="text-muted">Cambio desde: ${item.estado_anterior_nombre}</small>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </li>
+        `);
+        
+        timelineList.append(timelineItem);
+    });
+    
+    timeline.append(timelineList);
+    timelineContainer.append(timeline);
+}
+
 // Maneja la creación de pólizas con AJAX
 // Update the modal close action in the success handler
 $('#create-poliza-form').on('beforeSubmit', function (e) {
@@ -139,11 +293,10 @@ $('#polizaModal').on('hidden.bs.modal', function () {
     $('.image-preview-container').empty();
 });
 
-$(document).on('click', '.ajax-view', function (e) {
-    e.preventDefault();
-
-    var url = $(this).data('url');
-
+// Función para ver una póliza
+function verPoliza(id) {
+    var url = '/poliza-seguro/view?id=' + id + '&format=json';
+    
     // Mostrar el modal de carga
     Swal.fire({
         title: 'Cargando...',
@@ -191,20 +344,193 @@ $(document).on('click', '.ajax-view', function (e) {
                     previewContainer.html('<p class="text-muted">No hay imágenes disponibles para esta póliza.</p>');
                 }
 
+                // Mostrar el historial si existe
+                if (response.historial && response.historial.length > 0) {
+                    // Usar el contenedor de historial en la pestaña correspondiente
+                    var timelineContainer = $('#historial-content .timeline-container');
+                    timelineContainer.empty();
+                    
+                    // Crear el timeline
+                    var timeline = $('<div class="widget-timeline"></div>');
+                    var timelineList = $('<ul class="timeline"></ul>');
+                    
+                    // Agregar cada elemento del historial
+                    response.historial.forEach(function(item) {
+                        var fecha = new Date(item.fecha_cambio);
+                        var fechaFormateada = fecha.toLocaleString('es-ES');
+                        
+                        var timelineItem = $(`
+                            <li>
+                                <div class="timeline-badge ${item.clase_estado}"></div>
+                                <div class="timeline-panel">
+                                    <div class="media">
+                                        <div class="media-body">
+                                            <h6 class="mb-1">${item.estado_nuevo_nombre}</h6>
+                                            <small class="d-block">${fechaFormateada}</small>
+                                            ${item.comentario ? `<p class="mb-0 mt-2">${item.comentario}</p>` : ''}
+                                            ${item.motivo ? `<div class="mt-2"><strong>Motivo:</strong> ${item.motivo}</div>` : ''}
+                                            ${item.estado_anterior ? `<small class="text-muted">Cambio desde: ${item.estado_anterior_nombre}</small>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        `);
+                        
+                        timelineList.append(timelineItem);
+                    });
+                    
+                    timeline.append(timelineList);
+                    timelineContainer.append(timeline);
+                } else {
+                    $('#historial-content .timeline-container').html('<p class="text-muted text-center py-3">No hay historial de estados para esta póliza.</p>');
+                }
+
                 // Cambiar el título del modal y mostrarlo
                 $('#polizaModalTitle').text('Ver Póliza de Seguro');
+                
+                // Activar la pestaña de datos por defecto
+                $('#polizaModalTabs button[data-bs-target="#datos-content"]').tab('show');
+                
                 $('#polizaModal').modal('show');
                 
                 // Ocultar el botón de guardar en el footer
                 $('#btn-save-poliza-footer').hide();
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: response.message || 'No se pudo cargar la información de la póliza.',
+                    icon: 'error'
+                });
             }
         },
         error: function () {
-            Swal.close(); // Cerrar el modal de carga
+            Swal.close();
             Swal.fire({
-                icon: 'error',
                 title: 'Error',
-                text: 'No se pudo cargar los datos de la póliza.',
+                text: 'Ocurrió un error al cargar la información de la póliza.',
+                icon: 'error'
+            });
+        }
+    });
+}
+
+// Evento para ver una póliza
+$(document).on('click', '.ajax-view', function (e) {
+    e.preventDefault();
+    var url = $(this).data('url');
+    
+    // Mostrar el modal de carga
+    Swal.fire({
+        title: 'Cargando...',
+        text: 'Por favor espera.',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+
+    $.ajax({
+        url: url,
+        type: 'GET',
+        success: function (response) {
+            Swal.close(); // Cerrar el modal de carga
+
+            if (response.success) {
+                // Cargar los datos en el formulario
+                var data = response.data;
+                $('#create-poliza-form').find('input, select, textarea').each(function () {
+                    var name = $(this).attr('name');
+                    if (name && data[name.replace('PolizaSeguro[', '').replace(']', '')] !== undefined) {
+                        $(this).val(data[name.replace('PolizaSeguro[', '').replace(']', '')]);
+                    }
+                });
+
+                // Deshabilitar los campos
+                $('#create-poliza-form').find('input, select, textarea').prop('disabled', true);
+                
+                // Ocultar el control de carga de archivos y mostrar las imágenes
+                $('.upload-controls').hide();
+                
+                // Limpiar el contenedor de previsualizaciones
+                var previewContainer = $('.image-preview-container');
+                previewContainer.empty();
+                
+                // Mostrar las imágenes si existen
+                if (response.images && response.images.length > 0) {
+                    response.images.forEach(function(imageSrc) {
+                        var previewDiv = document.createElement('div');
+                        previewDiv.className = 'image-preview';
+                        previewDiv.innerHTML = `<img src="${imageSrc}" alt="Imagen de póliza">`;
+                        previewContainer.append(previewDiv);
+                    });
+                } else {
+                    previewContainer.html('<p class="text-muted">No hay imágenes disponibles para esta póliza.</p>');
+                }
+
+                // Mostrar el historial si existe
+                if (response.historial && response.historial.length > 0) {
+                    // Usar el contenedor de historial en la pestaña correspondiente
+                    var timelineContainer = $('#historial-content .timeline-container');
+                    timelineContainer.empty();
+                    
+                    // Crear el timeline
+                    var timeline = $('<div class="widget-timeline"></div>');
+                    var timelineList = $('<ul class="timeline"></ul>');
+                    
+                    // Agregar cada elemento del historial
+                    response.historial.forEach(function(item) {
+                        var fecha = new Date(item.fecha_cambio);
+                        var fechaFormateada = fecha.toLocaleString('es-ES');
+                        
+                        var timelineItem = $(`
+                            <li>
+                                <div class="timeline-badge ${item.clase_estado}"></div>
+                                <div class="timeline-panel">
+                                    <div class="media">
+                                        <div class="media-body">
+                                            <h6 class="mb-1">${item.estado_nuevo_nombre}</h6>
+                                            <small class="d-block">${fechaFormateada}</small>
+                                            ${item.comentario ? `<p class="mb-0 mt-2">${item.comentario}</p>` : ''}
+                                            ${item.motivo ? `<div class="mt-2"><strong>Motivo:</strong> ${item.motivo}</div>` : ''}
+                                            ${item.estado_anterior ? `<small class="text-muted">Cambio desde: ${item.estado_anterior_nombre}</small>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        `);
+                        
+                        timelineList.append(timelineItem);
+                    });
+                    
+                    timeline.append(timelineList);
+                    timelineContainer.append(timeline);
+                } else {
+                    $('#historial-content .timeline-container').html('<p class="text-muted text-center py-3">No hay historial de estados para esta póliza.</p>');
+                }
+
+                // Cambiar el título del modal y mostrarlo
+                $('#polizaModalTitle').text('Ver Póliza de Seguro');
+                
+                // Activar la pestaña de datos por defecto
+                $('#polizaModalTabs button[data-bs-target="#datos-content"]').tab('show');
+                
+                $('#polizaModal').modal('show');
+                
+                // Ocultar el botón de guardar en el footer
+                $('#btn-save-poliza-footer').hide();
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: response.message || 'No se pudo cargar la información de la póliza.',
+                    icon: 'error'
+                });
+            }
+        },
+        error: function () {
+            Swal.close();
+            Swal.fire({
+                title: 'Error',
+                text: 'Ocurrió un error al cargar la información de la póliza.',
+                icon: 'error'
             });
         }
     });
@@ -401,4 +727,9 @@ $(document).on('click', '#btn-save-poliza-footer', function() {
 // Initialize image upload handling when document is ready
 $(document).ready(function() {
     handleImageUpload();
+    
+    // Agregar evento para el botón de guardar cambios de estado
+    $('#btn-guardar-estado').on('click', function() {
+        cambiarEstadoPoliza();
+    });
 });

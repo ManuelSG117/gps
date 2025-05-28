@@ -96,15 +96,49 @@ class PolizaSeguroController extends Controller
                 }
             }
             
+            // Obtener el historial de estados de la póliza para respuestas AJAX
+            $historial = [];
+            foreach ($model->historial as $item) {
+                $historial[] = [
+                    'id' => $item->id,
+                    'estado_anterior' => $item->estado_anterior,
+                    'estado_anterior_nombre' => $item->estado_anterior ? \app\models\PolizaSeguro::getNombreEstado($item->estado_anterior) : '',
+                    'estado_nuevo' => $item->estado_nuevo,
+                    'estado_nuevo_nombre' => \app\models\PolizaSeguro::getNombreEstado($item->estado_nuevo),
+                    'fecha_cambio' => $item->fecha_cambio,
+                    'comentario' => $item->comentario,
+                    'motivo' => $item->motivo,
+                    'clase_estado' => \app\models\PolizaSeguro::getClaseEstado($item->estado_nuevo)
+                ];
+            }
+            
             return [
                 'success' => true,
                 'data' => $model->attributes,
                 'images' => $images,
+                'historial' => $historial,
+            ];
+        }
+        
+        // Obtener el historial de estados de la póliza
+        $historial = [];
+        foreach ($model->historial as $item) {
+            $historial[] = [
+                'id' => $item->id,
+                'estado_anterior' => $item->estado_anterior,
+                'estado_anterior_nombre' => $item->estado_anterior ? \app\models\PolizaSeguro::getNombreEstado($item->estado_anterior) : '',
+                'estado_nuevo' => $item->estado_nuevo,
+                'estado_nuevo_nombre' => \app\models\PolizaSeguro::getNombreEstado($item->estado_nuevo),
+                'fecha_cambio' => $item->fecha_cambio,
+                'comentario' => $item->comentario,
+                'motivo' => $item->motivo,
+                'clase_estado' => \app\models\PolizaSeguro::getClaseEstado($item->estado_nuevo)
             ];
         }
         
         return $this->render('view', [
             'model' => $model,
+            'historial' => $historial,
         ]);
     }
 
@@ -243,9 +277,8 @@ class PolizaSeguroController extends Controller
         // Define the base upload directory
         $baseUploadDir = Yii::getAlias('@webroot') . '/uploads/polizas/';
         
-        // Create a unique folder name for this poliza
-        $timestamp = date('Y-m-d_H-i-s');
-        $folderName = $model->aseguradora . '_' . $model->no_poliza . '_' . $timestamp;
+        // Create a folder name for this poliza (without timestamp)
+        $folderName = $model->aseguradora . '_' . $model->no_poliza;
         $folderName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $folderName); // Sanitize folder name
         
         // Create the full directory path
@@ -266,6 +299,11 @@ class PolizaSeguroController extends Controller
         if (!empty($uploadedFiles)) {
             // Contador para limitar a 2 imágenes como máximo (consistente con la UI)
             $count = 0;
+            
+            // Obtener el estado actual de la póliza para incluirlo en el nombre del archivo
+            $estadoNombre = PolizaSeguro::getNombreEstado($model->estado);
+            $timestamp = date('Y-m-d_H-i-s');
+            
             foreach ($uploadedFiles as $index => $file) {
                 // Limitar a 2 imágenes como máximo
                 if ($count >= 2) {
@@ -273,8 +311,8 @@ class PolizaSeguroController extends Controller
                     break;
                 }
                 
-                // Generate a unique filename
-                $fileName = 'poliza_' . ($index + 1) . '_' . time() . '.' . $file->extension;
+                // Generate a unique filename with estado and timestamp
+                $fileName = 'poliza_' . $estadoNombre . '_' . $timestamp . '_' . ($index + 1) . '.' . $file->extension;
                 $filePath = $uploadDir . $fileName;
                 
                 // Save the file
@@ -288,6 +326,64 @@ class PolizaSeguroController extends Controller
         }
     }
 
+    /**
+     * Acción para cambiar el estado de una póliza
+     * @param int $id ID de la póliza
+     * @return array Respuesta JSON
+     */
+    public function actionCambiarEstado($id)
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
+        $model = $this->findModel($id);
+        $request = Yii::$app->request;
+        
+        $nuevoEstado = $request->post('estado');
+        $comentario = $request->post('comentario', '');
+        $motivo = $request->post('motivo', '');
+        
+        if (!$nuevoEstado) {
+            return [
+                'success' => false,
+                'message' => 'El estado es requerido'
+            ];
+        }
+        
+        // Cambiar el estado de la póliza
+        if ($model->cambiarEstado($nuevoEstado, $comentario, $motivo)) {
+            // Procesar las imágenes si se han subido
+            $this->savePolizaImages($model);
+            
+            // Obtener el historial actualizado
+            $historial = [];
+            foreach ($model->historial as $item) {
+                $historial[] = [
+                    'id' => $item->id,
+                    'estado_anterior' => $item->estado_anterior,
+                    'estado_anterior_nombre' => $item->estado_anterior ? \app\models\PolizaSeguro::getNombreEstado($item->estado_anterior) : '',
+                    'estado_nuevo' => $item->estado_nuevo,
+                    'estado_nuevo_nombre' => \app\models\PolizaSeguro::getNombreEstado($item->estado_nuevo),
+                    'fecha_cambio' => $item->fecha_cambio,
+                    'comentario' => $item->comentario,
+                    'motivo' => $item->motivo,
+                    'clase_estado' => \app\models\PolizaSeguro::getClaseEstado($item->estado_nuevo)
+                ];
+            }
+            
+            return [
+                'success' => true,
+                'message' => 'Estado de la póliza actualizado correctamente',
+                'estado_actual' => $model->estado,
+                'historial' => $historial
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Error al actualizar el estado de la póliza'
+            ];
+        }
+    }
+    
     /**
      * Acción para checar vencimientos de pólizas y crear notificaciones si corresponde
      */
