@@ -99,16 +99,39 @@ class PolizaSeguroController extends Controller
             // Obtener el historial de estados de la póliza para respuestas AJAX
             $historial = [];
             foreach ($model->historial as $item) {
+                // Buscar imágenes asociadas a este cambio de estado
+                $estadoNombre = \app\models\PolizaSeguro::getNombreEstado($item->estado_nuevo);
+                $fechaCambio = new \DateTime($item->fecha_cambio);
+                $fechaFormateada = $fechaCambio->format('Y-m-d');
+                
+                // Buscar imágenes que coincidan con el patrón del estado y fecha
+                $imagenesHistorial = [];
+                $folderName = $model->aseguradora . '_' . $model->no_poliza;
+                $folderName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $folderName);
+                $uploadDir = $baseUploadDir . $folderName . '/';
+                
+                if (file_exists($uploadDir)) {
+                    // Buscar archivos que contengan el estado y la fecha
+                    $pattern = $uploadDir . 'poliza_' . $estadoNombre . '_' . $fechaFormateada . '*';
+                    $files = glob($pattern);
+                    
+                    foreach ($files as $file) {
+                        $relativePath = str_replace(Yii::getAlias('@webroot'), '', $file);
+                        $imagenesHistorial[] = Yii::getAlias('@web') . $relativePath;
+                    }
+                }
+                
                 $historial[] = [
                     'id' => $item->id,
                     'estado_anterior' => $item->estado_anterior,
                     'estado_anterior_nombre' => $item->estado_anterior ? \app\models\PolizaSeguro::getNombreEstado($item->estado_anterior) : '',
                     'estado_nuevo' => $item->estado_nuevo,
-                    'estado_nuevo_nombre' => \app\models\PolizaSeguro::getNombreEstado($item->estado_nuevo),
+                    'estado_nuevo_nombre' => $estadoNombre,
                     'fecha_cambio' => $item->fecha_cambio,
                     'comentario' => $item->comentario,
                     'motivo' => $item->motivo,
-                    'clase_estado' => \app\models\PolizaSeguro::getClaseEstado($item->estado_nuevo)
+                    'clase_estado' => \app\models\PolizaSeguro::getClaseEstado($item->estado_nuevo),
+                    'imagenes' => $imagenesHistorial
                 ];
             }
             
@@ -356,17 +379,42 @@ class PolizaSeguroController extends Controller
             
             // Obtener el historial actualizado
             $historial = [];
+            $baseUploadDir = Yii::getAlias('@webroot') . '/uploads/polizas/';
+            
             foreach ($model->historial as $item) {
+                // Buscar imágenes asociadas a este cambio de estado
+                $estadoNombre = \app\models\PolizaSeguro::getNombreEstado($item->estado_nuevo);
+                $fechaCambio = new \DateTime($item->fecha_cambio);
+                $fechaFormateada = $fechaCambio->format('Y-m-d');
+                
+                // Buscar imágenes que coincidan con el patrón del estado y fecha
+                $imagenesHistorial = [];
+                $folderName = $model->aseguradora . '_' . $model->no_poliza;
+                $folderName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $folderName);
+                $uploadDir = $baseUploadDir . $folderName . '/';
+                
+                if (file_exists($uploadDir)) {
+                    // Buscar archivos que contengan el estado y la fecha
+                    $pattern = $uploadDir . 'poliza_' . $estadoNombre . '_' . $fechaFormateada . '*';
+                    $files = glob($pattern);
+                    
+                    foreach ($files as $file) {
+                        $relativePath = str_replace(Yii::getAlias('@webroot'), '', $file);
+                        $imagenesHistorial[] = Yii::getAlias('@web') . $relativePath;
+                    }
+                }
+                
                 $historial[] = [
                     'id' => $item->id,
                     'estado_anterior' => $item->estado_anterior,
                     'estado_anterior_nombre' => $item->estado_anterior ? \app\models\PolizaSeguro::getNombreEstado($item->estado_anterior) : '',
                     'estado_nuevo' => $item->estado_nuevo,
-                    'estado_nuevo_nombre' => \app\models\PolizaSeguro::getNombreEstado($item->estado_nuevo),
+                    'estado_nuevo_nombre' => $estadoNombre,
                     'fecha_cambio' => $item->fecha_cambio,
                     'comentario' => $item->comentario,
                     'motivo' => $item->motivo,
-                    'clase_estado' => \app\models\PolizaSeguro::getClaseEstado($item->estado_nuevo)
+                    'clase_estado' => \app\models\PolizaSeguro::getClaseEstado($item->estado_nuevo),
+                    'imagenes' => $imagenesHistorial
                 ];
             }
             
