@@ -1,4 +1,4 @@
-    let map;
+let map;
     let markers = [];
     let routePath;
     let routeCoordinates = [];
@@ -300,15 +300,43 @@ function clearMarkers() {
 
 async function handleMarkerClick(marker, location) {
     try {
-        // Mostrar ubicación inicial con el enlace "Mostrar calle"
+        // Formatear la fecha de última actualización
+        const lastUpdateDate = new Date(location.lastUpdate);
+        const formattedDate = lastUpdateDate.toLocaleString();
+        
+        // Preparar información del vehículo
+        let vehicleInfo = '';
+        if (location.vehiculo) {
+            vehicleInfo = `
+                <b>Vehículo:</b> ${location.vehiculo.marca} ${location.vehiculo.modelo}<br>
+                <b>Placa:</b> ${location.vehiculo.placa || 'No disponible'}<br>
+            `;
+        } else {
+            vehicleInfo = `<b>Dispositivo:</b> ${location.userName}<br>`;
+        }
+        
+        // Estado de conexión
+        const connectionStatus = location.isActive ? 
+            '<span style="color: green;">Conectado</span>' : 
+            '<span style="color: red;">Desconectado</span>';
+        
+        // Mostrar popup con toda la información
         marker.bindPopup(`
+            ${vehicleInfo}
+            <b>Estado:</b> ${connectionStatus}<br>
+            <b>Última actualización:</b> ${formattedDate}<br>
             <b>Ubicación:</b> <a href="https://www.google.com/maps?q=${location.latitude},${location.longitude}" target="_blank">${location.latitude}, ${location.longitude}</a><br>
             <b>Dirección:</b> <a href="javascript:void(0);" onclick="showAddress(${location.latitude}, ${location.longitude}, this)">Mostrar calle</a><br>
-            <b>Velocidad:</b> ${location.speed} km/h
+            <b>Velocidad:</b> ${location.speed} km/h<br>
+            <div class="d-flex justify-content-between mt-2">
+                <a href="/gpsreport/index?gps=${location.phoneNumber}" class="btn btn-sm btn-primary">Seguimiento</a>
+                <button class="btn btn-sm btn-info mx-1" onclick="showMoreInfo('${location.phoneNumber}')">Información</button>
+                ${location.vehiculo ? `<a href="/gps/vehiculos/view?id=${location.vehiculo.id}" class="btn btn-sm btn-success">Ver Vehículo</a>` : ''}
+            </div>
         `, { offset: [0, -40] }).openPopup();
 
     } catch (error) {
-      //  console.error('Error fetching address:', error);
+        console.error('Error al mostrar información:', error);
     }
 }
 
@@ -316,7 +344,7 @@ async function showAddress(lat, lon, linkElement) {
     try {
         // Obtener dirección usando las coordenadas
         const address = await getAddress(lat, lon);
-//console.log(`Dirección obtenida: ${address}`);
+    //console.log(`Dirección obtenida: ${address}`);
         
         // Reemplazar el enlace con la dirección obtenida
         linkElement.innerHTML = address;
@@ -912,4 +940,106 @@ document.addEventListener('DOMContentLoaded', function() {
     // Adjust sidebar height when window is resized
     window.addEventListener('resize', adjustSidebarHeight);
 });
+    
+
+// Función para mostrar información adicional del vehículo
+function showMoreInfo(phoneNumber) {
+    // Buscar la ubicación correspondiente al número de teléfono
+    fetch('get-locations-time')
+        .then(response => response.json())
+        .then(locations => {
+            const location = locations.find(loc => loc.phoneNumber === phoneNumber);
+            if (!location) {
+                alert('No se encontró información para este dispositivo.');
+                return;
+            }
+
+            // Crear contenido para el modal
+            let modalContent = '<div class="vehicle-details">';
+            
+            // Información del vehículo si está disponible
+            if (location.vehiculo) {
+                modalContent += `
+                    <h5>Información del Vehículo</h5>
+                    <p><strong>Marca:</strong> ${location.vehiculo.marca}</p>
+                    <p><strong>Modelo:</strong> ${location.vehiculo.modelo}</p>
+                    <p><strong>Placa:</strong> ${location.vehiculo.placa || 'No disponible'}</p>
+                    <p><strong>Color:</strong> ${location.vehiculo.color || 'No disponible'}</p>
+                `;
+            } else {
+                modalContent += `<h5>Dispositivo: ${location.userName}</h5>`;
+            }
+
+            // Información de estado y última actualización
+            const lastUpdateDate = new Date(location.lastUpdate);
+            const formattedDate = lastUpdateDate.toLocaleString();
+            const connectionStatus = location.isActive ? 
+                '<span style="color: green;">Conectado</span>' : 
+                '<span style="color: red;">Desconectado</span>';
+            
+            modalContent += `
+                <h5>Estado del Dispositivo</h5>
+                <p><strong>Estado:</strong> ${connectionStatus}</p>
+                <p><strong>Última actualización:</strong> ${formattedDate}</p>
+                <p><strong>Velocidad:</strong> ${location.speed} km/h</p>
+                <p><strong>Dirección:</strong> ${location.direction || 'No disponible'}</p>
+            `;
+
+            // Información de ubicación
+            modalContent += `
+                <h5>Ubicación</h5>
+                <p><strong>Latitud:</strong> ${location.latitude}</p>
+                <p><strong>Longitud:</strong> ${location.longitude}</p>
+                <p><strong>Método de localización:</strong> ${location.locationMethod || 'GPS'}</p>
+                <p><strong>Precisión:</strong> ${location.accuracy || 'No disponible'}</p>
+                <p><a href="https://www.google.com/maps?q=${location.latitude},${location.longitude}" target="_blank" class="btn btn-sm btn-info">Ver en Google Maps</a></p>
+            `;
+
+            modalContent += '</div>';
+
+            // Crear y mostrar el modal
+            const modalDiv = document.createElement('div');
+            modalDiv.className = 'modal fade';
+            modalDiv.id = 'vehicleInfoModal';
+            modalDiv.setAttribute('tabindex', '-1');
+            modalDiv.setAttribute('aria-labelledby', 'vehicleInfoModalLabel');
+            modalDiv.setAttribute('aria-hidden', 'true');
+            
+            modalDiv.innerHTML = `
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="vehicleInfoModalLabel">
+                                ${location.vehiculo ? `${location.vehiculo.marca} ${location.vehiculo.modelo}` : location.userName}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${modalContent}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Eliminar modal anterior si existe
+            const existingModal = document.getElementById('vehicleInfoModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // Añadir el modal al documento
+            document.body.appendChild(modalDiv);
+
+            // Inicializar y mostrar el modal usando Bootstrap
+            const modal = new bootstrap.Modal(document.getElementById('vehicleInfoModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error al obtener información del vehículo:', error);
+            alert('Error al cargar la información. Por favor, inténtelo de nuevo.');
+        });
+}
     
