@@ -105,100 +105,100 @@ function initMap() {
 }
 
 
-async function loadRecentLocations() { 
+async function loadRecentLocations() {
     try {
         const response = await fetch('get-locations-time');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
+        const locations = await response.json();
 
-        const updatedPhoneNumbers = new Set();
-
-        data.forEach(location => {
-            updatedPhoneNumbers.add(location.phoneNumber);
-
-            const lastLocation = lastKnownLocations[location.phoneNumber];
-            const currentTime = Date.now();
-
-            // Log para ver cómo cambia el lastUpdateTime
-          //  console.log(`lastUpdateTime[${location.phoneNumber}]: `, lastUpdateTime[location.phoneNumber]);
-
-            // Si hay un cambio de ubicación, actualizamos el marcador y la hora de actualización
-            if (!lastLocation || 
-                lastLocation.latitude !== location.latitude || 
-                lastLocation.longitude !== location.longitude) {
-
-             //   console.log(`Actualizando marcador para ${location.phoneNumber}: nueva posición [${location.latitude}, ${location.longitude}].`);
-
-                if (markers[location.phoneNumber]) {
-                    map.removeLayer(markers[location.phoneNumber]);
-                }
-
-                const marker = createMarker(location);
-                markers[location.phoneNumber] = marker;
-
-                lastKnownLocations[location.phoneNumber] = {
-                    latitude: location.latitude,
-                    longitude: location.longitude
-                };
-
-                // Actualiza la última hora de actualización solo cuando haya un cambio de posición
-                lastUpdateTime[location.phoneNumber] = currentTime;
-              //  console.log(`lastUpdateTime actualizado para ${location.phoneNumber}: `, lastUpdateTime[location.phoneNumber]);
-
-            } else {
-               // console.log(`El marcador para ${location.phoneNumber} no ha cambiado de posición.`);
-            }
-        });
-
-        // Verificar si ha pasado más de 2 minutos para cada marcador
-        Object.keys(markers).forEach(phoneNumber => {
+        locations.forEach(location => {
+            const phoneNumber = location.phoneNumber;
             const marker = markers[phoneNumber];
-            const lastUpdated = lastUpdateTime[phoneNumber];
-            const currentTime = Date.now();
 
-            if (lastUpdated) {
-                const timeElapsed = currentTime - lastUpdated;
-                //console.log(`Tiempo transcurrido desde la última actualización de ${phoneNumber}: ${timeElapsed / 1000} segundos`);
+            // Registrar el tiempo de la última actualización
+            lastUpdateTime[phoneNumber] = Date.now();
 
-                if (timeElapsed > 2 * 60 * 1000) { // 2 minutos en milisegundos
-                    if (marker) {
-                  //      console.log(`Cambiando ícono a inactivo para el marcador de ${phoneNumber} (no recibido en la respuesta desde hace más de 2 minutos).`);
-                        marker.setIcon(L.icon({
-                            iconUrl: 'https://img.icons8.com/?size=100&id=p9Dtg5w9YDAv&format=png&color=000000',
-                            iconSize: [30, 30],
-                            iconAnchor: [20, 20],
-                            popupAnchor: [0, -20]
-                        }));
+            // Determinar el icono basado en el estado activo y el tipo de vehículo
+            let iconUrl = 'https://img.icons8.com/?size=100&id=UfftIT7em2K0&format=png&color=000000'; // Icono por defecto
+            
+            // Si tenemos información del vehículo, podemos personalizar el icono
+            if (location.vehiculo) {
+                // Aquí puedes implementar lógica para seleccionar iconos basados en marca, modelo, etc.
+                // Por ejemplo, diferentes iconos para diferentes marcas o tipos de vehículos
+                const marca = location.vehiculo.marca?.toLowerCase() || '';
+                
+                if (marca.includes('ford')) {
+                    iconUrl = 'https://img.icons8.com/?size=100&id=9KWnYJGDDcHU&format=png&color=000000';
+                } else if (marca.includes('toyota')) {
+                    iconUrl = 'https://img.icons8.com/?size=100&id=9KWnYJGDDcHU&format=png&color=000000';
+                } else if (marca.includes('nissan')) {
+                    iconUrl = 'https://img.icons8.com/?size=100&id=9KWnYJGDDcHU&format=png&color=000000';
+                }
+                // Puedes añadir más condiciones para otras marcas
+            }
+            
+            // Si el dispositivo no está activo, usar el icono de inactivo
+            if (!location.isActive) {
+                iconUrl = 'https://img.icons8.com/?size=100&id=p9Dtg5w9YDAv&format=png&color=000000';
+            }
+            
+            const icon = L.icon({
+                iconUrl: iconUrl,
+                iconSize: [30, 30],
+                iconAnchor: [20, 20],
+                popupAnchor: [0, -20]
+            });
+
+            if (marker) {
+                // Actualizar posición si ha cambiado
+                const currentLatLng = marker.getLatLng();
+                if (currentLatLng.lat !== location.latitude || currentLatLng.lng !== location.longitude) {
+                    marker.setLatLng([location.latitude, location.longitude]);
+                    marker.setIcon(icon);
+                    if (location.direction) {
+                        marker.setRotationAngle(location.direction);
                     }
+                } else {
+                    // Actualizar solo el icono si el estado activo ha cambiado
+                    marker.setIcon(icon);
                 }
             } else {
-            //    console.log(`No se ha encontrado el tiempo de última actualización para ${phoneNumber}.`);
+                // Crear un nuevo marcador
+                markers[phoneNumber] = createMarker(location, icon);
             }
         });
 
     } catch (error) {
-   //     console.error('Error fetching recent locations:', error);
+        console.error('Error fetching recent locations:', error);
     }
 }
 
 
-function createMarker(location) {
+function createMarker(location, customIcon) {
+    const icon = customIcon || L.icon({
+        iconUrl: 'https://img.icons8.com/?size=100&id=UfftIT7em2K0&format=png&color=000000',
+        iconSize: [30, 30],
+        iconAnchor: [20, 20],
+        popupAnchor: [0, -20]
+    });
+    
     const marker = L.marker([location.latitude, location.longitude], {
-        icon: L.icon({
-            iconUrl: 'https://img.icons8.com/?size=100&id=UfftIT7em2K0&format=png&color=000000',
-            iconSize: [30, 30],
-            iconAnchor: [20, 20],
-            popupAnchor: [0, -20]
-        })
+        icon: icon
     }).addTo(map);
 
     if (location.direction) {
         marker.setRotationAngle(location.direction);
     }
 
-    marker.bindTooltip(location.userName, { permanent: true, direction: 'top', className: 'custom-tooltip' }).openTooltip();
+    // Añadir información del vehículo al tooltip si está disponible
+    // Mostrar solo información del vehículo en el tooltip
+    let tooltipContent = '';
+    if (location.vehiculo) {
+        tooltipContent = `${location.vehiculo.marca} ${location.vehiculo.modelo}`;
+    } else {
+        tooltipContent = location.userName; // Mantener el nombre de usuario como respaldo si no hay información del vehículo
+    }
+    
+    marker.bindTooltip(tooltipContent, { permanent: true, direction: 'top', className: 'custom-tooltip' }).openTooltip();
 
     marker.on('click', () => {
         handleMarkerClick(marker, location);
@@ -216,31 +216,56 @@ function loadGpsOptions() {
                 .then(locationData => {
                     const gpsList = document.getElementById('gpsList');
                     const gpsSelect = document.getElementById('gpsSelector'); 
+                    gpsList.innerHTML = ''; // Limpiar la lista antes de actualizarla
+                    gpsSelect.innerHTML = ''; // Limpiar el selector antes de actualizarlo
+                    
                     gpsData.forEach(gps => {
                         const location = locationData.find(loc => loc.phoneNumber === gps.phoneNumber);
-                        const speed = location ? location.speed : 'N/A';
+                        const speed = location ? location.speed : '0';
+                        const isActive = location ? location.isActive : false;
 
+                        // Crear el contenedor principal
+                        const div = document.createElement('div');
+                        div.className = 'item-item';
+
+                        // 1. Checkbox y nombre del vehículo
                         const checkbox = document.createElement('input');
                         checkbox.type = 'checkbox';
                         checkbox.id = gps.phoneNumber;
                         checkbox.checked = true;
                         checkbox.onchange = () => toggleMarker(gps.phoneNumber);
-
-                        const label = document.createElement('label');
-                        label.htmlFor = gps.phoneNumber;
-                        label.textContent = `${gps.userName}  ${speed} km/h`;
-
-                    
-                        const div = document.createElement('div');
-                        div.className = 'item-item';
                         div.appendChild(checkbox);
-                        div.appendChild(label);
+
+                        // Nombre del vehículo
+                        let vehicleName = gps.userName;
+                        if (location && location.vehiculo) {
+                            vehicleName = `${location.vehiculo.modelo}`;
+                        }
+                        const nameLabel = document.createElement('span');
+                        nameLabel.textContent = vehicleName;
+                        nameLabel.style.marginRight = '10px';
+                        div.appendChild(nameLabel);
+
+                        // 2. Indicador de estado
+                        const statusIndicator = document.createElement('span');
+                        statusIndicator.className = isActive ? 'status-active' : 'status-inactive';
+                        statusIndicator.innerHTML = '&#x25CF;';
+                        statusIndicator.title = isActive ? 'Activo' : 'Inactivo';
+                        statusIndicator.style.marginRight = '10px';
+                        div.appendChild(statusIndicator);
+
+                        // 3. Velocidad
+                        const speedLabel = document.createElement('span');
+                        const displaySpeed = isActive ? speed : '0';
+                        speedLabel.textContent = `${displaySpeed} km/h`;
+                        div.appendChild(speedLabel);
+
                         gpsList.appendChild(div);
 
-                        // Crear y agregar opciones al select
+                        // Actualizar el selector
                         const option = document.createElement('option');
                         option.value = gps.phoneNumber;
-                        option.textContent = gps.userName;
+                        option.textContent = vehicleName;
                         gpsSelect.appendChild(option);
                     });
                 })

@@ -11,6 +11,7 @@ use yii\web\Response;
 use yii\helpers\Json;
 use Yii;
 use yii\web\BadRequestHttpException;
+use app\models\Vehiculos; // Asegúrate de importar el modelo de Vehiculo
 
 
 /**
@@ -81,7 +82,6 @@ public function actionSaveGeofence()
     }
 
 
-    public $enableCsrfValidation = false; // Deshabilitar CSRF para las solicitudes entrantes
     
     public function actionGetLocations()
     {
@@ -140,6 +140,29 @@ public function actionGetLocationsTime()
     $seenSessionIDs = [];
     foreach ($gpsLocations as $location) {
         if (!in_array($location->sessionID, $seenSessionIDs)) {
+            // Calcular si el dispositivo está activo (actualización en los últimos 2 minutos)
+            $lastUpdateTime = strtotime($location->lastUpdate);
+            $currentTime = time();
+            $timeElapsed = $currentTime - $lastUpdateTime;
+            $isActive = $timeElapsed <= 2 * 60; // 2 minutos en segundos
+            
+            // Buscar información del vehículo asociado al dispositivo
+            $vehiculo = Vehiculos::find()
+                ->joinWith('dispositivo')
+                ->where(['dispositivos.imei' => $location->phoneNumber])
+                ->one();
+                
+            $vehiculoInfo = null;
+            if ($vehiculo) {
+                $vehiculoInfo = [
+                    'id' => $vehiculo->id,
+                    'marca' => $vehiculo->marca_auto,
+                    'modelo' => $vehiculo->modelo_auto,
+                    'placa' => $vehiculo->placa,
+                    'color' => $vehiculo->color_auto
+                ];
+            }
+            
             $locations[] = [
                 'latitude' => $location->latitude,
                 'longitude' => $location->longitude,
@@ -154,6 +177,8 @@ public function actionGetLocationsTime()
                 'extraInfo' => $location->extraInfo,
                 'eventType' => $location->eventType,
                 'lastUpdate' => $location->lastUpdate,
+                'isActive' => $isActive,
+                'vehiculo' => $vehiculoInfo
             ];
             $seenSessionIDs[] = $location->sessionID;
         }

@@ -11,6 +11,45 @@ $this->registerJsFile('@web/js/index.js', ['depends' => [\yii\web\JqueryAsset::c
 $this->title = 'Gpslocations';
 ?>
 
+<style>
+    /* Estilos para los indicadores de estado */
+    .status-active {
+        color: #4CAF50; /* Verde para activo */
+        margin-right: 5px;
+        font-size: 16px;
+    }
+    
+    .status-inactive {
+        color: #F44336; /* Rojo para inactivo */
+        margin-right: 5px;
+        font-size: 16px;
+    }
+    
+    /* Mejorar el estilo de los elementos de la lista */
+    .item-item {
+        display: flex;
+        align-items: center;
+        padding: 5px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .item-item label {
+        margin-left: 5px;
+        font-size: 14px;
+    }
+    
+    /* Estilos para el tooltip del mapa */
+    .custom-tooltip {
+        background-color: rgba(255, 255, 255, 0.9);
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: bold;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+</style>
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA73efm01Xa11C5aXzXBGFbWUjMtkad5HE"></script>
