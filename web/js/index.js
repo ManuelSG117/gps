@@ -274,8 +274,9 @@ function filterGpsList() {
     const gpsItems = document.querySelectorAll('.item-item');
 
     gpsItems.forEach(item => {
-        const label = item.querySelector('label').textContent.toLowerCase();
-        if (label.includes(searchInput)) {
+        const nameSpan = item.querySelector('span'); // Obtiene el primer span que contiene el nombre
+        const name = nameSpan.textContent.toLowerCase();
+        if (name.includes(searchInput)) {
             item.style.display = '';
         } else {
             item.style.display = 'none';
