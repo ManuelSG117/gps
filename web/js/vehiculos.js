@@ -111,6 +111,31 @@ $(document).ready(function() {
             }
         });
     }
+    
+    // Validate icon file size
+    $('#vehiculo-icono').on('change', function() {
+        const file = this.files[0];
+        const maxSize = 1024 * 1024; // 1MB
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+        if (file) {
+            if (file.size > maxSize) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Archivo muy grande',
+                    text: 'El icono personalizado debe ser menor a 1MB'
+                });
+                this.value = '';
+            } else if (!allowedTypes.includes(file.type)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Formato no válido',
+                    text: 'El icono debe ser una imagen (JPG, PNG o GIF)'
+                });
+                this.value = '';
+            }
+        }
+    });
 });
 
 $(document).on('click', '.ajax-delete', function (e) {

@@ -111,6 +111,16 @@ use app\models\PolizaSeguro;
             </div>
         </div>
         
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Icono Personalizado</label>
+                    <input type="file" class="form-control" name="Vehiculos[icono_personalizado]" id="vehiculo-icono" accept="image/*">
+                    <small class="text-muted">Tamaño máximo: 1MB. Esta imagen se usará como marcador en el mapa.</small>
+                </div>
+            </div>
+        </div>
+        
         <div class="d-flex justify-content-end mt-4">
             <button type="button" class="btn btn-primary next-step">Siguiente <i class="fas fa-arrow-right"></i></button>
         </div>

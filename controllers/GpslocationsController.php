@@ -70,17 +70,7 @@ public function actionSaveGeofence()
         ]);
     }
 
-    public function actionIndexT()
-    {
-        $searchModel = new GpslocationsSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-
-        return $this->render('tlaloc', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
-    }
-
+  
 
     
     public function actionGetLocations()
@@ -124,64 +114,62 @@ public function actionGetLocationsTime()
         ->from('dispositivos')
         ->column();
 
-    // Obtener las ubicaciones más recientes de cada GPS por sessionID, solo de dispositivos registrados
+    // Obtener las ubicaciones más recientes de cada GPS por phoneNumber
     $subQuery = (new \yii\db\Query())
-        ->select(['sessionID', 'MAX(lastUpdate) as maxLastUpdate'])
+        ->select(['phoneNumber', 'MAX(lastUpdate) as maxLastUpdate'])
         ->from('gpslocations')
         ->where(['phoneNumber' => $registeredImeis])
-        ->groupBy('sessionID');
+        ->groupBy('phoneNumber');  // Cambiado de sessionID a phoneNumber
 
     $gpsLocations = Gpslocations::find()
-        ->innerJoin(['sub' => $subQuery], 'gpslocations.sessionID = sub.sessionID AND gpslocations.lastUpdate = sub.maxLastUpdate')
+        ->innerJoin(['sub' => $subQuery], 
+            'gpslocations.phoneNumber = sub.phoneNumber AND gpslocations.lastUpdate = sub.maxLastUpdate')
         ->where(['gpslocations.phoneNumber' => $registeredImeis])
         ->all();
 
     $locations = [];
-    $seenSessionIDs = [];
     foreach ($gpsLocations as $location) {
-        if (!in_array($location->sessionID, $seenSessionIDs)) {
-            // Calcular si el dispositivo está activo (actualización en los últimos 2 minutos)
-            $lastUpdateTime = strtotime($location->lastUpdate);
-            $currentTime = time();
-            $timeElapsed = $currentTime - $lastUpdateTime;
-            $isActive = $timeElapsed <= 2 * 60; // 2 minutos en segundos
+        // Calcular si el dispositivo está activo (actualización en los últimos 2 minutos)
+        $lastUpdateTime = strtotime($location->lastUpdate);
+        $currentTime = time();
+        $timeElapsed = $currentTime - $lastUpdateTime;
+        $isActive = $timeElapsed <= 2 * 60; // 2 minutos en segundos
+        
+        // Buscar información del vehículo asociado al dispositivo
+        $vehiculo = Vehiculos::find()
+            ->joinWith('dispositivo')
+            ->where(['dispositivos.imei' => $location->phoneNumber])
+            ->one();
             
-            // Buscar información del vehículo asociado al dispositivo
-            $vehiculo = Vehiculos::find()
-                ->joinWith('dispositivo')
-                ->where(['dispositivos.imei' => $location->phoneNumber])
-                ->one();
-                
-            $vehiculoInfo = null;
-            if ($vehiculo) {
-                $vehiculoInfo = [
-                    'id' => $vehiculo->id,
-                    'marca' => $vehiculo->marca_auto,
-                    'modelo' => $vehiculo->modelo_auto,
-                    'placa' => $vehiculo->placa,
-                    'color' => $vehiculo->color_auto
-                ];
-            }
-            
-            $locations[] = [
-                'latitude' => $location->latitude,
-                'longitude' => $location->longitude,
-                'speed' => $location->speed,
-                'direction' => $location->direction,
-                'gpsTime' => $location->gpsTime,
-                'phoneNumber' => $location->phoneNumber,
-                'userName' => $location->userName,
-                'sessionID' => $location->sessionID,
-                'locationMethod' => $location->locationMethod,
-                'accuracy' => $location->accuracy,
-                'extraInfo' => $location->extraInfo,
-                'eventType' => $location->eventType,
-                'lastUpdate' => $location->lastUpdate,
-                'isActive' => $isActive,
-                'vehiculo' => $vehiculoInfo
+        $vehiculoInfo = null;
+        if ($vehiculo) {
+            $vehiculoInfo = [
+                'id' => $vehiculo->id,
+                'marca' => $vehiculo->marca_auto,
+                'modelo' => $vehiculo->modelo_auto,
+                'placa' => $vehiculo->placa,
+                'color' => $vehiculo->color_auto,
+                'icono_personalizado' => $vehiculo->icono_personalizado
             ];
-            $seenSessionIDs[] = $location->sessionID;
         }
+        
+        $locations[] = [
+            'latitude' => $location->latitude,
+            'longitude' => $location->longitude,
+            'speed' => $location->speed,
+            'direction' => $location->direction,
+            'gpsTime' => $location->gpsTime,
+            'phoneNumber' => $location->phoneNumber,
+            'userName' => $location->userName,
+            'sessionID' => $location->sessionID,
+            'locationMethod' => $location->locationMethod,
+            'accuracy' => $location->accuracy,
+            'extraInfo' => $location->extraInfo,
+            'eventType' => $location->eventType,
+            'lastUpdate' => $location->lastUpdate,
+            'isActive' => $isActive,
+            'vehiculo' => $vehiculoInfo
+        ];
     }
     return $this->asJson($locations);
 }

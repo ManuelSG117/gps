@@ -118,29 +118,21 @@ async function loadRecentLocations() {
             lastUpdateTime[phoneNumber] = Date.now();
 
             // Determinar el icono basado en el estado activo y el tipo de vehículo
-            let iconUrl = 'https://img.icons8.com/?size=100&id=UfftIT7em2K0&format=png&color=000000'; // Icono por defecto
+            let iconUrl;
             
-            // Si tenemos información del vehículo, podemos personalizar el icono
-            if (location.vehiculo) {
-                // Aquí puedes implementar lógica para seleccionar iconos basados en marca, modelo, etc.
-                // Por ejemplo, diferentes iconos para diferentes marcas o tipos de vehículos
-                const marca = location.vehiculo.marca?.toLowerCase() || '';
-                
-                if (marca.includes('ford')) {
-                    iconUrl = 'https://img.icons8.com/?size=100&id=9KWnYJGDDcHU&format=png&color=000000';
-                } else if (marca.includes('toyota')) {
-                    iconUrl = 'https://img.icons8.com/?size=100&id=9KWnYJGDDcHU&format=png&color=000000';
-                } else if (marca.includes('nissan')) {
-                    iconUrl = 'https://img.icons8.com/?size=100&id=9KWnYJGDDcHU&format=png&color=000000';
-                }
-                // Puedes añadir más condiciones para otras marcas
+            // Primero verificar si hay un icono personalizado
+            if (location.vehiculo && location.vehiculo.icono_personalizado) {
+                iconUrl = `data:image/png;base64,${location.vehiculo.icono_personalizado}`;
+            } else {
+                // Si no hay icono personalizado, usar el icono por defecto
+                iconUrl = 'https://img.icons8.com/?size=100&id=UfftIT7em2K0&format=png&color=000000';
             }
             
-            // Si el dispositivo no está activo, usar el icono de inactivo
+            // Si el dispositivo está inactivo, siempre usar el icono de inactivo
             if (!location.isActive) {
                 iconUrl = 'https://img.icons8.com/?size=100&id=p9Dtg5w9YDAv&format=png&color=000000';
             }
-            
+
             const icon = L.icon({
                 iconUrl: iconUrl,
                 iconSize: [30, 30],
@@ -213,7 +205,7 @@ function loadGpsOptions() {
         .then(gpsData => {
             fetch('get-locations-time')
                 .then(response => response.json())
-                .then(locationData => {
+                .then(locationData => {  // Fixed: Added arrow function syntax here
                     const gpsList = document.getElementById('gpsList');
                     const gpsSelect = document.getElementById('gpsSelector'); 
                     gpsList.innerHTML = ''; // Limpiar la lista antes de actualizarla
@@ -1042,4 +1034,3 @@ function showMoreInfo(phoneNumber) {
             alert('Error al cargar la información. Por favor, inténtelo de nuevo.');
         });
 }
-    

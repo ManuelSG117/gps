@@ -8,6 +8,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use Yii;
+use yii\web\UploadedFile;
 
 /**
  * VehiculosController implements the CRUD actions for Vehiculos model.
@@ -93,6 +94,12 @@ class VehiculosController extends Controller
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             
             try {
+                // Handle custom icon upload
+                $iconFile = UploadedFile::getInstance($model, 'icono_personalizado');
+                if ($iconFile) {
+                    $model->icono_personalizado = base64_encode(file_get_contents($iconFile->tempName));
+                }
+
                 if ($model->save()) {
                     // Handle image uploads after saving the vehicle
                     $this->saveVehicleImages($model);
@@ -139,6 +146,12 @@ class VehiculosController extends Controller
                 Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
                 
                 try {
+                    // Handle custom icon upload
+                    $iconFile = UploadedFile::getInstance($model, 'icono_personalizado');
+                    if ($iconFile) {
+                        $model->icono_personalizado = base64_encode(file_get_contents($iconFile->tempName));
+                    }
+
                     if ($model->save()) {
                         // Handle image uploads after updating the vehicle
                         $this->saveVehicleImages($model);
