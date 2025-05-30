@@ -30,6 +30,19 @@ $this->params['breadcrumbs'][] = $this->title;
         'model' => $model,
         'attributes' => [
             'id',
+            'no_empleado',
+            [
+                'attribute' => 'foto',
+                'format' => 'html',
+                'value' => function ($model) {
+                    if ($model->foto) {
+                        return Html::img('data:image/jpeg;base64,' . base64_encode($model->foto), [
+                            'style' => 'max-width: 150px; max-height: 150px;'
+                        ]);
+                    }
+                    return 'Sin foto';
+                },
+            ],
             'nombres',
             'apellido_p',
             'apellido_m',

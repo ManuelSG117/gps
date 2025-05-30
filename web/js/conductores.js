@@ -57,6 +57,7 @@ $(document).on('click', '.ajax-delete', function (e) {
 $(document).on('submit', '#create-conductores-form', function (e) {
     e.preventDefault();
     var form = $(this);
+    var formData = new FormData(form[0]);
 
     // Mostrar el modal de carga
     Swal.fire({
@@ -70,7 +71,9 @@ $(document).on('submit', '#create-conductores-form', function (e) {
     $.ajax({
         url: form.attr('action'),
         type: 'POST',
-        data: form.serialize(),
+        data: formData,
+        processData: false,
+        contentType: false,
         success: function (response) {
             Swal.close(); // Cerrar el modal de carga
             if (response.success) {
@@ -283,4 +286,20 @@ $(document).on('click', '#btn-cancelar, button[data-bs-dismiss="modal"]', functi
     } else {
         $('#exampleModalCenter').modal('hide');
     }
+});
+
+$(document).ready(function() {
+    // Foto preview handler
+    $('#conductor-foto').change(function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#foto-preview').show().find('img').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(file);
+        } else {
+            $('#foto-preview').hide();
+        }
+    });
 });

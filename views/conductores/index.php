@@ -50,6 +50,11 @@ $this->registerJsFile('@web/js/conductores.js',['depends' => [\yii\web\JqueryAss
     'columns' => [
         ['class' => 'yii\grid\SerialColumn'],
         [
+            'attribute' => 'no_empleado',
+            'hAlign' => 'center',
+            'contentOptions' => ['class' => 'no_empleado'],
+        ],
+        [
             'attribute' => 'nombre',
             'hAlign' => 'center',
             'contentOptions' => ['class' => 'nombre'], 

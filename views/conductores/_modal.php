@@ -135,6 +135,24 @@ use yii\widgets\Pjax;
                 'O+' => 'O+',
                 'O-' => 'O-',
             ], ['prompt' => 'Selecciona uno']) ?>
+
+            <?= $form->field($model, 'no_empleado', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->textInput(['maxlength' => true]) ?>
+
+            <?= $form->field($model, 'foto', [
+                'options' => ['class' => 'col-md-4 form-field-spacing']
+            ])->fileInput([
+                'accept' => 'image/*',
+                'class' => 'form-control',
+                'id' => 'conductor-foto'
+            ]) ?>
+
+            <div class="col-md-4 form-field-spacing">
+                <div id="foto-preview" class="mt-2" style="display: none;">
+                    <img src="" alt="Vista previa" style="max-width: 150px; max-height: 150px;">
+                </div>
+            </div>
         </div>
         
         <div class="d-flex justify-content-end mt-4">
