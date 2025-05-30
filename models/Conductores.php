@@ -23,6 +23,8 @@ use Yii;
  * @property string|null $email
  * @property string|null $tipo_sangre
  * @property string|null $fecha_nacimiento
+ * @property string|null $no_empleado
+ * @property resource|null $foto
  * @property string $nombre_contacto
  * @property string $apellido_p_contacto
  * @property string|null $apellido_m_contacto
@@ -50,12 +52,13 @@ class Conductores extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['apellido_m', 'colonia', 'calle', 'num_ext', 'num_int', 'cp', 'email', 'tipo_sangre', 'fecha_nacimiento', 'apellido_m_contacto', 'parentesco', 'estatus'], 'default', 'value' => null],
+            [['apellido_m', 'colonia', 'calle', 'num_ext', 'num_int', 'cp', 'email', 'tipo_sangre', 'fecha_nacimiento', 'no_empleado', 'foto', 'apellido_m_contacto', 'parentesco', 'estatus'], 'default', 'value' => null],
             [['nombre', 'apellido_p', 'no_licencia', 'estado', 'municipio', 'telefono', 'nombre_contacto', 'apellido_p_contacto', 'telefono_contacto'], 'required'],
             [['num_ext', 'estatus'], 'integer'],
             [['fecha_nacimiento'], 'safe'],
+            [['foto'], 'string'],
             [['nombre', 'apellido_p', 'apellido_m', 'estado', 'colonia', 'calle', 'email', 'nombre_contacto', 'apellido_p_contacto', 'apellido_m_contacto', 'parentesco'], 'string', 'max' => 55],
-            [['no_licencia', 'municipio', 'tipo_sangre'], 'string', 'max' => 45],
+            [['no_licencia', 'municipio', 'tipo_sangre', 'no_empleado'], 'string', 'max' => 45],
             [['num_int', 'telefono', 'telefono_contacto'], 'string', 'max' => 10],
             [['cp'], 'string', 'max' => 5],
         ];
@@ -69,9 +72,9 @@ class Conductores extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'nombre' => 'Nombre',
-            'apellido_p' => 'A. Paterno',
-            'apellido_m' => 'A. Materno',
-            'no_licencia' => 'No. Licencia',
+            'apellido_p' => 'Apellido P',
+            'apellido_m' => 'Apellido M',
+            'no_licencia' => 'No Licencia',
             'estado' => 'Estado',
             'municipio' => 'Municipio',
             'colonia' => 'Colonia',
@@ -83,11 +86,13 @@ class Conductores extends \yii\db\ActiveRecord
             'email' => 'Email',
             'tipo_sangre' => 'Tipo Sangre',
             'fecha_nacimiento' => 'Fecha Nacimiento',
-            'nombre_contacto' => 'Nombre',
-            'apellido_p_contacto' => 'A. Paterno',
-            'apellido_m_contacto' => 'A. Materno',
+            'no_empleado' => 'No Empleado',
+            'foto' => 'Foto',
+            'nombre_contacto' => 'Nombre Contacto',
+            'apellido_p_contacto' => 'Apellido P Contacto',
+            'apellido_m_contacto' => 'Apellido M Contacto',
             'parentesco' => 'Parentesco',
-            'telefono_contacto' => 'Telefono',
+            'telefono_contacto' => 'Telefono Contacto',
             'estatus' => 'Estatus',
         ];
     }
