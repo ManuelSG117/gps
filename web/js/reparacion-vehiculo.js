@@ -506,11 +506,17 @@ function cambiarEstadoReparacion(id, estado, comentario, archivos, motivo_pausa,
             Swal.close();
             console.log('Respuesta del servidor:', response);
             if (response.success) {
+                // Si el estado es "En Proceso" (2), mostrar mensaje adicional
+                let message = response.message;
+                if (estado == '2') {
+                    message += '\nEl vehículo ha sido marcado como inactivo mientras está en mantenimiento.';
+                }
+                
                 Swal.fire({
                     icon: 'success',
                     title: '¡Éxito!',
-                    text: response.message,
-                    timer: 1500,
+                    text: message,
+                    timer: 2000,
                     showConfirmButton: false
                 }).then(() => {
                     $.pjax.reload({container: '#reparaciones-grid'});

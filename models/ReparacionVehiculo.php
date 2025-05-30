@@ -119,6 +119,19 @@ class ReparacionVehiculo extends \yii\db\ActiveRecord
         // Si el nuevo estado es Completado, establecer la fecha de finalización
         if ($nuevoEstado == 4 && empty($this->fecha_finalizacion)) {
             $this->fecha_finalizacion = date('Y-m-d');
+            
+            // Reactivar el vehículo cuando se complete la reparación
+            if ($this->vehiculo) {
+                $this->vehiculo->estatus = 1; // Activo
+                $this->vehiculo->save();
+            }
+        }
+        // Si el estado es "En Proceso", marcar el vehículo como inactivo
+        elseif ($nuevoEstado == 2) {
+            if ($this->vehiculo) {
+                $this->vehiculo->estatus = 0; // Inactivo
+                $this->vehiculo->save();
+            }
         }
         
         // Guardar el modelo
