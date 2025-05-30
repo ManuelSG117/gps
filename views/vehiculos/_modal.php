@@ -111,16 +111,6 @@ use app\models\PolizaSeguro;
             </div>
         </div>
         
-        <div class="row">
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label class="form-label">Icono Personalizado</label>
-                    <input type="file" class="form-control" name="Vehiculos[icono_personalizado]" id="vehiculo-icono" accept="image/*">
-                    <small class="text-muted">Tamaño máximo: 1MB. Esta imagen se usará como marcador en el mapa.</small>
-                </div>
-            </div>
-        </div>
-        
         <div class="d-flex justify-content-end mt-4">
             <button type="button" class="btn btn-primary next-step">Siguiente <i class="fas fa-arrow-right"></i></button>
         </div>
@@ -337,8 +327,41 @@ use app\models\PolizaSeguro;
             </div>
         </div>
         
-        <div class="text-right">
-            <button type="button" class="btn btn-secondary prev-step"><i class="fas fa-arrow-left"></i> Atrás</button>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label>Icono personalizado para el mapa</label>
+                <?= FileInput::widget([
+                    'name' => 'Vehiculos[icono_personalizado]',
+                    'options' => [
+                        'id' => 'vehiculo-icono-personalizado',
+                        'accept' => 'image/*',
+                        'class' => 'file-input'
+                    ],
+                    'pluginOptions' => [
+                        'showCaption' => false,
+                        'showRemove' => true,
+                        'showUpload' => false,
+                        'browseClass' => 'btn btn-primary',
+                        'browseIcon' => '<i class="fas fa-camera"></i> ',
+                        'browseLabel' =>  'Seleccionar icono',
+                        'maxFileSize' => 1024, // 1MB máximo
+                        'msgSizeTooLarge' => 'El archivo "{name}" ({size} KB) excede el tamaño máximo permitido de {maxSize} KB',
+                        'allowedFileExtensions' => ['jpg', 'png', 'gif', 'svg'],
+                        'fileActionSettings' => [
+                            'showRemove' => true,
+                            'showUpload' => false,
+                            'showZoom' => true,
+                            'showDrag' => true,
+                            'showDownload' => false
+                        ]
+                    ]
+                ]); ?>
+                <small class="form-text text-muted">Seleccione un icono personalizado para mostrar en el mapa (máx. 1MB). Si no selecciona ninguno, se usará el icono predeterminado.</small>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-end mt-4">
+            <button type="button" class="btn btn-warning prev-step me-3"><i class="fas fa-arrow-left"></i> Atrás</button>
             <button type="button" class="btn btn-primary next-step">Siguiente <i class="fas fa-arrow-right"></i></button>
         </div>
     </div>

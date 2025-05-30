@@ -8,7 +8,6 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use Yii;
-use yii\web\UploadedFile;
 
 /**
  * VehiculosController implements the CRUD actions for Vehiculos model.
@@ -94,15 +93,16 @@ class VehiculosController extends Controller
             Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             
             try {
-                // Handle custom icon upload
-                $iconFile = UploadedFile::getInstance($model, 'icono_personalizado');
-                if ($iconFile) {
-                    $model->icono_personalizado = base64_encode(file_get_contents($iconFile->tempName));
-                }
-
                 if ($model->save()) {
                     // Handle image uploads after saving the vehicle
                     $this->saveVehicleImages($model);
+                    
+                    // Handle icon upload after saving the vehicle
+                    $iconPath = $this->saveVehicleIcon($model);
+                    if ($iconPath) {
+                        $model->icono_personalizado = $iconPath;
+                        $model->save(false); // Save without validation
+                    }
                     
                     return [
                         'success' => true, 
@@ -146,15 +146,16 @@ class VehiculosController extends Controller
                 Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
                 
                 try {
-                    // Handle custom icon upload
-                    $iconFile = UploadedFile::getInstance($model, 'icono_personalizado');
-                    if ($iconFile) {
-                        $model->icono_personalizado = base64_encode(file_get_contents($iconFile->tempName));
-                    }
-
                     if ($model->save()) {
                         // Handle image uploads after updating the vehicle
                         $this->saveVehicleImages($model);
+                        
+                        // Handle icon upload after updating the vehicle
+                        $iconPath = $this->saveVehicleIcon($model);
+                        if ($iconPath) {
+                            $model->icono_personalizado = $iconPath;
+                            $model->save(false); // Save without validation
+                        }
                         
                         return [
                             'success' => true, 
@@ -388,5 +389,49 @@ class VehiculosController extends Controller
         }
         
         return $images;
+    }
+    
+    /**
+     * Saves vehicle icon to the specified directory
+     * @param Vehiculos $model The vehicle model
+     * @return string|null Path to the saved icon or null if no icon was uploaded
+     */
+    protected function saveVehicleIcon($model)
+    {
+        // Define the base upload directory for icons
+        $baseUploadDir = Yii::getAlias('@webroot') . '/uploads/iconos/';
+        
+        // Create directory if it doesn't exist
+        if (!file_exists($baseUploadDir)) {
+            mkdir($baseUploadDir, 0777, true);
+        }
+        
+        // Get the uploaded file
+        $uploadedFile = \yii\web\UploadedFile::getInstance($model, 'icono_personalizado');
+        
+        if ($uploadedFile) {
+            // Validate file size (max 1MB)
+            if ($uploadedFile->size > 1024 * 1024) {
+                $model->addError('icono_personalizado', 'El icono no debe exceder 1MB de tamaño.');
+                return null;
+            }
+            
+            // Generate a unique filename
+            $fileName = 'icon_' . $model->id . '_' . time() . '.' . $uploadedFile->extension;
+            $filePath = $baseUploadDir . $fileName;
+            
+            // Save the file
+            if ($uploadedFile->saveAs($filePath)) {
+                Yii::info("Saved icon for vehicle {$model->id} to {$filePath}", 'app');
+                
+                // Return the web accessible path
+                return Yii::getAlias('@web') . '/uploads/iconos/' . $fileName;
+            } else {
+                Yii::error("Failed to save icon for vehicle {$model->id}", 'app');
+                return null;
+            }
+        }
+        
+        return null;
     }
 }
