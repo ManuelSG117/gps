@@ -40,163 +40,7 @@ $(document).ready(function() {
         $(`.step-indicator[data-step="${stepNumber}"]`).addClass('active');
     }
     
-    // Function to validate each step
-    function validateStep(stepNumber) {
-        let isValid = true;
-        
-        // Get all required fields in the current step
-        $(`#step-content-${stepNumber} [required]`).each(function() {
-            // Make sure the field is visible and enabled before validation
-            if($(this).is(':visible') && !$(this).prop('disabled')) {
-                if($(this).val() === '') {
-                    isValid = false;
-                    $(this).addClass('is-invalid');
-                } else {
-                    $(this).removeClass('is-invalid');
-                }
-            }
-        });
-        
-        if(!isValid) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Campos requeridos',
-                text: 'Por favor complete todos los campos obligatorios antes de continuar.'
-            });
-        }
-        
-        return isValid;
-    }
-    
-    // Initialize file upload widgets when modal opens
-    $('#exampleModalCenter').on('shown.bs.modal', function() {
-        initFileUploads();
-    });
-    
-    // Initialize Kartik file upload widgets
-    function initFileUploads() {
-        // Define image categories
-        const imageCategories = [
-            {id: 'frente', label: 'Frente del vehículo'},
-            {id: 'lateral_derecho', label: 'Lateral derecho'},
-            {id: 'lateral_izquierdo', label: 'Lateral izquierdo'},
-            {id: 'trasera', label: 'Trasera'},
-            {id: 'llantas', label: 'Llantas'},
-            {id: 'motor', label: 'Motor'},
-            {id: 'kilometraje', label: 'Kilometraje'}
-        ];
-        
-        // Initialize each file input
-        imageCategories.forEach(category => {
-            if($(`#vehiculo-imagen-${category.id}`).length) {
-                $(`#vehiculo-imagen-${category.id}`).fileinput({
-                    theme: 'fa',
-                    showUpload: false,
-                    showCancel: false,
-                    showRemove: true,
-                    showPreview: true,
-                    allowedFileExtensions: ['jpg', 'png', 'jpeg'],
-                    maxFileSize: 2048,
-                    initialPreviewAsData: true,
-                    browseClass: 'btn btn-primary',
-                    browseIcon: '<i class="fas fa-folder-open"></i> ',
-                    browseLabel: 'Buscar imagen',
-                    removeLabel: 'Eliminar',
-                    removeIcon: '<i class="fas fa-trash"></i> ',
-                    msgPlaceholder: `Seleccionar imagen (${category.label})`,
-                    layoutTemplates: {
-                        main2: '{preview} {remove} {browse}'
-                    }
-                });
-            }
-        });
-    }
-    
-    // Validate icon file size
-    $('#vehiculo-icono').on('change', function() {
-        const file = this.files[0];
-        const maxSize = 1024 * 1024; // 1MB
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-
-        if (file) {
-            if (file.size > maxSize) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Archivo muy grande',
-                    text: 'El icono personalizado debe ser menor a 1MB'
-                });
-                this.value = '';
-            } else if (!allowedTypes.includes(file.type)) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Formato no válido',
-                    text: 'El icono debe ser una imagen (JPG, PNG o GIF)'
-                });
-                this.value = '';
-            }
-        }
-    });
-});
-
-$(document).on('click', '.ajax-delete', function (e) {
-   // console.log('Delete button clicked');
-    e.preventDefault();
-
-    var id = $(this).data('id');
-    var url = $(this).data('url');
-    
-    Swal.fire({
-        title: '¿Estás seguro?',
-        text: "No podrás deshacer esta acción.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Mostrar el modal de carga
-            Swal.fire({
-                title: 'Cargando...',
-                text: 'Por favor espera.',
-                icon: 'info',
-                showConfirmButton: false,
-                allowOutsideClick: false
-            });
-
-            $.ajax({
-                url: url,
-                type: 'POST',
-                success: function (response) {
-                    Swal.close(); // Cerrar el modal de carga
-
-                    if (response.success) {
-                        Swal.fire(
-                            '¡Eliminado!',
-                            response.message,
-                            'success'
-                        );
-                        $.pjax.reload({ container: '#vehiculos-grid' });
-                    }
-                },
-                error: function () {
-                    Swal.close(); // Cerrar el modal de carga
-                    Swal.fire(
-                        'Error',
-                        'No se pudo eliminar el registro.',
-                        'error'
-                    );
-                }
-            });
-        }
-    });
-});
-
-
-// Add a form submission handler
-$(document).ready(function() {
-    // Handle form submission
+    // Add a form submission handler
     $(document).on('submit', '#create-vehiculos-form', function(e) {
         e.preventDefault(); // Prevent default form submission
         
@@ -273,6 +117,61 @@ $(document).ready(function() {
                 });
             }
         });
+    });
+});
+
+$(document).on('click', '.ajax-delete', function (e) {
+   // console.log('Delete button clicked');
+    e.preventDefault();
+
+    var id = $(this).data('id');
+    var url = $(this).data('url');
+    
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás deshacer esta acción.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mostrar el modal de carga
+            Swal.fire({
+                title: 'Cargando...',
+                text: 'Por favor espera.',
+                icon: 'info',
+                showConfirmButton: false,
+                allowOutsideClick: false
+            });
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                success: function (response) {
+                    Swal.close(); // Cerrar el modal de carga
+
+                    if (response.success) {
+                        Swal.fire(
+                            '¡Eliminado!',
+                            response.message,
+                            'success'
+                        );
+                        $.pjax.reload({ container: '#vehiculos-grid' });
+                    }
+                },
+                error: function () {
+                    Swal.close(); // Cerrar el modal de carga
+                    Swal.fire(
+                        'Error',
+                        'No se pudo eliminar el registro.',
+                        'error'
+                    );
+                }
+            });
+        }
     });
 });
 
@@ -473,6 +372,138 @@ $(document).on('click', '.ajax-update', function(e) {
     });
 });
 
+// Initialize file upload widgets when modal opens
+$('#exampleModalCenter').on('shown.bs.modal', function() {
+    initFileUploads();
+});
+
+// Initialize Kartik file upload widgets
+function initFileUploads() {
+    // Define image categories with their specific order
+    const imageCategories = [
+        {id: 'frente', label: 'Frente del vehículo', required: true},
+        {id: 'lateral_derecho', label: 'Lateral derecho', required: true},
+        {id: 'lateral_izquierdo', label: 'Lateral izquierdo', required: true},
+        {id: 'trasera', label: 'Trasera', required: true},
+        {id: 'llantas', label: 'Llantas', required: true},
+        {id: 'motor', label: 'Motor', required: true},
+        {id: 'kilometraje', label: 'Kilometraje', required: true}
+    ];
+    
+    // Initialize each file input
+    imageCategories.forEach(category => {
+        if($(`#vehiculo-imagen-${category.id}`).length) {
+            $(`#vehiculo-imagen-${category.id}`).fileinput({
+                theme: 'fa',
+                showUpload: false,
+                showCancel: false,
+                showRemove: true,
+                showPreview: true,
+                required: category.required,
+                allowedFileExtensions: ['jpg', 'png', 'jpeg'],
+                maxFileSize: 2048,
+                initialPreviewAsData: true,
+                browseClass: 'btn btn-primary',
+                browseIcon: '<i class="fas fa-folder-open"></i> ',
+                browseLabel: `Buscar ${category.label}`,
+                removeLabel: 'Eliminar',
+                removeIcon: '<i class="fas fa-trash"></i> ',
+                msgPlaceholder: `Seleccionar imagen (${category.label})`,
+                layoutTemplates: {
+                    main2: '{preview} {remove} {browse}'
+                },
+                validateInitial: true,
+                msgRequired: `La imagen ${category.label} es requerida`
+            });
+
+            // Add validation indicator
+            if(category.required) {
+                $(`#vehiculo-imagen-${category.id}`).closest('.form-group').find('label').append(
+                    ' <span class="required text-danger">*</span>'
+                );
+            }
+        }
+    });
+}
+
+// Add validation before allowing to move to next step
+function validateStep(stepNumber) {
+    let isValid = true;
+    
+    if(stepNumber === 3) { // Image upload step
+        $('.file-input[required]').each(function() {
+            if($(this).fileinput('getFileStack').length === 0) {
+                isValid = false;
+                $(this).closest('.form-group').addClass('has-error');
+                
+                // Get the label text
+                const labelText = $(this).closest('.form-group').find('label').text().replace('*', '').trim();
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Imagen requerida',
+                    text: `Por favor seleccione una imagen para: ${labelText}`
+                });
+                return false; // Break the loop
+            }
+        });
+    }
+    
+    return isValid && validateBasicStep(stepNumber);
+}
+
+// Basic step validation (existing function)
+function validateBasicStep(stepNumber) {
+    let isValid = true;
+    
+    // Get all required fields in the current step
+    $(`#step-content-${stepNumber} [required]`).each(function() {
+        // Make sure the field is visible and enabled before validation
+        if($(this).is(':visible') && !$(this).prop('disabled')) {
+            if($(this).val() === '') {
+                isValid = false;
+                $(this).addClass('is-invalid');
+            } else {
+                $(this).removeClass('is-invalid');
+            }
+        }
+    });
+    
+    if(!isValid) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Campos requeridos',
+            text: 'Por favor complete todos los campos obligatorios antes de continuar.'
+        });
+    }
+    
+    return isValid;
+}
+
+// Validate icon file size
+$('#vehiculo-icono').on('change', function() {
+    const file = this.files[0];
+    const maxSize = 1024 * 1024; // 1MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+    if (file) {
+        if (file.size > maxSize) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Archivo muy grande',
+                text: 'El icono personalizado debe ser menor a 1MB'
+            });
+            this.value = '';
+        } else if (!allowedTypes.includes(file.type)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Formato no válido',
+                text: 'El icono debe ser una imagen (JPG, PNG o GIF)'
+            });
+            this.value = '';
+        }
+    }
+});
 
 // Restablecer el formulario al cerrar el modal
 $('#exampleModalCenter').on('hidden.bs.modal', function () {
@@ -495,4 +526,165 @@ $('#exampleModalCenter').on('hidden.bs.modal', function () {
     
     // Reset to first step
     showStep(1);
+});
+
+function handleImageUpload() {
+    const input = document.getElementById('imagen-vehiculo');
+    const previewContainer = document.querySelector('.image-preview-container');
+    let uploadedFiles = [];
+
+    if (input) {
+        input.addEventListener('change', function(e) {
+            const newFiles = Array.from(e.target.files);
+            
+            newFiles.forEach((file, index) => {
+                if (!file.type.startsWith('image/')) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Por favor, seleccione solo archivos de imagen'
+                    });
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'image-preview';
+                    previewDiv.style.position = 'relative';
+                    previewDiv.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview" style="width: 150px; height: 150px; object-fit: cover;">
+                        <button type="button" class="remove-image" style="position: absolute; top: 5px; right: 5px;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    previewContainer.appendChild(previewDiv);
+
+                    // Agregar evento para eliminar imagen
+                    previewDiv.querySelector('.remove-image').addEventListener('click', function() {
+                        previewDiv.remove();
+                        uploadedFiles = uploadedFiles.filter(f => f !== file);
+                    });
+                };
+                reader.readAsDataURL(file);
+                uploadedFiles.push(file);
+            });
+        });
+    }
+}
+
+// Initialize image upload handling when document is ready
+$(document).ready(function() {
+    handleImageUpload();
+});
+
+// Manejar la vista previa del icono
+$(document).ready(function() {
+    $('#icono-vehiculo').change(function() {
+        const file = this.files[0];
+        if (file) {
+            if (file.size > 1024 * 1024) { // 1MB
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'El icono debe ser menor a 1MB'
+                });
+                this.value = '';
+                $('#icono-preview').hide();
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#icono-preview').show().find('img').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(file);
+        } else {
+            $('#icono-preview').hide();
+        }
+    });
+});
+
+// Modificar la función de envío del formulario para incluir el icono
+$(document).on('submit', '#create-vehiculos-form', function(e) {
+    e.preventDefault();
+    var form = $(this);
+    var formData = new FormData(form[0]);
+
+    // Agregar el icono al FormData si existe
+    const iconoInput = document.getElementById('icono-vehiculo');
+    if (iconoInput && iconoInput.files[0]) {
+        formData.append('Vehiculos[icono_personalizado]', iconoInput.files[0]);
+    }
+    
+    // Temporarily enable all fields to allow form submission
+    $(this).find(':input:disabled').prop('disabled', false);
+    
+    // Ensure all file inputs are included in the form data
+    $('.file-input').each(function() {
+        var inputId = $(this).attr('id');
+        // Check if inputId is defined before using replace
+        if (inputId) {
+            var fileCategory = inputId.replace('vehiculo-imagen-', '');
+            
+            // Check if there's a file selected
+            var fileInput = document.getElementById(inputId);
+            if (fileInput && fileInput.files.length > 0) {
+                // The file will be automatically included in FormData
+                console.log('File detected for ' + fileCategory);
+            }
+        }
+    });
+    
+    // Show loading indicator
+    Swal.fire({
+        title: 'Guardando...',
+        text: 'Por favor espera mientras se guarda la información.',
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+    
+    $.ajax({
+        url: form.attr('action'),
+        type: form.attr('method'),
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            Swal.close();
+            
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: response.message
+                }).then((result) => {
+                    // Close modal and refresh grid
+                    $(document).data('confirmed-close', true);
+                    $('#exampleModalCenter').modal('hide');
+                    $.pjax.reload({container: '#vehiculos-grid'});
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message || 'Error al guardar el vehículo'
+                });
+                
+                // If there's HTML to update, do it
+                if (response.html) {
+                    $('#create-vehiculos-pjax').html(response.html);
+                }
+            }
+        },
+        error: function() {
+            Swal.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error de conexión al guardar el vehículo'
+            });
+        }
+    });
 });

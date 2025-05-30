@@ -21,8 +21,10 @@ use app\models\PolizaSeguro;
     'action' => ['/vehiculos/create'],
     'method' => 'post',
     'enableClientValidation' => true,
-    'options' => ['enctype' => 'multipart/form-data', 'data-pjax' => false], // Changed data-pjax to false
-    'enableAjaxValidation' => false,
+    'options' => [
+        'enctype' => 'multipart/form-data',
+        'data-pjax' => false
+    ],
 ]); ?>
 
 <div class="modal-body">
@@ -102,6 +104,15 @@ use app\models\PolizaSeguro;
                 <?= $form->field($model, 'color_auto')->textInput(['maxlength' => true]) ?>
             </div>
             <div class="col-md-6">
+                <?= $form->field($model, 'no_economico')->textInput([
+                    'maxlength' => true,
+                    'placeholder' => 'Ej: VEH-001'
+                ]) ?>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
                 <?= $form->field($model, 'tipo_motor')->dropDownList([
                     'Gasolina' => 'Gasolina',
                     'Diesel' => 'Diesel',
@@ -178,185 +189,53 @@ use app\models\PolizaSeguro;
     <div id="step-content-3" class="step-content" data-step="3" style="display:none;">
         <h5 class="text-center text-primary mb-4">Fotografías del Vehículo</h5>
         
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <strong>¡Importante!</strong> Las fotos del vehículo deben agregarse en el siguiente orden:
+            <ol>
+                <li>Frente del vehículo</li>
+                <li>Lateral derecho</li>
+                <li>Lateral izquierdo</li>
+                <li>Trasera</li>
+                <li>Llantas</li>
+                <li>Motor</li>
+                <li>Kilometraje</li>
+            </ol>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <div class="row mb-3">
-            <div class="col-md-6">
-                <label>Frente del vehículo</label>
-                <?= FileInput::widget([
-                    'name' => 'VehiculoImagenes[frente]',
-                    'options' => [
-                        'id' => 'vehiculo-imagen-frente',
-                        'accept' => 'image/*',
-                        'class' => 'file-input'
-                    ],
-                    'pluginOptions' => [
-                        'showCaption' => false,
-                        'showRemove' => true,
-                        'showUpload' => false,
-                        'browseClass' => 'btn btn-primary',
-                        'browseIcon' => '<i class="fas fa-camera"></i> ',
-                        'browseLabel' =>  'Seleccionar imagen',
-                        'fileActionSettings' => [
-                            'showRemove' => true,
-                            'showUpload' => false,
-                            'showZoom' => true,
-                            'showDrag' => true,
-                            'showDownload' => false
-                        ]
-                    ]
-                ]); ?>
-            </div>
-            <div class="col-md-6">
-                <label>Lateral derecho</label>
-                <?= FileInput::widget([
-                    'name' => 'VehiculoImagenes[lateral_derecho]',
-                    'options' => [
-                        'id' => 'vehiculo-imagen-lateral_derecho',
-                        'accept' => 'image/*',
-                        'class' => 'file-input'
-                    ],
-                    'pluginOptions' => [
-                        'showCaption' => false,
-                        'showRemove' => true,
-                        'showUpload' => false,
-                        'browseClass' => 'btn btn-primary',
-                        'browseIcon' => '<i class="fas fa-camera"></i> ',
-                        'browseLabel' =>  'Seleccionar imagen'
-                    ]
-                ]); ?>
+            <div class="col-md-12">
+                <div class="view-mode-gallery" style="display: none;">
+                    <h6 class="mb-3">Imágenes del Vehículo</h6>
+                    <div class="image-gallery d-flex flex-wrap gap-3"></div>
+                </div>
+                
+                <div class="edit-mode-upload">
+                    <label class="form-label">Imágenes del Vehículo</label>
+                    <div class="image-upload-container">
+                        <div class="image-preview-container d-flex flex-wrap gap-2 mb-2" style="min-height: 150px;"></div>
+                        <div class="upload-controls mt-2">
+                            <input type="file" id="imagen-vehiculo" name="VehiculoImagenes[]" class="form-control" accept="image/*" multiple>
+                            <small class="text-muted d-block mt-1">Agregue las imágenes en el orden especificado arriba. Formatos permitidos: JPG, PNG</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label>Lateral izquierdo</label>
-                <?= FileInput::widget([
-                    'name' => 'VehiculoImagenes[lateral_izquierdo]',
-                    'options' => [
-                        'id' => 'vehiculo-imagen-lateral_izquierdo',
-                        'accept' => 'image/*',
-                        'class' => 'file-input'
-                    ],
-                    'pluginOptions' => [
-                        'showCaption' => false,
-                        'showRemove' => true,
-                        'showUpload' => false,
-                        'browseClass' => 'btn btn-primary',
-                        'browseIcon' => '<i class="fas fa-camera"></i> ',
-                        'browseLabel' =>  'Seleccionar imagen'
-                    ]
-                ]); ?>
-            </div>
-            <div class="col-md-6">
-                <label>Trasera</label>
-                <?= FileInput::widget([
-                    'name' => 'VehiculoImagenes[trasera]',
-                    'options' => [
-                        'id' => 'vehiculo-imagen-trasera',
-                        'accept' => 'image/*',
-                        'class' => 'file-input'
-                    ],
-                    'pluginOptions' => [
-                        'showCaption' => false,
-                        'showRemove' => true,
-                        'showUpload' => false,
-                        'browseClass' => 'btn btn-primary',
-                        'browseIcon' => '<i class="fas fa-camera"></i> ',
-                        'browseLabel' =>  'Seleccionar imagen'
-                    ]
-                ]); ?>
-            </div>
-        </div>
-        
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <label>Llantas</label>
-                <?= FileInput::widget([
-                    'name' => 'VehiculoImagenes[llantas]',
-                    'options' => [
-                        'id' => 'vehiculo-imagen-llantas',
-                        'accept' => 'image/*',
-                        'class' => 'file-input'
-                    ],
-                    'pluginOptions' => [
-                        'showCaption' => false,
-                        'showRemove' => true,
-                        'showUpload' => false,
-                        'browseClass' => 'btn btn-primary',
-                        'browseIcon' => '<i class="fas fa-camera"></i> ',
-                        'browseLabel' =>  'Seleccionar imagen'
-                    ]
-                ]); ?>
-            </div>
-            <div class="col-md-4">
-                <label>Motor</label>
-                <?= FileInput::widget([
-                    'name' => 'VehiculoImagenes[motor]',
-                    'options' => [
-                        'id' => 'vehiculo-imagen-motor',
-                        'accept' => 'image/*',
-                        'class' => 'file-input'
-                    ],
-                    'pluginOptions' => [
-                        'showCaption' => false,
-                        'showRemove' => true,
-                        'showUpload' => false,
-                        'browseClass' => 'btn btn-primary',
-                        'browseIcon' => '<i class="fas fa-camera"></i> ',
-                        'browseLabel' =>  'Seleccionar imagen'
-                    ]
-                ]); ?>
-            </div>
-            <div class="col-md-4">
-                <label>Kilometraje</label>
-                <?= FileInput::widget([
-                    'name' => 'VehiculoImagenes[kilometraje]',
-                    'options' => [
-                        'id' => 'vehiculo-imagen-kilometraje',
-                        'accept' => 'image/*',
-                        'class' => 'file-input'
-                    ],
-                    'pluginOptions' => [
-                        'showCaption' => false,
-                        'showRemove' => true,
-                        'showUpload' => false,
-                        'browseClass' => 'btn btn-primary',
-                        'browseIcon' => '<i class="fas fa-camera"></i> ',
-                        'browseLabel' =>  'Seleccionar imagen'
-                    ]
-                ]); ?>
-            </div>
-        </div>
-        
+
         <div class="row mb-3">
             <div class="col-md-6">
                 <label>Icono personalizado para el mapa</label>
-                <?= FileInput::widget([
-                    'name' => 'Vehiculos[icono_personalizado]',
-                    'options' => [
-                        'id' => 'vehiculo-icono-personalizado',
-                        'accept' => 'image/*',
-                        'class' => 'file-input'
-                    ],
-                    'pluginOptions' => [
-                        'showCaption' => false,
-                        'showRemove' => true,
-                        'showUpload' => false,
-                        'browseClass' => 'btn btn-primary',
-                        'browseIcon' => '<i class="fas fa-camera"></i> ',
-                        'browseLabel' =>  'Seleccionar icono',
-                        'maxFileSize' => 1024, // 1MB máximo
-                        'msgSizeTooLarge' => 'El archivo "{name}" ({size} KB) excede el tamaño máximo permitido de {maxSize} KB',
-                        'allowedFileExtensions' => ['jpg', 'png', 'gif', 'svg'],
-                        'fileActionSettings' => [
-                            'showRemove' => true,
-                            'showUpload' => false,
-                            'showZoom' => true,
-                            'showDrag' => true,
-                            'showDownload' => false
-                        ]
-                    ]
-                ]); ?>
-                <small class="form-text text-muted">Seleccione un icono personalizado para mostrar en el mapa (máx. 1MB). Si no selecciona ninguno, se usará el icono predeterminado.</small>
+                <div class="image-upload-container">
+                    <div class="icon-preview-container d-flex flex-wrap gap-2 mb-2"></div>
+                    <div class="upload-controls">
+                        <input type="file" id="icono-vehiculo" name="Vehiculos[icono_personalizado]" class="form-control" accept="image/*">
+                        <small class="form-text text-muted">Seleccione un icono personalizado para mostrar en el mapa (máx. 1MB). Si no selecciona ninguno, se usará el icono predeterminado.</small>
+                        <div id="icono-preview" class="mt-2" style="display: none;">
+                            <img src="" alt="Vista previa del icono" style="max-width: 64px; max-height: 64px;">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -456,6 +335,34 @@ use app\models\PolizaSeguro;
 .step-indicator.active .step-title {
     color: #007bff;
     font-weight: bold;
+}
+
+.image-preview {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+    margin: 5px;
+    display: inline-block;
+}
+
+.remove-image {
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 50%;
+    padding: 5px;
+    width: 25px;
+    height: 25px;
+    line-height: 15px;
+    text-align: center;
+    cursor: pointer;
+    color: #dc3545;
+}
+
+.image-upload-container {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    border-radius: 5px;
+    background-color: #f8f9fa;
 }
 
 /* Hide buttons by default */
