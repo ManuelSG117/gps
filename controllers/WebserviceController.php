@@ -175,7 +175,7 @@ private function getVehiculosCapasuData()
         }
 
         return [
-            'vehiculo' => [
+           
                 'modelo' => $vehiculo->modelo_auto,
                 'marca' => $vehiculo->marca_auto,
                 'placa' => $vehiculo->placa,
@@ -189,7 +189,6 @@ private function getVehiculosCapasuData()
                 'velocidad' => $ubicacion->speed,
                 'direccion' => $ubicacion->direction,
                 'ultima_actualizacion' => Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s')
-            ]
         ];
     }
 }
