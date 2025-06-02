@@ -12,7 +12,11 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\Json;
 use app\models\Notificaciones;
-use app\components\WhatsappService;
+use app\models\Gpslocations;
+
+/**
+ * VehiculoGeocercaController implementa las acciones CRUD para el modelo VehiculoGeocerca.
+ */
 
 /**
  * VehiculoGeocercaController implementa las acciones CRUD para el modelo VehiculoGeocerca.
@@ -447,5 +451,115 @@ class VehiculoGeocercaController extends Controller
         }
 
         throw new NotFoundHttpException('La página solicitada no existe.');
+    }
+    
+    private function getVehiculosCapasuData()
+    {
+        $vehiculos = \app\models\Vehiculos::find()->with('dispositivo')->all();
+        $vehiculosDentro = [];
+        $vehiculosFuera = [];
+
+        // Buscar la geocerca 'capasu'
+        $geocerca = \app\models\Geocerca::findOne(['name' => 'capasu']);
+        if (!$geocerca) {
+            return ['error' => 'No se encontró la geocerca capasu'];
+        }
+
+        $coords = array_map(function($pair) {
+            $latlng = explode(',', $pair);
+            return [floatval($latlng[0]), floatval($latlng[1])];
+        }, explode('|', $geocerca->coordinates));
+
+        foreach ($vehiculos as $vehiculo) {
+            $imei = $vehiculo->dispositivo ? $vehiculo->dispositivo->imei : null;
+            $ubicacion = null;
+            if ($imei) {
+                $ubicacion = \app\models\Gpslocations::find()
+                    ->where(['phoneNumber' => $imei])
+                    ->orderBy(['lastUpdate' => SORT_DESC])
+                    ->one();
+            }
+
+            if ($ubicacion) {
+                $isInside = self::pointInPolygon(
+                    [$ubicacion->latitude, $ubicacion->longitude],
+                    $coords
+                );
+
+                $vehiculoData = [
+                    'id' => $vehiculo->id,
+                    'modelo' => $vehiculo->modelo_auto,
+                    'marca' => $vehiculo->marca_auto,
+                    'placa' => $vehiculo->placa,
+                    'imei' => $imei,
+                    'latitude' => $ubicacion->latitude,
+                    'longitude' => $ubicacion->longitude,
+                    'lastUpdate' => Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s'),
+                    'speed' => $ubicacion->speed,
+                    'direction' => $ubicacion->direction,
+                    'estado' => $isInside ? 'dentro' : 'fuera',
+                    'ultima_actualizacion' => Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s')
+                ];
+                
+                // Buscar la última ubicación con estado diferente
+                $ultimaUbicacionDiferente = Gpslocations::find()
+                    ->where(['phoneNumber' => $imei])
+                    ->andWhere(['<', 'lastUpdate', $ubicacion->lastUpdate])
+                    ->orderBy(['lastUpdate' => SORT_DESC])
+                    ->one();
+                
+                if ($ultimaUbicacionDiferente) {
+                    $estadoAnterior = self::pointInPolygon(
+                        [$ultimaUbicacionDiferente->latitude, $ultimaUbicacionDiferente->longitude],
+                        $coords
+                    ) ? 'dentro' : 'fuera';
+                    
+                    if ($estadoAnterior !== ($isInside ? 'dentro' : 'fuera')) {
+                        $vehiculoData['ultima_transicion'] = Yii::$app->formatter->asDatetime($ultimaUbicacionDiferente->lastUpdate, 'php:Y-m-d H:i:s');
+                    }
+                }
+
+                if ($isInside) {
+                    $vehiculosDentro[] = $vehiculoData;
+                } else {
+                    $vehiculosFuera[] = $vehiculoData;
+                }
+            }
+        }
+
+        return [
+            'dentro' => $vehiculosDentro,
+            'fuera' => $vehiculosFuera
+        ];
+    }
+
+    public function actionGetVehiculosDentroCapasu()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $resultado = $this->getVehiculosCapasuData();
+        
+        if (isset($resultado['error'])) {
+            return $resultado;
+        }
+        
+        return $resultado['dentro'];
+    }
+
+    public function actionGetVehiculosFueraCapasu()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $resultado = $this->getVehiculosCapasuData();
+        
+        if (isset($resultado['error'])) {
+            return $resultado;
+        }
+        
+        return $resultado['fuera'];
+    }
+
+    public function actionGetVehiculosCapasu()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return $this->getVehiculosCapasuData();
     }
 }
