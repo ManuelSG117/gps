@@ -183,9 +183,7 @@ private function getVehiculosCapasuData()
                 'conductor' => $vehiculo->conductor ? 
                     $vehiculo->conductor->nombre . ' ' . 
                     $vehiculo->conductor->apellido_p . ' ' . 
-                    $vehiculo->conductor->apellido_m : null
-            ],
-            'ubicacion' => [
+                    $vehiculo->conductor->apellido_m : null,
                 'latitude' => $ubicacion->latitude,
                 'longitude' => $ubicacion->longitude,
                 'velocidad' => $ubicacion->speed,
