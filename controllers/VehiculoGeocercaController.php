@@ -339,7 +339,7 @@ class VehiculoGeocercaController extends Controller
     public function actionGetVehiculosUbicacion()
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        $vehiculos = \app\models\Vehiculos::find()->with('dispositivo')->all();
+        $vehiculos = \app\models\Vehiculos::find()->with(['dispositivo', 'conductor'])->all();
         $result = [];
         foreach ($vehiculos as $vehiculo) {
             $imei = $vehiculo->dispositivo ? $vehiculo->dispositivo->imei : null;
@@ -455,7 +455,7 @@ class VehiculoGeocercaController extends Controller
     
     private function getVehiculosCapasuData()
     {
-        $vehiculos = \app\models\Vehiculos::find()->with('dispositivo')->all();
+        $vehiculos = \app\models\Vehiculos::find()->with(['dispositivo', 'conductor'])->all();
         $vehiculosDentro = [];
         $vehiculosFuera = [];
 
@@ -498,7 +498,12 @@ class VehiculoGeocercaController extends Controller
                     'speed' => $ubicacion->speed,
                     'direction' => $ubicacion->direction,
                     'estado' => $isInside ? 'dentro' : 'fuera',
-                    'ultima_actualizacion' => Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s')
+                    'ultima_actualizacion' => Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s'),
+                    'conductor' => $vehiculo->conductor ? 
+                        $vehiculo->conductor->nombre . ' ' . 
+                        $vehiculo->conductor->apellido_p . ' ' . 
+                        $vehiculo->conductor->apellido_m
+                    : null
                 ];
                 
                 // Buscar la última ubicación con estado diferente
