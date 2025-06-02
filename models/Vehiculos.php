@@ -30,6 +30,7 @@ use Yii;
  * @property int|null $direccion_id
  * @property int|null $departamento_id
  * @property string|null $icono_personalizado
+ * @property string|null $identificador
  *
  * @property Conductores $conductor
  * @property Dispositivos $dispositivo
@@ -65,7 +66,7 @@ class Vehiculos extends \yii\db\ActiveRecord
             [['modelo_auto', 'marca_auto'], 'string', 'max' => 60],
             [['placa'], 'string', 'max' => 10],
             [['no_serie'], 'string', 'max' => 17],
-            [['color_auto', 'tipo_motor', 'estado_llantas', 'estado_vehiculo', 'estado_motor', 'no_economico'], 'string', 'max' => 45],
+            [['color_auto', 'tipo_motor', 'estado_llantas', 'estado_vehiculo', 'estado_motor', 'no_economico', 'identificador'], 'string', 'max' => 45],
             [['conductor_id'], 'exist', 'skipOnError' => true, 'targetClass' => Conductores::class, 'targetAttribute' => ['conductor_id' => 'id']],
             [['dispositivo_id'], 'exist', 'skipOnError' => true, 'targetClass' => Dispositivos::class, 'targetAttribute' => ['dispositivo_id' => 'id']],
             [['poliza_id'], 'exist', 'skipOnError' => true, 'targetClass' => PolizaSeguro::class, 'targetAttribute' => ['poliza_id' => 'id']],
@@ -95,12 +96,13 @@ class Vehiculos extends \yii\db\ActiveRecord
             'estado_motor' => 'Estado Motor',
             'no_economico' => 'No Economico',
             'estatus' => 'Estatus',
-            'conductor_id' => 'Conductor ID',
-            'dispositivo_id' => 'Dispositivo ID',
-            'poliza_id' => 'Poliza ID',
-            'direccion_id' => 'Direccion ID',
-            'departamento_id' => 'Departamento ID',
+            'conductor_id' => 'Conductor ',
+            'dispositivo_id' => 'Dispositivo',
+            'poliza_id' => 'Poliza ',
+            'direccion_id' => 'Direccion ',
+            'departamento_id' => 'Departamento ',
             'icono_personalizado' => 'Icono Personalizado',
+            'identificador' => 'Identificador',
         ];
     }
 
