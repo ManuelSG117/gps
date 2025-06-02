@@ -392,20 +392,12 @@ class VehiculosController extends Controller
     }
     
     /**
-     * Saves vehicle icon to the specified directory
+     * Saves vehicle icon as base64 string in the database
      * @param Vehiculos $model The vehicle model
-     * @return string|null Path to the saved icon or null if no icon was uploaded
+     * @return string|null Base64 encoded icon or null if no icon was uploaded
      */
     protected function saveVehicleIcon($model)
     {
-        // Define the base upload directory for icons
-        $baseUploadDir = Yii::getAlias('@webroot') . '/uploads/iconos/';
-        
-        // Create directory if it doesn't exist
-        if (!file_exists($baseUploadDir)) {
-            mkdir($baseUploadDir, 0777, true);
-        }
-        
         // Get the uploaded file
         $uploadedFile = \yii\web\UploadedFile::getInstance($model, 'icono_personalizado');
         
@@ -416,20 +408,14 @@ class VehiculosController extends Controller
                 return null;
             }
             
-            // Generate a unique filename
-            $fileName = 'icon_' . $model->id . '_' . time() . '.' . $uploadedFile->extension;
-            $filePath = $baseUploadDir . $fileName;
+            // Read the file content
+            $fileContent = file_get_contents($uploadedFile->tempName);
             
-            // Save the file
-            if ($uploadedFile->saveAs($filePath)) {
-                Yii::info("Saved icon for vehicle {$model->id} to {$filePath}", 'app');
-                
-                // Return the web accessible path
-                return Yii::getAlias('@web') . '/uploads/iconos/' . $fileName;
-            } else {
-                Yii::error("Failed to save icon for vehicle {$model->id}", 'app');
-                return null;
-            }
+            // Convert to base64
+            $base64Icon = 'data:' . $uploadedFile->type . ';base64,' . base64_encode($fileContent);
+            
+            Yii::info("Saved base64 icon for vehicle {$model->id}", 'app');
+            return $base64Icon;
         }
         
         return null;
