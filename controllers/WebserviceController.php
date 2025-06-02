@@ -131,4 +131,67 @@ private function getVehiculosCapasuData()
         
         return $resultado['fuera'];
     }
+
+    public function actionBuscarVehiculo($busqueda)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        // Buscar por identificador del vehículo
+        $vehiculo = Vehiculos::find()
+            ->with(['dispositivo', 'conductor'])
+            ->where(['identificador' => $busqueda])
+            ->one();
+
+        // Si no se encuentra por identificador, buscar por nombre completo del conductor
+        if (!$vehiculo) {
+            $vehiculo = Vehiculos::find()
+                ->select(['vehiculos.*', 'conductores.*'])
+                ->with(['dispositivo', 'conductor'])
+                ->joinWith('conductor')
+                ->where(['or',
+                    ['like', 'CONCAT(conductores.nombre, " ", conductores.apellido_p, " ", conductores.apellido_m)', $busqueda],
+                    ['like', 'CONCAT(conductores.nombre, " ", conductores.apellido_p)', $busqueda],
+                    ['like', 'conductores.nombre', $busqueda]
+                ])
+                ->one();
+        }
+
+        if (!$vehiculo) {
+            return ['error' => 'No se encontró ningún vehículo con el identificador o conductor especificado'];
+        }
+
+        if (!$vehiculo->dispositivo || !$vehiculo->dispositivo->imei) {
+            return ['error' => 'El vehículo no tiene un dispositivo GPS asignado'];
+        }
+
+        // Obtener la última ubicación del vehículo
+        $ubicacion = Gpslocations::find()
+            ->where(['phoneNumber' => $vehiculo->dispositivo->imei])
+            ->orderBy(['lastUpdate' => SORT_DESC])
+            ->one();
+
+        if (!$ubicacion) {
+            return ['error' => 'No se encontró la ubicación del vehículo'];
+        }
+
+        return [
+            'vehiculo' => [
+                'modelo' => $vehiculo->modelo_auto,
+                'marca' => $vehiculo->marca_auto,
+                'placa' => $vehiculo->placa,
+                'identificador' => $vehiculo->identificador,
+                'conductor' => $vehiculo->conductor ? 
+                    $vehiculo->conductor->nombre . ' ' . 
+                    $vehiculo->conductor->apellido_p . ' ' . 
+                    $vehiculo->conductor->apellido_m : null
+            ],
+            'ubicacion' => [
+                'latitude' => $ubicacion->latitude,
+                'longitude' => $ubicacion->longitude,
+                'velocidad' => $ubicacion->speed,
+                'direccion' => $ubicacion->direction,
+                'ultima_actualizacion' => Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s')
+            ]
+        ];
+    }
 }
