@@ -101,7 +101,10 @@ use app\models\PolizaSeguro;
         
         <div class="row">
             <div class="col-md-6">
-                <?= $form->field($model, 'color_auto')->textInput(['maxlength' => true]) ?>
+            <?= $form->field($model, 'identificador')->textInput([
+                    'maxlength' => true,
+                    'placeholder' => 'Ej: CAP-36'
+                ]) ?>   
             </div>
             <div class="col-md-6">
                 <?= $form->field($model, 'no_economico')->textInput([
@@ -119,6 +122,9 @@ use app\models\PolizaSeguro;
                     'Eléctrico' => 'Eléctrico',
                     'Híbrido' => 'Híbrido'
                 ], ['prompt' => 'Seleccione tipo de motor']) ?>
+            </div>
+            <div class="col-md-6">
+            <?= $form->field($model, 'color_auto')->textInput(['maxlength' => true]) ?>                 
             </div>
         </div>
         

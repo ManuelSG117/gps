@@ -491,14 +491,12 @@ class VehiculoGeocercaController extends Controller
                     'modelo' => $vehiculo->modelo_auto,
                     'marca' => $vehiculo->marca_auto,
                     'placa' => $vehiculo->placa,
-                    'imei' => $imei,
+                    'identificador' => $vehiculo->identificador,
                     'latitude' => $ubicacion->latitude,
                     'longitude' => $ubicacion->longitude,
-                    'lastUpdate' => Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s'),
-                    'speed' => $ubicacion->speed,
-                    'direction' => $ubicacion->direction,
-                    'estado' => $isInside ? 'dentro' : 'fuera',
                     'ultima_actualizacion' => Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s'),
+                    'velocidad' => $ubicacion->speed,
+                    'estado' => $isInside ? 'dentro' : 'fuera',
                     'conductor' => $vehiculo->conductor ? 
                         $vehiculo->conductor->nombre . ' ' . 
                         $vehiculo->conductor->apellido_p . ' ' . 
