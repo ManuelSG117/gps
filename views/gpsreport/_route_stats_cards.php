@@ -11,7 +11,7 @@
     <div class="row">
         <div class="col-lg-4 col-md-6 col-12 mb-3">
             <div class="cards">
-                <dotlottie-player src="https://lottie.host/2e2e2e2e-2e2e-2e2e-2e2e-2e2e2e2e2e2e/route1.lottie" background="transparent" speed="1" style="width: 120px; height: 120px" loop autoplay></dotlottie-player>
+                <dotlottie-player src="https://lottie.host/2c5ef1d7-d8f0-4fbe-93ff-b26bfe61d85c/RAjwsMUb6k.lottie" background="transparent" speed="1" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 0;" loop autoplay></dotlottie-player>
                 <div class="card__content">
                     <p class="card__title">Distancia Total Recorrida</p>
                     <p class="card__description stat-value" id="stat-distance">-</p>
@@ -21,7 +21,7 @@
         </div>
         <div class="col-lg-4 col-md-6 col-12 mb-3">
             <div class="cards">
-                <dotlottie-player src="https://lottie.host/3b3b3b3b-3b3b-3b3b-3b3b-3b3b3b3b3b3b/route2.lottie" background="transparent" speed="1" style="width: 120px; height: 120px" loop autoplay></dotlottie-player>
+                <dotlottie-player src="https://lottie.host/f544da77-a18b-488d-87de-e401b849c7f6/G4GdIXpZMa.lottie" background="transparent" speed="1" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 0;" loop autoplay></dotlottie-player>
                 <div class="card__content">
                     <p class="card__title">Velocidad Promedio</p>
                     <p class="card__description stat-value" id="stat-avg-speed">-</p>
@@ -31,8 +31,8 @@
         </div>
         <div class="col-lg-4 col-12 mb-3">
             <div class="cards">
-                <dotlottie-player src="https://lottie.host/4c4c4c4c-4c4c-4c4c-4c4c-4c4c4c4c4c4c/route3.lottie" background="transparent" speed="1" style="width: 120px; height: 120px" loop autoplay></dotlottie-player>
-                <div class="card__content">
+            <dotlottie-player src="https://lottie.host/f544da77-a18b-488d-87de-e401b849c7f6/G4GdIXpZMa.lottie" background="transparent" speed="1" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 0;" loop autoplay></dotlottie-player>
+            <div class="card__content">
                     <p class="card__title">Duración Total</p>
                     <p class="card__description stat-value" id="stat-duration">-</p>
                     <p class="card__description">Tiempo transcurrido desde el primer hasta el último punto de la ruta.</p>

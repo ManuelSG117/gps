@@ -248,7 +248,7 @@ $registeredPhones = GpsLocations::find()
 ]) ?>
 
 <!-- Card para mostrar entradas/salidas a la geocerca CAPASU -->
-<div id="capasu-card" class="card shadow mb-4" style="display:none;">
+<div id="capasu-card" class=" " style="display:none;">
     <div class="card-header bg-info text-white d-flex align-items-center">
         <i class="fa fa-map-marker fa-lg mr-2"></i>
         <span style="font-size:1.15rem;"><strong>Entradas y Salidas a CAPASU</strong></span>
