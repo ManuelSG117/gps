@@ -191,4 +191,84 @@ private function getVehiculosCapasuData()
                 'ultima_actualizacion' => Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s')
         ];
     }
+
+    public function actionGetInformeVehiculo($identificador, $tipo = 'dia', $fecha = null)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if (!$fecha) {
+            $fecha = date('Y-m-d');
+        }
+
+        $vehiculo = Vehiculos::find()
+            ->with(['dispositivo'])
+            ->where(['identificador' => $identificador])
+            ->one();
+
+        if (!$vehiculo || !$vehiculo->dispositivo) {
+            return ['error' => 'Vehículo no encontrado o sin dispositivo GPS'];
+        }
+
+        $fechaInicio = $tipo === 'semana' ? 
+            date('Y-m-d 00:00:00', strtotime($fecha . ' -6 days')) :
+            date('Y-m-d 00:00:00', strtotime($fecha));
+        
+        $fechaFin = date('Y-m-d 23:59:59', strtotime($fecha));
+
+        // Obtener todas las ubicaciones del período
+        $ubicaciones = Gpslocations::find()
+            ->where(['phoneNumber' => $vehiculo->dispositivo->imei])
+            ->andWhere(['between', 'lastUpdate', $fechaInicio, $fechaFin])
+            ->orderBy(['lastUpdate' => SORT_ASC])
+            ->all();
+
+        if (empty($ubicaciones)) {
+            return ['error' => 'No hay datos para el período seleccionado'];
+        }
+
+        // Hora de salida (primera ubicación del día)
+        $horaSalida = Yii::$app->formatter->asDatetime($ubicaciones[0]->lastUpdate, 'php:Y-m-d H:i:s');
+
+        // Calcular kilómetros recorridos
+        $kmRecorridos = 0;
+        $paradas = 0;
+        $tiempoParada = 300; // 5 minutos = parada
+
+        for ($i = 1; $i < count($ubicaciones); $i++) {
+            // Calcular distancia entre puntos
+            $lat1 = $ubicaciones[$i-1]->latitude;
+            $lon1 = $ubicaciones[$i-1]->longitude;
+            $lat2 = $ubicaciones[$i]->latitude;
+            $lon2 = $ubicaciones[$i]->longitude;
+
+            $kmRecorridos += $this->calcularDistancia($lat1, $lon1, $lat2, $lon2);
+
+            // Detectar paradas (velocidad 0 por más de 5 minutos)
+            $tiempoDiferencia = strtotime($ubicaciones[$i]->lastUpdate) - strtotime($ubicaciones[$i-1]->lastUpdate);
+            if ($ubicaciones[$i]->speed == 0 && $tiempoDiferencia >= $tiempoParada) {
+                $paradas++;
+            }
+        }
+
+        return [
+            'fecha_inicio' => $fechaInicio,
+            'fecha_fin' => $fechaFin,
+            'hora_salida' => $horaSalida,
+            'kilometros_recorridos' => round($kmRecorridos, 2),
+            'numero_paradas' => $paradas
+        ];
+    }
+
+    private function calcularDistancia($lat1, $lon1, $lat2, $lon2) {
+        $r = 6371; // Radio de la Tierra en km
+
+        $lat1 = deg2rad($lat1);
+        $lon1 = deg2rad($lon1);
+        $lat2 = deg2rad($lat2);
+        $lon2 = deg2rad($lon2);
+
+        $d = acos(sin($lat1) * sin($lat2) + cos($lat1) * cos($lat2) * cos($lon2 - $lon1)) * $r;
+
+        return $d;
+    }
 }
