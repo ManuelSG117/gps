@@ -246,7 +246,7 @@ private function getVehiculosCapasuData()
         // Calcular kilómetros recorridos
         $kmRecorridos = 0;
         $paradas = 0;
-        $tiempoParada = 300; // 5 minutos = parada
+        $tiempoParada = 180; // 3 minutos = parada
 
         for ($i = 1; $i < count($ubicaciones); $i++) {
             // Calcular distancia entre puntos
@@ -257,7 +257,7 @@ private function getVehiculosCapasuData()
 
             $kmRecorridos += $this->calcularDistancia($lat1, $lon1, $lat2, $lon2);
 
-            // Detectar paradas (velocidad 0 por más de 5 minutos)
+            // Detectar paradas (velocidad 0 por más de 3 minutos)
             $tiempoDiferencia = strtotime($ubicaciones[$i]->lastUpdate) - strtotime($ubicaciones[$i-1]->lastUpdate);
             if ($ubicaciones[$i]->speed == 0 && $tiempoDiferencia >= $tiempoParada) {
                 $paradas++;
@@ -265,6 +265,11 @@ private function getVehiculosCapasuData()
         }
 
         return [
+            'identificador' => $vehiculo->identificador,
+            'conductor' => $vehiculo->conductor ? 
+                $vehiculo->conductor->nombre . ' ' . 
+                $vehiculo->conductor->apellido_p . ' ' .
+                $vehiculo->conductor->apellido_m : null,
             'fecha_inicio' => $fechaInicio,
             'fecha_fin' => $fechaFin,
             'hora_salida' => $horaSalida,
