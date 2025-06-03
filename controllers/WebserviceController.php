@@ -192,7 +192,7 @@ private function getVehiculosCapasuData()
         ];
     }
 
-    public function actionGetInformeVehiculo($identificador, $tipo = 'dia', $fecha = null)
+    public function actionGetInformeVehiculo($busqueda, $tipo = 'dia', $fecha = null)
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
@@ -200,10 +200,24 @@ private function getVehiculosCapasuData()
             $fecha = date('Y-m-d');
         }
 
+        // Buscar por identificador del vehículo
         $vehiculo = Vehiculos::find()
-            ->with(['dispositivo'])
-            ->where(['identificador' => $identificador])
+            ->with(['dispositivo', 'conductor'])
+            ->where(['identificador' => $busqueda])
             ->one();
+
+        // Si no se encuentra por identificador, buscar por nombre completo del conductor
+        if (!$vehiculo) {
+            $vehiculo = Vehiculos::find()
+                ->with(['dispositivo', 'conductor'])
+                ->joinWith('conductor')
+                ->where(['or',
+                    ['like', 'CONCAT(conductores.nombre, " ", conductores.apellido_p, " ", conductores.apellido_m)', $busqueda],
+                    ['like', 'CONCAT(conductores.nombre, " ", conductores.apellido_p)', $busqueda],
+                    ['like', 'conductores.nombre', $busqueda]
+                ])
+                ->one();
+        }
 
         if (!$vehiculo || !$vehiculo->dispositivo) {
             return ['error' => 'Vehículo no encontrado o sin dispositivo GPS'];
