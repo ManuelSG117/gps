@@ -77,7 +77,26 @@ while (true) {
                     $response = "**,imei:" + $imei + ",E;";
                 }
                 break;
-            }
+            
+            //add case for 13 fields
+            case 13:
+                $imei = substr($tk103_data[0], 5);
+                $alarm = $tk103_data[1];
+                $gps_time = nmea_to_mysql_time($tk103_data[2]);
+                $latitude = degree_to_decimal($tk103_data[7], $tk103_data[8]);
+                $longitude = degree_to_decimal($tk103_data[9], $tk103_data[10]);
+                $speed_in_knots = $tk103_data[11];
+                $speed_in_kmh = 1.852 * $speed_in_knots;
+                $bearing = $tk103_data[12];
+
+                insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_kmh, $bearing);
+
+                if ($alarm == "help me") {
+                    $response = "**,imei:" + $imei + ",E;";
+                }
+
+                break;
+        }
  
             if (!$data) {
                 unset($client_sockets[ array_search($socket, $client_sockets) ]);

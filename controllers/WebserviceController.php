@@ -71,7 +71,7 @@ private function getVehiculosCapasuData()
                     'estado' => $isInside ? 'dentro' : 'fuera',
                     'conductor' => $vehiculo->conductor ? 
                         $vehiculo->conductor->nombre . ' ' . 
-                        $vehiculo->conductor->apellido_p . ' ' . 
+                        $vehiculo->conductor->apellido_p . ' '.
                         $vehiculo->conductor->apellido_m
                     : null
                 ];
@@ -136,60 +136,60 @@ private function getVehiculosCapasuData()
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        // Buscar por identificador del vehículo
-        $vehiculo = Vehiculos::find()
+        // Preparar la búsqueda para diferentes formatos
+        $busquedaLimpia = str_replace(' ', '', $busqueda); // Eliminar espacios
+        $busquedaLimpia = str_replace('-', '', $busquedaLimpia); // Eliminar guiones
+        
+        // Buscar por identificador del vehículo con coincidencias parciales
+        $vehiculos = Vehiculos::find()
             ->with(['dispositivo', 'conductor'])
-            ->where(['identificador' => $busqueda])
-            ->one();
+            ->where(['or',
+                ['like', 'REPLACE(REPLACE(identificador, " ", ""), "-", "")', $busquedaLimpia],
+                ['like', 'CONCAT(conductores.nombre, " ", conductores.apellido_p, " ", conductores.apellido_m)', $busqueda],
+                ['like', 'CONCAT(conductores.nombre, " ", conductores.apellido_p)', $busqueda],
+                ['like', 'conductores.nombre', $busqueda]
+            ])
+            ->joinWith('conductor')
+            ->all();
 
-        // Si no se encuentra por identificador, buscar por nombre completo del conductor
-        if (!$vehiculo) {
-            $vehiculo = Vehiculos::find()
-                ->select(['vehiculos.*', 'conductores.*'])
-                ->with(['dispositivo', 'conductor'])
-                ->joinWith('conductor')
-                ->where(['or',
-                    ['like', 'CONCAT(conductores.nombre, " ", conductores.apellido_p, " ", conductores.apellido_m)', $busqueda],
-                    ['like', 'CONCAT(conductores.nombre, " ", conductores.apellido_p)', $busqueda],
-                    ['like', 'conductores.nombre', $busqueda]
-                ])
-                ->one();
-        }
-
-        if (!$vehiculo) {
+        if (empty($vehiculos)) {
             return ['error' => 'No se encontró ningún vehículo con el identificador o conductor especificado'];
         }
 
-        if (!$vehiculo->dispositivo || !$vehiculo->dispositivo->imei) {
-            return ['error' => 'El vehículo no tiene un dispositivo GPS asignado'];
-        }
+        $resultados = [];
+        foreach ($vehiculos as $vehiculo) {
+            if (!$vehiculo->dispositivo || !$vehiculo->dispositivo->imei) {
+                continue; // Saltar vehículos sin dispositivo GPS
+            }
 
-        // Obtener la última ubicación del vehículo
-        $ubicacion = Gpslocations::find()
-            ->where(['phoneNumber' => $vehiculo->dispositivo->imei])
-            ->orderBy(['lastUpdate' => SORT_DESC])
-            ->one();
+            // Obtener la última ubicación del vehículo
+            $ubicacion = Gpslocations::find()
+                ->where(['phoneNumber' => $vehiculo->dispositivo->imei])
+                ->orderBy(['lastUpdate' => SORT_DESC])
+                ->one();
 
-        if (!$ubicacion) {
-            return ['error' => 'No se encontró la ubicación del vehículo'];
-        }
+            if (!$ubicacion) {
+                continue; // Saltar vehículos sin ubicación
+            }
 
-        return [
-           
+            $resultados[] = [
                 'modelo' => $vehiculo->modelo_auto,
                 'marca' => $vehiculo->marca_auto,
                 'placa' => $vehiculo->placa,
                 'identificador' => $vehiculo->identificador,
                 'conductor' => $vehiculo->conductor ? 
                     $vehiculo->conductor->nombre . ' ' . 
-                    $vehiculo->conductor->apellido_p . ' ' . 
+                    $vehiculo->conductor->apellido_p . ' '.
                     $vehiculo->conductor->apellido_m : null,
                 'latitude' => $ubicacion->latitude,
                 'longitude' => $ubicacion->longitude,
                 'velocidad' => $ubicacion->speed,
                 'direccion' => $ubicacion->direction,
                 'ultima_actualizacion' => Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s')
-        ];
+            ];
+        }
+
+        return $resultados;
     }
 
     public function actionGetInformeVehiculo($busqueda, $tipo = 'dia', $fecha = null)

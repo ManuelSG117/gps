@@ -223,7 +223,39 @@ while (true) {
                         log_message("Enviado LOAD al cliente (inicio)");
                     }
                     break;
-                case 19: // imei:359710049095095,tracker,151006012336,,F,172337.000,A,5105.9792,N,11404.9599,W,0.01,322.56,,0,0,,, 
+                case 13: // imei:868166052404811,tracker,250604173134,,F,173134.000,A,1924.35848,N,10204.00195,W,5.51,126.22
+                    try {
+                        $imei_part = $tk103_data[0];
+                        $imei = "";
+                        if (strpos($imei_part, 'imei:') === 0) {
+                            $imei = substr($imei_part, 5);
+                            update_device_info($socket, $imei);
+                        }
+                        
+                        $alarm = $tk103_data[1];
+                        $gps_time = nmea_to_mysql_time($tk103_data[2]);
+                        $gps_status = $tk103_data[6]; // A=válido, V=inválido
+                        $latitude = degree_to_decimal($tk103_data[7], $tk103_data[8]);
+                        $longitude = degree_to_decimal($tk103_data[9], $tk103_data[10]);
+                        $speed_in_knots = floatval($tk103_data[11]);
+                        $speed_in_kmh = 1.852 * $speed_in_knots;
+                        $bearing = $tk103_data[12];
+                        
+                        // Validar datos GPS
+                        if ($gps_status == 'A' && validate_gps_data($latitude, $longitude, $speed_in_kmh)) {
+                            $result = insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_kmh, $bearing);
+                            if ($result === 'IMEI_NOT_REGISTERED') {
+                                $response = "IMEI_NOT_REGISTERED";
+                                log_message("IMEI $imei no está registrado en la tabla dispositivos. No se insertará la ubicación.");
+                            }
+                        } else {
+                            log_message("Datos GPS inválidos, no se insertarán en la base de datos");
+                        }
+                    } catch (Exception $e) {
+                        log_message("ERROR al procesar datos GPS: " . $e->getMessage());
+                    }
+                    break;
+                case 19: // formato antiguo con 19 elementos
                     try {
                         $imei_part = $tk103_data[0];
                         $imei = "";

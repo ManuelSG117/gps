@@ -101,7 +101,7 @@ function initMap() {
     loadGpsOptions();
     loadRecentLocations();
 
-    recentLocationsInterval = setInterval(loadRecentLocations, 10000); 
+    recentLocationsInterval = setInterval(loadRecentLocations, 1000); 
 }
 
 
@@ -240,7 +240,7 @@ function loadGpsOptions() {
                         // Nombre del vehículo
                         let vehicleName = gps.userName;
                         if (location && location.vehiculo) {
-                            vehicleName = `${location.vehiculo.modelo}`;
+                            vehicleName = `${location.vehiculo.identificador}`;
                         }
                         const nameLabel = document.createElement('span');
                         nameLabel.textContent = vehicleName;

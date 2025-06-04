@@ -149,7 +149,8 @@ public function actionGetLocationsTime()
                 'modelo' => $vehiculo->modelo_auto,
                 'placa' => $vehiculo->placa,
                 'color' => $vehiculo->color_auto,
-                'icono_personalizado' => $vehiculo->icono_personalizado
+                'icono_personalizado' => $vehiculo->icono_personalizado,
+                'identificador' => $vehiculo->identificador
             ];
         }
         
