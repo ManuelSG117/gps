@@ -132,7 +132,7 @@ private function getVehiculosCapasuData()
         return $resultado['fuera'];
     }
 
-    public function actionBuscarVehiculo($busqueda)
+    public function actionBuscarVehiculo($busqueda = null, $id = null)
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
@@ -140,15 +140,28 @@ private function getVehiculosCapasuData()
         $busquedaLimpia = str_replace(' ', '', $busqueda); // Eliminar espacios
         $busquedaLimpia = str_replace('-', '', $busquedaLimpia); // Eliminar guiones
         
+        // Construir la condición de búsqueda
+        $conditions = ['or'];
+
+        if ($busqueda !== null) {
+            $conditions[] = ['like', 'REPLACE(REPLACE(identificador, " ", ""), "-", "")', $busquedaLimpia];
+            $conditions[] = ['like', 'CONCAT(conductores.nombre, " ", conductores.apellido_p, " ", conductores.apellido_m)', $busqueda];
+            $conditions[] = ['like', 'CONCAT(conductores.nombre, " ", conductores.apellido_p)', $busqueda];
+            $conditions[] = ['like', 'conductores.nombre', $busqueda];
+        }
+
+        if ($id !== null) {
+            $conditions[] = ['vehiculos.id' => $id];
+        }
+
+        if (count($conditions) === 1) { // Only 'or' is present, no actual search criteria
+            return ['error' => 'Debe proporcionar un parámetro de búsqueda (busqueda o id)'];
+        }
+
         // Buscar por identificador del vehículo con coincidencias parciales
         $vehiculos = Vehiculos::find()
             ->with(['dispositivo', 'conductor'])
-            ->where(['or',
-                ['like', 'REPLACE(REPLACE(identificador, " ", ""), "-", "")', $busquedaLimpia],
-                ['like', 'CONCAT(conductores.nombre, " ", conductores.apellido_p, " ", conductores.apellido_m)', $busqueda],
-                ['like', 'CONCAT(conductores.nombre, " ", conductores.apellido_p)', $busqueda],
-                ['like', 'conductores.nombre', $busqueda]
-            ])
+            ->where($conditions)
             ->joinWith('conductor')
             ->all();
 
@@ -176,6 +189,7 @@ private function getVehiculosCapasuData()
             // }
 
             $resultados[] = [
+                'id' => $vehiculo->id,
                 'modelo' => $vehiculo->modelo_auto,
                 'marca' => $vehiculo->marca_auto,
                 'placa' => $vehiculo->placa,
@@ -188,7 +202,7 @@ private function getVehiculosCapasuData()
                 'longitude' => $ubicacion ? $ubicacion->longitude : null,
                 'velocidad' => $ubicacion ? $ubicacion->speed : null,
                 'direccion' => $ubicacion ? $ubicacion->direction : null,
-                'ultima_actualizacion' => $ubicacion ? Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s') : null
+                'ultima_actualizacion' => $ubicacion ? \Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s') : null
             ];
         }
 
