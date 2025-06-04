@@ -158,19 +158,22 @@ private function getVehiculosCapasuData()
 
         $resultados = [];
         foreach ($vehiculos as $vehiculo) {
-            if (!$vehiculo->dispositivo || !$vehiculo->dispositivo->imei) {
-                continue; // Saltar vehículos sin dispositivo GPS
-            }
+            // if (!$vehiculo->dispositivo || !$vehiculo->dispositivo->imei) {
+            //     continue; // Saltar vehículos sin dispositivo GPS
+            // }
 
             // Obtener la última ubicación del vehículo
-            $ubicacion = Gpslocations::find()
-                ->where(['phoneNumber' => $vehiculo->dispositivo->imei])
-                ->orderBy(['lastUpdate' => SORT_DESC])
-                ->one();
-
-            if (!$ubicacion) {
-                continue; // Saltar vehículos sin ubicación
+            $ubicacion = null;
+            if ($vehiculo->dispositivo && $vehiculo->dispositivo->imei) {
+                $ubicacion = Gpslocations::find()
+                    ->where(['phoneNumber' => $vehiculo->dispositivo->imei])
+                    ->orderBy(['lastUpdate' => SORT_DESC])
+                    ->one();
             }
+
+            // if (!$ubicacion) {
+            //     continue; // Saltar vehículos sin ubicación
+            // }
 
             $resultados[] = [
                 'modelo' => $vehiculo->modelo_auto,
@@ -179,13 +182,13 @@ private function getVehiculosCapasuData()
                 'identificador' => $vehiculo->identificador,
                 'conductor' => $vehiculo->conductor ? 
                     $vehiculo->conductor->nombre . ' ' . 
-                    $vehiculo->conductor->apellido_p . ' '.
+                    $vehiculo->conductor->apellido_p . ' '. 
                     $vehiculo->conductor->apellido_m : null,
-                'latitude' => $ubicacion->latitude,
-                'longitude' => $ubicacion->longitude,
-                'velocidad' => $ubicacion->speed,
-                'direccion' => $ubicacion->direction,
-                'ultima_actualizacion' => Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s')
+                'latitude' => $ubicacion ? $ubicacion->latitude : null,
+                'longitude' => $ubicacion ? $ubicacion->longitude : null,
+                'velocidad' => $ubicacion ? $ubicacion->speed : null,
+                'direccion' => $ubicacion ? $ubicacion->direction : null,
+                'ultima_actualizacion' => $ubicacion ? Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s') : null
             ];
         }
 
