@@ -28,6 +28,11 @@ foreach ($registeredPhones as $phone) {
     $formattedPhones[$phone['phoneNumber']] = $phone['identificador'];
 }
 
+// Construir las opciones del dropdown
+$deviceOptions = ['all' => 'Todos los dispositivos'] + $formattedPhones;
+// Seleccionar por defecto el primer phoneNumber real si no hay selección previa
+$defaultGps = Yii::$app->request->get('gps', array_key_first($formattedPhones));
+
 $registeredPhones = $formattedPhones;
 
 ?>
@@ -76,11 +81,8 @@ $registeredPhones = $formattedPhones;
             <div class="col-lg-2 col-md-4 col-12">
                 <div class="form-group">
                     <label for="gps">Dispositivo:</label>
-                    <?= Html::dropDownList('gps', Yii::$app->request->get('gps', 'all'), 
-                        array_merge(
-                            ['all' => 'Todos los dispositivos'], 
-                            $formattedPhones
-                        ), [
+                    <?= Html::dropDownList('gps', $defaultGps, 
+                        $deviceOptions, [
                             'class' => 'form-control',
                             'id' => 'gps',
                         ]) ?>

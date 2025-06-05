@@ -193,10 +193,10 @@ function createMarker(location, customIcon) {
     // Añadir información del vehículo al tooltip si está disponible
     // Mostrar solo información del vehículo en el tooltip
     let tooltipContent = '';
-    if (location.vehiculo) {
-        tooltipContent = `${location.vehiculo.marca} ${location.vehiculo.modelo}`;
+    if (location.vehiculo && location.vehiculo.identificador) {
+        tooltipContent = location.vehiculo.identificador;
     } else {
-        tooltipContent = location.userName; // Mantener el nombre de usuario como respaldo si no hay información del vehículo
+        tooltipContent = location.placa; // Mantener el nombre de usuario como respaldo si no hay información del vehículo
     }
     
     marker.bindTooltip(tooltipContent, { permanent: true, direction: 'top', className: 'custom-tooltip' }).openTooltip();
