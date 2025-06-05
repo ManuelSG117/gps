@@ -210,7 +210,7 @@ private function getVehiculosCapasuData()
     }
 
     public function actionGetInformeVehiculo($busqueda, $tipo = 'dia', $fecha = null)
-    {
+    { 
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
         if (!$fecha) {
