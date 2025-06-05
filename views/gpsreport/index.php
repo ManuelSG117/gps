@@ -13,13 +13,22 @@ $registeredImeis = (new \yii\db\Query())
     ->from('dispositivos')
     ->column();
 
-// Obtener solo los phoneNumber de ubicaciones que estén registrados
-$registeredPhones = GpsLocations::find()
-    ->select(['phoneNumber'])
-    ->where(['phoneNumber' => $registeredImeis])
-    ->groupBy('phoneNumber')
-    ->indexBy('phoneNumber')
-    ->column();
+// Obtener los phoneNumber de ubicaciones que estén registrados y sus identificadores de vehiculos
+$registeredPhones = (new \yii\db\Query())
+    ->select(['gps.phoneNumber', 'v.identificador'])
+    ->from('gpslocations gps')
+    ->innerJoin('dispositivos d', 'gps.phoneNumber = d.imei')
+    ->innerJoin('vehiculos v', 'd.id = v.dispositivo_id')
+    ->where(['gps.phoneNumber' => $registeredImeis])
+    ->groupBy('gps.phoneNumber')
+    ->all();
+
+$formattedPhones = [];
+foreach ($registeredPhones as $phone) {
+    $formattedPhones[$phone['phoneNumber']] = $phone['identificador'];
+}
+
+$registeredPhones = $formattedPhones;
 
 ?>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -70,7 +79,7 @@ $registeredPhones = GpsLocations::find()
                     <?= Html::dropDownList('gps', Yii::$app->request->get('gps', 'all'), 
                         array_merge(
                             ['all' => 'Todos los dispositivos'], 
-                            $registeredPhones
+                            $formattedPhones
                         ), [
                             'class' => 'form-control',
                             'id' => 'gps',
