@@ -311,6 +311,7 @@ async function handleMarkerClick(marker, location) {
             vehicleInfo = `
                 <b>Vehículo:</b> ${location.vehiculo.marca} ${location.vehiculo.modelo}<br>
                 <b>Placa:</b> ${location.vehiculo.placa || 'No disponible'}<br>
+                <b>Identificador:</b> ${location.vehiculo.identificador || 'No disponible'}<br>
             `;
         } else {
             vehicleInfo = `<b>Dispositivo:</b> ${location.userName}<br>`;
