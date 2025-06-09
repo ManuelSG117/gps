@@ -237,7 +237,7 @@ class VehiculosController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
-    
+        
     /**
      * Saves vehicle images to the specified directory structure
      * @param Vehiculos $model The vehicle model
