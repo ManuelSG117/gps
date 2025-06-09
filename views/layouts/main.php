@@ -100,22 +100,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
                             </div>
 						</div>
                         <div class="header-right d-flex align-items-center">
-							<div class="input-group search-area">
-								<input type="text" class="form-control" placeholder="Search here...">
-								<span class="input-group-text"><a href="javascript:void(0)">
-									<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-										<g clip-path="url(#clip0_1_450)">
-										<path opacity="0.3" d="M14.2929 16.7071C13.9024 16.3166 13.9024 15.6834 14.2929 15.2929C14.6834 14.9024 15.3166 14.9024 15.7071 15.2929L19.7071 19.2929C20.0976 19.6834 20.0976 20.3166 19.7071 20.7071C19.3166 21.0976 18.6834 21.0976 18.2929 20.7071L14.2929 16.7071Z" fill="#452B90"/>
-										<path d="M11 16C13.7614 16 16 13.7614 16 11C16 8.23859 13.7614 6.00002 11 6.00002C8.23858 6.00002 6 8.23859 6 11C6 13.7614 8.23858 16 11 16ZM11 18C7.13401 18 4 14.866 4 11C4 7.13402 7.13401 4.00002 11 4.00002C14.866 4.00002 18 7.13402 18 11C18 14.866 14.866 18 11 18Z" fill="#452B90"/>
-										</g>
-										<defs>
-										<clipPath id="clip0_1_450">
-										<rect width="24" height="24" fill="white"/>
-										</clipPath>
-										</defs>
-									</svg>
-								</a></span>
-							</div>
+						
 							<ul class="navbar-nav">
 								<li class="nav-item dropdown notification_dropdown">
 									<a class="nav-link bell dz-theme-mode" href="javascript:void(0);">

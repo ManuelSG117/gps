@@ -6,6 +6,7 @@ use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
 use yii\widgets\Pjax;
+use kartik\select2\Select2;
 
 /** @var yii\web\View $this */
 /** @var app\models\VehiculosSearch $searchModel */
@@ -36,6 +37,28 @@ $this->registerJsFile('@web/js/vehiculos.js', ['depends' => [\yii\web\JqueryAsse
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
             'modelo_auto',
+            [
+                'attribute' => 'identificador',
+                'value' => function ($model) {
+                    return $model->identificador;
+                },
+                'filter' => Select2::widget([
+                    'model' => $searchModel,
+                    'attribute' => 'identificador',
+                    'data' => \yii\helpers\ArrayHelper::map(app\models\Vehiculos::find()->select('identificador')->distinct()->where(['not', ['identificador' => null]])->orderBy('identificador')->asArray()->all(), 'identificador', 'identificador'),
+                    'options' => [
+                        'placeholder' => 'Selecciona identificador(es)',
+                        'multiple' => true,
+                        'value' => (array)$searchModel->identificador,
+                    ],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                    ],
+                ]),
+                'filterInputOptions' => [
+                    'id' => 'identificador-filter',
+                ],
+            ],
             'marca_auto',
             // 'placa',
             // 'no_serie',

@@ -364,42 +364,29 @@ class VehiculoGeocercaController extends Controller
                         $isInside = self::pointInPolygon([$ubicacion->latitude, $ubicacion->longitude], $coords);
                         $stateKey = 'vehiculo_' . $vehiculo->id . '_geocerca_' . $geocerca->id . '_inside';
                         $wasInside = \Yii::$app->cache->get($stateKey);
-                        if ($isInside) {
-                            // Si está dentro, actualiza el estado
-                            \Yii::$app->cache->set($stateKey, true, 24*3600); // 1 día de cache
+                        if ($isInside !== $wasInside && $wasInside !== null) {
+                            // Hubo un cambio de estado: entrada o salida
+                            $not = new \app\models\Notificaciones();
+                            $not->tipo = 'geocerca';
+                            $not->mensaje = 'El vehículo ' . $vehiculo->identificador . ' ha ' . ($isInside ? 'entrado a' : 'salido de') . ' la geocerca ' . $geocerca->name;
+                            $not->id_vehiculo = $vehiculo->id;
+                            $not->fecha_creacion = date('Y-m-d H:i:s');
+                            $not->leido = 0;
+                            $not->datos_adicionales = json_encode([
+                                'geocerca_id' => $geocerca->id,
+                                'vehiculo_id' => $vehiculo->id,
+                                'ubicacion' => [
+                                    'lat' => $ubicacion->latitude,
+                                    'lng' => $ubicacion->longitude,
+                                    'fecha' => $ubicacion->lastUpdate
+                                ]
+                            ]);
+                            $not->save();
+                            // Actualizar el estado en cache
+                            \Yii::$app->cache->set($stateKey, $isInside, 24*3600);
                         } else {
-                            // Si está fuera y antes estaba dentro (o nunca se notificó), notifica
-                            if ($wasInside || $wasInside === null) {
-                                // Verificar si ya existe una notificación no leída igual
-                                $existe = \app\models\Notificaciones::find()
-                                    ->where([
-                                        'tipo' => 'geocerca',
-                                        'id_vehiculo' => $vehiculo->id,
-                                        'leido' => 0,
-                                    ])
-                                    ->andWhere(['like', 'mensaje', $geocerca->name])
-                                    ->one();
-                                if (!$existe) {
-                                    $not = new \app\models\Notificaciones();
-                                    $not->tipo = 'geocerca';
-                                    $not->mensaje = 'El vehículo ' . $vehiculo->placa . ' ha salido de la geocerca ' . $geocerca->name;
-                                    $not->id_vehiculo = $vehiculo->id;
-                                    $not->fecha_creacion = date('Y-m-d H:i:s');
-                                    $not->leido = 0;
-                                    $not->datos_adicionales = json_encode([
-                                        'geocerca_id' => $geocerca->id,
-                                        'vehiculo_id' => $vehiculo->id,
-                                        'ubicacion' => [
-                                            'lat' => $ubicacion->latitude,
-                                            'lng' => $ubicacion->longitude,
-                                            'fecha' => $ubicacion->lastUpdate
-                                        ]
-                                    ]);
-                                    $not->save();
-                                }
-                                // Marcar como fuera
-                                \Yii::$app->cache->set($stateKey, false, 24*3600);
-                            }
+                            // Solo actualizar el estado si no hubo cambio
+                            \Yii::$app->cache->set($stateKey, $isInside, 24*3600);
                         }
                     }
                 }
@@ -407,6 +394,7 @@ class VehiculoGeocercaController extends Controller
             // --- Fin lógica notificación ---
             $result[] = [
                 'id' => $vehiculo->id,
+                'identificador' => $vehiculo->identificador,
                 'modelo' => $vehiculo->modelo_auto,
                 'marca' => $vehiculo->marca_auto,
                 'placa' => $vehiculo->placa,

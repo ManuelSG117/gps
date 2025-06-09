@@ -696,16 +696,59 @@ $(document).on('click', '.geofence-log-btn', function(e) {
     $('#geofenceLogModal').modal('show');
     $('#geofenceLogTable tbody').html('<tr><td colspan="4" class="text-center">Cargando...</td></tr>');
     $('#geofenceFilterSelect').html('<option value="">Todas</option>');
+    // Reset fechas
+    $('#geofenceLogDateStart').val('');
+    $('#geofenceLogDateEnd').val('');
+    window._showingAllGeofenceLogs = false;
 
     // Obtener logs de geocercas por AJAX
+    fetchGeofenceLogs(vehiculoId);
+    // Guardar id para futuros filtros
+    window._currentGeofenceVehiculoId = vehiculoId;
+});
+
+// Inputs de fecha y botón de filtrar
+if ($('#geofenceLogDateStart').length === 0) {
+    $('#geofenceLogModal .modal-body').prepend(`
+        <div class="row mb-2">
+            <div class="col-md-3">
+                <label for="geofenceLogDateStart" class="form-label">Fecha inicio:</label>
+                <input type="date" id="geofenceLogDateStart" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label for="geofenceLogDateEnd" class="form-label">Fecha fin:</label>
+                <input type="date" id="geofenceLogDateEnd" class="form-control" />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-primary" id="geofenceLogDateFilterBtn">Filtrar</button>
+            </div>
+        </div>
+    `);
+}
+
+$(document).on('click', '#geofenceLogDateFilterBtn', function() {
+    const vehiculoId = window._currentGeofenceVehiculoId;
+    if (!vehiculoId) return;
+    window._showingAllGeofenceLogs = false;
+    fetchGeofenceLogs(vehiculoId);
+});
+
+function fetchGeofenceLogs(vehiculoId) {
+    const dateStart = $('#geofenceLogDateStart').val();
+    const dateEnd = $('#geofenceLogDateEnd').val();
     $.ajax({
         url: '/vehiculos/geofence-logs',
         type: 'GET',
-        data: { vehiculo_id: vehiculoId },
+        data: {
+            vehiculo_id: vehiculoId,
+            date_start: dateStart,
+            date_end: dateEnd
+        },
         success: function(response) {
             if (response.success) {
                 // Llenar select de geocercas
                 const geocercas = response.geocercas;
+                $('#geofenceFilterSelect').html('<option value="">Todas</option>');
                 geocercas.forEach(function(g) {
                     $('#geofenceFilterSelect').append(`<option value="${g.id}">${g.name}</option>`);
                 });
@@ -720,7 +763,7 @@ $(document).on('click', '.geofence-log-btn', function(e) {
             $('#geofenceLogTable tbody').html('<tr><td colspan="4" class="text-center text-danger">Error al obtener datos</td></tr>');
         }
     });
-});
+}
 
 // Filtrar logs por geocerca
 $('#geofenceFilterSelect').on('change', function() {
@@ -732,7 +775,7 @@ $('#geofenceFilterSelect').on('change', function() {
     renderGeofenceLogsTable(logs);
 });
 
-// Renderizar tabla de logs
+// Renderizar tabla de logs (solo coordenadas y botón de mapa)
 function renderGeofenceLogsTable(logs) {
     const tbody = $('#geofenceLogTable tbody');
     tbody.empty();
@@ -744,16 +787,20 @@ function renderGeofenceLogsTable(logs) {
     let showingAll = window._showingAllGeofenceLogs || false;
     let logsToShow = showingAll ? logs : logs.slice(0, maxToShow);
     logsToShow.forEach(function(log, idx) {
-        const ubicacionBtn = `<button class=\"btn btn-sm btn-info show-address-btn\" data-lat=\"${log.lat}\" data-lng=\"${log.lng}\" data-row=\"${idx}\">Ver dirección</button> <span id=\"address-row-${idx}\"></span>`;
+        const coords = `${log.lat}, ${log.lng}`;
+        const verMapaBtn = `<a class=\"btn btn-sm btn-outline-success ms-1\" title=\"Ver en Google Maps\" href=\"https://maps.google.com/?q=${log.lat},${log.lng}\" target=\"_blank\"><i class=\"fas fa-map-marker-alt\"></i></a>`;
+        const ubicacionHtml = `<span>${coords}</span> ${verMapaBtn}`;
         tbody.append(`<tr>
             <td>${log.fecha}</td>
             <td>${log.evento}</td>
             <td>${log.geocerca}</td>
-            <td>${ubicacionBtn}</td>
+            <td>${ubicacionHtml}</td>
         </tr>`);
     });
     if (!showingAll && logs.length > maxToShow) {
         tbody.append(`<tr><td colspan='4' class='text-center'><button class='btn btn-link' id='showAllGeofenceLogsBtn'>Mostrar todos (${logs.length})</button></td></tr>`);
+    } else if (showingAll && logs.length > maxToShow) {
+        tbody.append(`<tr><td colspan='4' class='text-center'><button class='btn btn-link' id='showLessGeofenceLogsBtn'>Mostrar menos</button></td></tr>`);
     }
 }
 
@@ -762,22 +809,8 @@ $(document).on('click', '#showAllGeofenceLogsBtn', function() {
     renderGeofenceLogsTable(window._geofenceLogs || []);
 });
 
-// Evento para mostrar dirección en vez de coordenadas
-$(document).on('click', '.show-address-btn', function() {
-    const lat = $(this).data('lat');
-    const lng = $(this).data('lng');
-    const rowIdx = $(this).data('row');
-    const $span = $(`#address-row-${rowIdx}`);
-    $span.html('<span class="text-muted">Buscando dirección...</span>');
-    // Usar Nominatim para geocodificación inversa
-    $.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, function(data) {
-        if (data && data.display_name) {
-            $span.html(`<span class="text-success">${data.display_name}</span>`);
-        } else {
-            $span.html('<span class="text-danger">No se encontró dirección</span>');
-        }
-    }).fail(function() {
-        $span.html('<span class="text-danger">Error al buscar dirección</span>');
-    });
+$(document).on('click', '#showLessGeofenceLogsBtn', function() {
+    window._showingAllGeofenceLogs = false;
+    renderGeofenceLogsTable(window._geofenceLogs || []);
 });
 // --- FIN: Lógica para logs de geocercas ---

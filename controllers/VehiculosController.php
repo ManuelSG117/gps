@@ -429,6 +429,8 @@ class VehiculosController extends Controller
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $vehiculoId = Yii::$app->request->get('vehiculo_id');
+        $dateStart = Yii::$app->request->get('date_start');
+        $dateEnd = Yii::$app->request->get('date_end');
         if (!$vehiculoId) {
             return ['success' => false, 'message' => 'Falta el parámetro vehiculo_id'];
         }
@@ -447,11 +449,16 @@ class VehiculosController extends Controller
             $vehiculo = $asignacion->vehiculo;
             if (!$vehiculo || !$vehiculo->dispositivo) continue;
             $imei = $vehiculo->dispositivo->imei;
-            $ubicaciones = \app\models\Gpslocations::find()
+            $ubicacionesQuery = \app\models\Gpslocations::find()
                 ->where(['phoneNumber' => $imei])
-                ->orderBy(['lastUpdate' => SORT_ASC])
-                ->limit(1000) // Limitar para performance
-                ->all();
+                ->orderBy(['lastUpdate' => SORT_ASC]);
+            if ($dateStart) {
+                $ubicacionesQuery->andWhere(['>=', 'lastUpdate', $dateStart . ' 00:00:00']);
+            }
+            if ($dateEnd) {
+                $ubicacionesQuery->andWhere(['<=', 'lastUpdate', $dateEnd . ' 23:59:59']);
+            }
+            $ubicaciones = $ubicacionesQuery->limit(1000)->all();
             // Preparar polígono
             $coords = array_map(function($pair) {
                 $latlng = explode(',', $pair);

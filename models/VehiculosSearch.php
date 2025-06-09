@@ -11,6 +11,8 @@ use app\models\Vehiculos;
  */
 class VehiculosSearch extends Vehiculos
 {
+    public $identificador = [];
+
     /**
      * {@inheritdoc}
      */
@@ -19,6 +21,7 @@ class VehiculosSearch extends Vehiculos
         return [
             [['id', 'km_recorridos', 'velocidad_max', 'km_litro', 'estatus', 'conductor_id', 'dispositivo_id', 'poliza_id', 'direccion_id', 'departamento_id'], 'integer'],
             [['modelo_auto', 'marca_auto', 'placa', 'no_serie', 'ano_adquisicion', 'ano_auto', 'color_auto', 'tipo_motor', 'estado_llantas', 'estado_vehiculo', 'estado_motor'], 'safe'],
+            ['identificador', 'safe'],
         ];
     }
 
@@ -72,6 +75,13 @@ class VehiculosSearch extends Vehiculos
             'direccion_id' => $this->direccion_id,
             'departamento_id' => $this->departamento_id,
         ]);
+
+        // Filtro especial para identificador (soporta array para select2 multiple)
+        if (is_array($this->identificador) && count($this->identificador) > 0) {
+            $query->andFilterWhere(['in', 'identificador', $this->identificador]);
+        } elseif (!empty($this->identificador)) {
+            $query->andFilterWhere(['like', 'identificador', $this->identificador]);
+        }
 
         $query->andFilterWhere(['like', 'modelo_auto', $this->modelo_auto])
             ->andFilterWhere(['like', 'marca_auto', $this->marca_auto])
