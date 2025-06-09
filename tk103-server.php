@@ -46,6 +46,8 @@ $client_sockets = array();
 $buffer = array(); // Buffer para almacenar datos temporalmente
 $connected_devices = array(); // Dispositivos conectados
 $imei_to_socket = array(); // Mapeo de IMEI a socket
+$last_batch_time = time(); // Inicializar la variable
+
 function validate_gps_data($latitude, $longitude, $speed) {
     global $max_speed_kmh;
 
@@ -136,6 +138,27 @@ function insert_gps_batch($pdo, $batch) {
     }
 }
 
+// Función para manejar el fallo de un batch
+function handle_failed_batch($batch) {
+    global $gps_queue_file;
+    
+    // Guardar el batch fallido en un archivo separado
+    $failed_batch_file = __DIR__ . '/failed_batches.json';
+    $failed_batches = [];
+    
+    if (file_exists($failed_batch_file)) {
+        $failed_batches = json_decode(file_get_contents($failed_batch_file), true) ?: [];
+    }
+    
+    $failed_batches[] = [
+        'timestamp' => date('Y-m-d H:i:s'),
+        'data' => $batch
+    ];
+    
+    file_put_contents($failed_batch_file, json_encode($failed_batches));
+    log_message("Batch fallido guardado para reintento posterior");
+}
+
 // Bucle principal con manejo de errores
 while (true) {
     try {
@@ -149,7 +172,7 @@ while (true) {
         // start reading and use a large timeout
         if(!@stream_select($read_sockets, $write, $except, 300000)) {
             log_message("ERROR: Error en stream_select, reintentando...");
-            continue; // En lugar de morir, continuamos
+            continue;
         }
      
         // new client
@@ -584,5 +607,78 @@ function degree_to_decimal($coordinates_in_degrees, $direction){
     $total_connections = count($client_sockets);
     log_message("Estadísticas: $total_devices dispositivos activos, $total_connections conexiones");
     }
+}
+
+function get_db_connection() {
+    global $pdo;
+    static $error_count = 0;
+    static $last_error_time = 0;
+    
+    try {
+        if (!$pdo || !$pdo->getAttribute(PDO::ATTR_CONNECTION_STATUS)) {
+            // Si la conexión no existe o está muerta, crear una nueva
+            $db_config = get_db_config();
+            
+            // Cerrar la conexión anterior si existe
+            if ($pdo) {
+                $pdo = null;
+            }
+            
+            $pdo = new PDO(
+                $db_config['host'],
+                $db_config['username'],
+                $db_config['password'],
+                array(
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_TIMEOUT => 5,
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES " . $db_config['charset']
+                )
+            );
+            
+            // Si llegamos aquí, la conexión fue exitosa
+            $error_count = 0;
+            $last_error_time = 0;
+            log_message("Conexión a la base de datos establecida correctamente");
+        }
+        return $pdo;
+    } catch (PDOException $e) {
+        $error_count++;
+        $current_time = time();
+        
+        // Si es el tercer error o han pasado más de 5 minutos desde el último error
+        if ($error_count >= 3 || ($current_time - $last_error_time) > 300) {
+            log_message("Error de conexión a la base de datos (intento $error_count): " . $e->getMessage());
+            
+            // Cerrar la conexión actual
+            if ($pdo) {
+                $pdo = null;
+            }
+            
+            // Esperar 5 segundos antes de reintentar
+            sleep(5);
+            
+            // Reiniciar el contador si han pasado más de 5 minutos
+            if (($current_time - $last_error_time) > 300) {
+                $error_count = 1;
+            }
+            
+            $last_error_time = $current_time;
+            
+            // Reintentar la conexión
+            return get_db_connection();
+        }
+        
+        throw $e; // Propagar el error si no es el tercer intento
+    }
+}
+
+function get_db_config() {
+    $config = require __DIR__ . '/config/db.php';
+    return [
+        'host' => $config['dsn'],
+        'username' => $config['username'],
+        'password' => $config['password'],
+        'charset' => $config['charset']
+    ];
 }
 }

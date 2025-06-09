@@ -45,18 +45,8 @@ class GpslocationsController extends Controller
 
      // ...existing code...
 
-public function actionGeocerca()
-{
-    return $this->render('geocerca');
-}
 
-public function actionSaveGeofence()
-{
-    $request = Yii::$app->request;
-    $geofenceData = $request->post('geofenceData');
 
-    return $this->asJson(['status' => 'success']);
-}
 
 
     public function actionIndex()
@@ -409,5 +399,88 @@ private function calculateDistance($lat1, $lon1, $lat2, $lon2)
         $flagPath = Yii::getAlias('@app/gps_queue_alert.flag');
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return ['alert' => file_exists($flagPath)];
+    }
+
+
+    // Nueva función para obtener hora de entrada y salida de la geocerca "capasu"
+    public function actionCapasuTimes()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $filter = Yii::$app->request->get('filter', 'today');
+        $gps = Yii::$app->request->get('gps', null);
+        $startDate = Yii::$app->request->get('startDate', null);
+        $endDate = Yii::$app->request->get('endDate', null);
+
+        $query = GpsLocations::find()->orderBy(['lastUpdate' => SORT_ASC]);
+        if ($gps) {
+            $query->andWhere(['phoneNumber' => $gps]);
+        }
+        switch ($filter) {
+            case 'today':
+                $query->andWhere(['DATE(lastUpdate)' => date('Y-m-d')]);
+                break;
+            case 'yesterday':
+                $query->andWhere(['DATE(lastUpdate)' => date('Y-m-d', strtotime('-1 day'))]);
+                break;
+            case 'current_week':
+                $query->andWhere(['>=', 'DATE(lastUpdate)', date('Y-m-d', strtotime('monday this week'))]);
+                break;
+            case 'last_week':
+                $query->andWhere(['between', 'DATE(lastUpdate)', date('Y-m-d', strtotime('monday last week')), date('Y-m-d', strtotime('sunday last week'))]);
+                break;
+            case 'current_month':
+                $query->andWhere(['>=', 'DATE(lastUpdate)', date('Y-m-01')]);
+                break;
+            case 'last_month':
+                $query->andWhere(['between', 'DATE(lastUpdate)', date('Y-m-d', strtotime('first day of last month')), date('Y-m-d', strtotime('last day of last month'))]);
+                break;
+            case 'custom':
+                if ($startDate && $endDate) {
+                    $query->andWhere(['between', 'DATE(lastUpdate)', $startDate, $endDate]);
+                }
+                break;
+        }
+
+        $locations = $query->all();
+        $result = [];
+        $inside = false;
+        $entryTime = null;
+        $exitTime = null;
+
+        $coordenadasRevisadas = 0; // Contador de coordenadas revisadas
+
+        foreach ($locations as $loc) {
+            $coordenadasRevisadas++;
+            $isIn = $this->isInsideCapasu($loc->latitude, $loc->longitude);
+            if ($isIn && !$inside) {
+                // Entró a la geocerca
+                $entryTime = $loc->lastUpdate;
+                $inside = true;
+            } elseif (!$isIn && $inside) {
+                // Salió de la geocerca
+                $exitTime = $loc->lastUpdate;
+                $result[] = [
+                    'entrada' => $entryTime,
+                    'salida' => $exitTime,
+                ];
+                $entryTime = null;
+                $exitTime = null;
+                $inside = false;
+            }
+        }
+        // Si terminó dentro de la geocerca y nunca salió
+        if ($inside && $entryTime) {
+            $result[] = [
+                'entrada' => $entryTime,
+                'salida' => null,
+            ];
+        }
+
+        // Devolver también el número de coordenadas revisadas
+        return [
+            'capasu_times' => $result,
+            'coordenadas_revisadas' => $coordenadasRevisadas,
+        ];
     }
 }

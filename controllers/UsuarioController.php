@@ -7,6 +7,7 @@ use app\models\UsuarioSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use Yii;
 
 /**
  * UsuarioController implements the CRUD actions for Usuario model.
@@ -89,6 +90,7 @@ class UsuarioController extends Controller
                     'model' => $model,
         ]);
     }
+
 
     /**
      * Updates an existing Usuario model.

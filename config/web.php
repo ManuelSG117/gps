@@ -22,17 +22,11 @@ $config = [
         ],
           'dynagrid' => [
         'class' => '\kartik\dynagrid\Module',
-        // Opcional: configuración adicional
-        // 'dbSettings' => [
-        //     'tableName' => 'dynagrid_settings',
-        // ],
+       
     ],
     ],
     'components' => [
 
-        'authManager' => [
-            'class' => 'yii\rbac\DbManager',
-        ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'dlcdIjlWxvy1qBxjvD0PFAf6Ynp1TOxB',
@@ -55,6 +49,9 @@ $config = [
             // send all mails to a file by default.
             'useFileTransport' => true,
         ],
+        'authManager' => [
+            'class' => 'yii\rbac\DbManager',
+        ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [
@@ -66,28 +63,15 @@ $config = [
         ],
         'db' => $db,
     
- 'urlManager' => [
+        'urlManager' => [
             'enablePrettyUrl' => true,
-            'enableStrictParsing' => false,
-            'showScriptName' => true,
-            'rules' => [
-                //['class' => 'yii\rest\UrlRule', 'controller' => 'user'],
-            ],
+            'showScriptName' => false,
+           
         ],
-        'as access' => [
-            'class' => 'mdm\admin\components\AccessControl',
-            'allowActions' => [
-                'site/login',
-                'site/logout',
-                'admin/*',
-                'gii/*',
-                'usuario/*'
-            ]
-        ],
-    
-        
     ],
     'params' => $params,
+
+
 ];
 
 if (YII_ENV_DEV) {
