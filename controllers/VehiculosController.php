@@ -420,4 +420,81 @@ class VehiculosController extends Controller
         
         return null;
     }
+
+    /**
+     * Devuelve las últimas entradas y salidas de las geocercas asignadas a un vehículo
+     * @return \yii\web\Response
+     */
+    public function actionGeofenceLogs()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $vehiculoId = Yii::$app->request->get('vehiculo_id');
+        if (!$vehiculoId) {
+            return ['success' => false, 'message' => 'Falta el parámetro vehiculo_id'];
+        }
+        // Obtener geocercas asignadas
+        $asignaciones = \app\models\VehiculoGeocerca::find()->where(['vehiculo_id' => $vehiculoId, 'activo' => 1])->all();
+        if (!$asignaciones) {
+            return ['success' => true, 'logs' => [], 'geocercas' => []];
+        }
+        $geocercas = [];
+        $logs = [];
+        foreach ($asignaciones as $asignacion) {
+            $geocerca = $asignacion->geocerca;
+            if (!$geocerca || !$geocerca->coordinates) continue;
+            $geocercas[] = ['id' => $geocerca->id, 'name' => $geocerca->name];
+            // Obtener ubicaciones del vehículo
+            $vehiculo = $asignacion->vehiculo;
+            if (!$vehiculo || !$vehiculo->dispositivo) continue;
+            $imei = $vehiculo->dispositivo->imei;
+            $ubicaciones = \app\models\Gpslocations::find()
+                ->where(['phoneNumber' => $imei])
+                ->orderBy(['lastUpdate' => SORT_ASC])
+                ->limit(1000) // Limitar para performance
+                ->all();
+            // Preparar polígono
+            $coords = array_map(function($pair) {
+                $latlng = explode(',', $pair);
+                return [floatval($latlng[0]), floatval($latlng[1])];
+            }, explode('|', $geocerca->coordinates));
+            // Detectar entradas y salidas
+            $inside = null;
+            foreach ($ubicaciones as $loc) {
+                $isIn = \app\controllers\VehiculoGeocercaController::pointInPolygon([
+                    $loc->latitude, $loc->longitude
+                ], $coords);
+                if ($inside === null) {
+                    $inside = $isIn;
+                    $logs[] = [
+                        'fecha' => $loc->lastUpdate,
+                        'evento' => $isIn ? 'Entrada' : 'Salida',
+                        'geocerca' => $geocerca->name,
+                        'geocerca_id' => $geocerca->id,
+                        'lat' => $loc->latitude,
+                        'lng' => $loc->longitude
+                    ];
+                } elseif ($isIn !== $inside) {
+                    $inside = $isIn;
+                    $logs[] = [
+                        'fecha' => $loc->lastUpdate,
+                        'evento' => $isIn ? 'Entrada' : 'Salida',
+                        'geocerca' => $geocerca->name,
+                        'geocerca_id' => $geocerca->id,
+                        'lat' => $loc->latitude,
+                        'lng' => $loc->longitude
+                    ];
+                }
+            }
+        }
+        // Ordenar por fecha descendente y limitar a los últimos 50 eventos
+        usort($logs, function($a, $b) {
+            return strtotime($b['fecha']) - strtotime($a['fecha']);
+        });
+        $logs = array_slice($logs, 0, 50);
+        return [
+            'success' => true,
+            'logs' => $logs,
+            'geocercas' => $geocercas
+        ];
+    }
 }

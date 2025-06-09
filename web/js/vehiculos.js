@@ -688,3 +688,96 @@ $(document).on('submit', '#create-vehiculos-form', function(e) {
         }
     });
 });
+
+// --- INICIO: Lógica para logs de geocercas ---
+$(document).on('click', '.geofence-log-btn', function(e) {
+    e.preventDefault();
+    const vehiculoId = $(this).data('id');
+    $('#geofenceLogModal').modal('show');
+    $('#geofenceLogTable tbody').html('<tr><td colspan="4" class="text-center">Cargando...</td></tr>');
+    $('#geofenceFilterSelect').html('<option value="">Todas</option>');
+
+    // Obtener logs de geocercas por AJAX
+    $.ajax({
+        url: '/vehiculos/geofence-logs',
+        type: 'GET',
+        data: { vehiculo_id: vehiculoId },
+        success: function(response) {
+            if (response.success) {
+                // Llenar select de geocercas
+                const geocercas = response.geocercas;
+                geocercas.forEach(function(g) {
+                    $('#geofenceFilterSelect').append(`<option value="${g.id}">${g.name}</option>`);
+                });
+                // Guardar logs en variable global temporal
+                window._geofenceLogs = response.logs;
+                renderGeofenceLogsTable(response.logs);
+            } else {
+                $('#geofenceLogTable tbody').html('<tr><td colspan="4" class="text-center text-danger">No hay datos</td></tr>');
+            }
+        },
+        error: function() {
+            $('#geofenceLogTable tbody').html('<tr><td colspan="4" class="text-center text-danger">Error al obtener datos</td></tr>');
+        }
+    });
+});
+
+// Filtrar logs por geocerca
+$('#geofenceFilterSelect').on('change', function() {
+    const geocercaId = $(this).val();
+    let logs = window._geofenceLogs || [];
+    if (geocercaId) {
+        logs = logs.filter(l => l.geocerca_id == geocercaId);
+    }
+    renderGeofenceLogsTable(logs);
+});
+
+// Renderizar tabla de logs
+function renderGeofenceLogsTable(logs) {
+    const tbody = $('#geofenceLogTable tbody');
+    tbody.empty();
+    if (!logs || logs.length === 0) {
+        tbody.html('<tr><td colspan="4" class="text-center">Sin registros</td></tr>');
+        return;
+    }
+    const maxToShow = 10;
+    let showingAll = window._showingAllGeofenceLogs || false;
+    let logsToShow = showingAll ? logs : logs.slice(0, maxToShow);
+    logsToShow.forEach(function(log, idx) {
+        const ubicacionBtn = `<button class=\"btn btn-sm btn-info show-address-btn\" data-lat=\"${log.lat}\" data-lng=\"${log.lng}\" data-row=\"${idx}\">Ver dirección</button> <span id=\"address-row-${idx}\"></span>`;
+        tbody.append(`<tr>
+            <td>${log.fecha}</td>
+            <td>${log.evento}</td>
+            <td>${log.geocerca}</td>
+            <td>${ubicacionBtn}</td>
+        </tr>`);
+    });
+    if (!showingAll && logs.length > maxToShow) {
+        tbody.append(`<tr><td colspan='4' class='text-center'><button class='btn btn-link' id='showAllGeofenceLogsBtn'>Mostrar todos (${logs.length})</button></td></tr>`);
+    }
+}
+
+$(document).on('click', '#showAllGeofenceLogsBtn', function() {
+    window._showingAllGeofenceLogs = true;
+    renderGeofenceLogsTable(window._geofenceLogs || []);
+});
+
+// Evento para mostrar dirección en vez de coordenadas
+$(document).on('click', '.show-address-btn', function() {
+    const lat = $(this).data('lat');
+    const lng = $(this).data('lng');
+    const rowIdx = $(this).data('row');
+    const $span = $(`#address-row-${rowIdx}`);
+    $span.html('<span class="text-muted">Buscando dirección...</span>');
+    // Usar Nominatim para geocodificación inversa
+    $.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, function(data) {
+        if (data && data.display_name) {
+            $span.html(`<span class="text-success">${data.display_name}</span>`);
+        } else {
+            $span.html('<span class="text-danger">No se encontró dirección</span>');
+        }
+    }).fail(function() {
+        $span.html('<span class="text-danger">Error al buscar dirección</span>');
+    });
+});
+// --- FIN: Lógica para logs de geocercas ---

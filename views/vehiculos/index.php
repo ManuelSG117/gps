@@ -50,7 +50,7 @@ $this->registerJsFile('@web/js/vehiculos.js', ['depends' => [\yii\web\JqueryAsse
             ],
             [
                 'class' => ActionColumn::className(),
-                'template' => '{view} {update} {delete}',
+                'template' => '{view} {update} {delete} {geofence-log}',
                 'buttons' => [
                     'view' => function ($url, $model, $key) {
                         return Html::a('<i class="fas fa-eye"></i>', '#', [
@@ -74,6 +74,13 @@ $this->registerJsFile('@web/js/vehiculos.js', ['depends' => [\yii\web\JqueryAsse
                             'data-url' => Url::to(['delete', 'id' => $model->id]),
                         ]);
                     },
+                    'geofence-log' => function ($url, $model, $key) {
+                        return Html::a('<i class="fas fa-route"></i>', '#', [
+                            'class' => 'btn btn-warning light btn-sharp geofence-log-btn',
+                            'title' => 'Ver entradas/salidas de geocercas',
+                            'data-id' => $model->id,
+                        ]);
+                    },
                 ],
             ],
         ],
@@ -93,6 +100,41 @@ $this->registerJsFile('@web/js/vehiculos.js', ['depends' => [\yii\web\JqueryAsse
             <?= $this->render('_modal', [
                 'model' => $model,
             ]) ?>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar logs de geocercas -->
+<div class="modal fade" id="geofenceLogModal" tabindex="-1" role="dialog" aria-labelledby="geofenceLogModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="geofenceLogModalLabel">Entradas y Salidas de Geocercas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="geofenceFilterSelect" class="form-label">Filtrar por Geocerca:</label>
+                    <select id="geofenceFilterSelect" class="form-select">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" id="geofenceLogTable">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Evento</th>
+                                <th>Geocerca</th>
+                                <th>Ubicación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Aquí se llenarán los logs -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
