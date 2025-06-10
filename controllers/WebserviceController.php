@@ -240,11 +240,17 @@ private function getVehiculosCapasuData()
             return ['error' => 'Vehículo no encontrado o sin dispositivo GPS'];
         }
 
-        $fechaInicio = $tipo === 'semana' ? 
-            date('Y-m-d 00:00:00', strtotime($fecha . ' -6 days')) :
-            date('Y-m-d 00:00:00', strtotime($fecha));
-        
-        $fechaFin = date('Y-m-d 23:59:59', strtotime($fecha));
+        // Calcular fechas de inicio y fin según el tipo
+        if ($tipo === 'semana') {
+            $fechaInicio = date('Y-m-d 00:00:00', strtotime($fecha . ' -6 days'));
+            $fechaFin = date('Y-m-d 23:59:59', strtotime($fecha));
+        } elseif ($tipo === 'mes') {
+            $fechaInicio = date('Y-m-01 00:00:00', strtotime($fecha));
+            $fechaFin = date('Y-m-t 23:59:59', strtotime($fecha));
+        } else { // 'dia' por defecto
+            $fechaInicio = date('Y-m-d 00:00:00', strtotime($fecha));
+            $fechaFin = date('Y-m-d 23:59:59', strtotime($fecha));
+        }
 
         // Obtener todas las ubicaciones del período
         $ubicaciones = Gpslocations::find()
@@ -257,7 +263,7 @@ private function getVehiculosCapasuData()
             return ['error' => 'No hay datos para el período seleccionado'];
         }
 
-        // Hora de salida (primera ubicación del día)
+        // Hora de salida (primera ubicación del período)
         $horaSalida = Yii::$app->formatter->asDatetime($ubicaciones[0]->lastUpdate, 'php:Y-m-d H:i:s');
 
         // Calcular kilómetros recorridos
@@ -266,13 +272,27 @@ private function getVehiculosCapasuData()
         $tiempoParada = 180; // 3 minutos = parada
 
         for ($i = 1; $i < count($ubicaciones); $i++) {
-            // Calcular distancia entre puntos
             $lat1 = $ubicaciones[$i-1]->latitude;
             $lon1 = $ubicaciones[$i-1]->longitude;
             $lat2 = $ubicaciones[$i]->latitude;
             $lon2 = $ubicaciones[$i]->longitude;
 
-            $kmRecorridos += $this->calcularDistancia($lat1, $lon1, $lat2, $lon2);
+            // Validar que los valores no sean nulos y estén en rango válido
+            if (
+                is_null($lat1) || is_null($lon1) || is_null($lat2) || is_null($lon2) ||
+                !is_numeric($lat1) || !is_numeric($lon1) || !is_numeric($lat2) || !is_numeric($lon2)
+            ) {
+                continue;
+            }
+
+            $distancia = $this->calcularDistancia($lat1, $lon1, $lat2, $lon2);
+
+            // Validar que la distancia sea un número válido
+            if (is_nan($distancia) || is_infinite($distancia)) {
+                continue;
+            }
+
+            $kmRecorridos += $distancia;
 
             // Detectar paradas (velocidad 0 por más de 3 minutos)
             $tiempoDiferencia = strtotime($ubicaciones[$i]->lastUpdate) - strtotime($ubicaciones[$i-1]->lastUpdate);
@@ -303,7 +323,11 @@ private function getVehiculosCapasuData()
         $lat2 = deg2rad($lat2);
         $lon2 = deg2rad($lon2);
 
-        $d = acos(sin($lat1) * sin($lat2) + cos($lat1) * cos($lat2) * cos($lon2 - $lon1)) * $r;
+        $cosArgument = sin($lat1) * sin($lat2) + cos($lat1) * cos($lat2) * cos($lon2 - $lon1);
+        // Limitar el argumento entre -1 y 1
+        $cosArgument = min(1, max(-1, $cosArgument));
+
+        $d = acos($cosArgument) * $r;
 
         return $d;
     }
