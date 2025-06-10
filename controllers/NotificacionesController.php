@@ -68,4 +68,12 @@ class NotificacionesController extends Controller
         }
         return ['success' => false];
     }
-} 
+
+    // Marcar todas las notificaciones como leídas
+    public function actionMarkAllAsRead()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        Notificaciones::updateAll(['leido' => 1, 'fecha_lectura' => date('Y-m-d H:i:s')], ['leido' => 0]);
+        return ['success' => true];
+    }
+}

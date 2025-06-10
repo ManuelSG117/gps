@@ -61,4 +61,16 @@ $(function(){
             if(resp.success) loadNotifications();
         });
     });
-}); 
+    $(document).on('click', '#mark-all-read-btn', function(){
+        $.post('/notificaciones/mark-all-as-read', function(resp){
+            if(resp.success) loadNotifications();
+        });
+    });
+
+    // Marcar todas las notificaciones como leídas
+    $(document).on('click', '#mark-all-read-btn', function(){
+        $.post('/notificaciones/mark-all-as-read', function(resp){
+            if(resp.success) loadNotifications();
+        });
+    });
+});

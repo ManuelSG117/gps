@@ -32,7 +32,10 @@ $vehiculosJson = \yii\helpers\Json::encode(array_map(function($vehiculo) {
         'id' => $vehiculo->id,
         'modelo' => $vehiculo->modelo_auto,
         'marca' => $vehiculo->marca_auto,
-        'placa' => $vehiculo->placa
+        'placa' => $vehiculo->placa,
+        'identificador' => $vehiculo->identificador,
+        'no_economico' => $vehiculo->no_economico
+
     ];
 }, $vehiculos));
 
@@ -241,8 +244,8 @@ var vehiculosData = <?= $vehiculosJson ?>;
                                     <th>
                                         <input type="checkbox" id="selectAllVehiculos">
                                     </th>
-                                    <th>Modelo</th>
-                                    <th>Marca</th>
+                                    <th>Identificador</th>
+                                    <th>No. Económico</th>
                                     <th>Placa</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -253,8 +256,8 @@ var vehiculosData = <?= $vehiculosJson ?>;
                                     <td>
                                         <input type="checkbox" class="vehiculo-checkbox" data-id="<?= $vehiculo->id ?>">
                                     </td>
-                                    <td><?= Html::encode($vehiculo->modelo_auto) ?></td>
-                                    <td><?= Html::encode($vehiculo->marca_auto) ?></td>
+                                    <td><?= Html::encode($vehiculo->identificador) ?></td>
+                                    <td><?= Html::encode($vehiculo->no_economico)?></td>
                                     <td><?= Html::encode($vehiculo->placa) ?></td>
                                     <td>
                                         <button class="btn btn-sm btn-info ver-geocercas" data-id="<?= $vehiculo->id ?>">

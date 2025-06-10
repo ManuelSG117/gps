@@ -334,8 +334,8 @@ function highlightGeofenceInTable(geocercaId) {
  */
 function showVehicleInfo(vehiculo) {
     Swal.fire({
-        title: `${vehiculo.marca} ${vehiculo.modelo}`,
-        text: `Placa: ${vehiculo.placa}`,
+        title: `${vehiculo.identificador}`,
+        text: `Inf. vehículo:  - ${vehiculo.marca} ${vehiculo.modelo}- Placa: ${vehiculo.placa}`,
         icon: 'info',
         confirmButtonText: 'Cerrar'
     });

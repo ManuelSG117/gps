@@ -128,6 +128,9 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 										<span class="badge bg-danger" id="notification-badge" style="position:absolute;top:8px;right:8px;display:none;">0</span>
 									</a>
 									<div class="dropdown-menu dropdown-menu-end" style="min-width:350px;max-width:400px;">
+										<div style="display:flex;justify-content:flex-end;align-items:center;">
+											<button id="mark-all-read-btn" class="btn btn-link btn-sm" style="color:#452B90;font-weight:bold;">Marcar todas como leídas</button>
+										</div>
 										<div id="DZ_W_Notification1" class="widget-media dz-scroll p-2" style="height:380px;max-height:380px;overflow-y:auto;">
 											<!-- Notificaciones AJAX -->
 										</div>
