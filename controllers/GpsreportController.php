@@ -902,4 +902,90 @@ class GpsreportController extends Controller
             'coordenadas_revisadas' => $coordenadasRevisadas,
         ];
     }
+
+    public function actionCombinedReport()
+    {
+        $filter = Yii::$app->request->get('filter', 'today');
+        $gps = Yii::$app->request->get('gps', 'all');
+        $startDate = Yii::$app->request->get('startDate', null);
+        $endDate = Yii::$app->request->get('endDate', null);
+
+        // Obtener ubicaciones (ruta)
+        $query = GpsLocations::find();
+        if ($gps && $gps !== 'all') {
+            $query->andWhere(['phoneNumber' => $gps]);
+        }
+        switch ($filter) {
+            case 'today':
+                $query->andWhere(['DATE(lastUpdate)' => date('Y-m-d')]);
+                break;
+            case 'yesterday':
+                $query->andWhere(['DATE(lastUpdate)' => date('Y-m-d', strtotime('-1 day'))]);
+                break;
+            case 'current_week':
+                $query->andWhere(['>=', 'DATE(lastUpdate)', date('Y-m-d', strtotime('monday this week'))]);
+                break;
+            case 'last_week':
+                $query->andWhere(['between', 'DATE(lastUpdate)', date('Y-m-d', strtotime('monday last week')), date('Y-m-d', strtotime('sunday last week'))]);
+                break;
+            case 'current_month':
+                $query->andWhere(['>=', 'DATE(lastUpdate)', date('Y-m-01')]);
+                break;
+            case 'last_month':
+                $query->andWhere(['between', 'DATE(lastUpdate)', date('Y-m-d', strtotime('first day of last month')), date('Y-m-d', strtotime('last day of last month'))]);
+                break;
+            case 'custom':
+                if ($startDate && $endDate) {
+                    $query->andWhere(['between', 'DATE(lastUpdate)', $startDate, $endDate]);
+                } else if ($startDate) {
+                    $query->andWhere(['>=', 'DATE(lastUpdate)', $startDate]);
+                } else if ($endDate) {
+                    $query->andWhere(['<=', 'DATE(lastUpdate)', $endDate]);
+                }
+                break;
+        }
+        $query->orderBy(['lastUpdate' => SORT_ASC]);
+        $locations = $query->all();
+
+        // Convertir a array plano para JS
+        $locationsArr = [];
+        foreach ($locations as $loc) {
+            $locationsArr[] = [
+                'latitude' => $loc->latitude,
+                'longitude' => $loc->longitude,
+                'lastUpdate' => $loc->lastUpdate,
+                'speed' => $loc->speed,
+            ];
+        }
+
+        // Obtener paradas (igual que en actionGetAllStops, pero como array)
+        $stops = [];
+        $lastStop = null;
+        foreach ($locations as $location) {
+            if ($location->speed == 0) {
+                if (!$lastStop) {
+                    $lastStop = [
+                        'start_time' => $location->lastUpdate,
+                        'latitude' => $location->latitude,
+                        'longitude' => $location->longitude,
+                    ];
+                }
+            } else {
+                if ($lastStop) {
+                    $duration = strtotime($location->lastUpdate) - strtotime($lastStop['start_time']);
+                    if ($duration > 180) { // 3 minutos
+                        $lastStop['end_time'] = $location->lastUpdate;
+                        $lastStop['duration'] = $duration;
+                        $stops[] = $lastStop;
+                        $lastStop = null;
+                    }
+                }
+            }
+        }
+
+        return $this->render('combined_report', [
+            'locations' => $locationsArr,
+            'stops' => $stops,
+        ]);
+    }
 }
