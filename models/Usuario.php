@@ -11,6 +11,9 @@ use Yii;
  * @property string $username
  * @property string $names
  * @property string $password
+ * @property int|null $activo
+ * @property string|null $correo_electronico
+ * @property string|null $token_acceso
  */
 class Usuario extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
@@ -30,8 +33,10 @@ class Usuario extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function rules()
     {
         return [
+            [['activo', 'correo_electronico', 'token_acceso'], 'default', 'value' => null],
             [['username', 'names', 'password'], 'required'],
-            [['username', 'names', 'password'], 'string', 'max' => 255],
+            [['activo'], 'integer'],
+            [['username', 'names', 'password', 'correo_electronico', 'token_acceso'], 'string', 'max' => 255],
         ];
     }
 
@@ -45,8 +50,12 @@ class Usuario extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'username' => 'Username',
             'names' => 'Names',
             'password' => 'Password',
+            'activo' => 'Activo',
+            'correo_electronico' => 'Correo Electronico',
+            'token_acceso' => 'Token Acceso',
         ];
     }
+    //Este lo pide pero lo dejamos como null por que no lo usamos por el momento
     public function getAuthKey() {
         return null;
        //return $this->auth_key;

@@ -9,34 +9,15 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
+use yii\helpers\Url;
+
 
 class SiteController extends Controller
 {
     /**
      * {@inheritdoc}
      */
-    public function behaviors()
-    {
-        return [
-            'access' => [
-                'class' => AccessControl::class,
-                'only' => ['logout'],
-                'rules' => [
-                    [
-                        'actions' => ['logout'],
-                        'allow' => true,
-                        'roles' => ['@'],
-                    ],
-                ],
-            ],
-            'verbs' => [
-                'class' => VerbFilter::class,
-                'actions' => [
-                    'logout' => ['post'],
-                ],
-            ],
-        ];
-    }
+
 
     /**
      * {@inheritdoc}
@@ -61,7 +42,8 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        return $this->redirect(['/conductores/index']);
+        //return $this->render('index');
     }
 
     /**
@@ -69,7 +51,8 @@ class SiteController extends Controller
      *
      * @return Response|string
      */
-    public function actionLogin()
+    
+      public function actionLogin()
     {
         if (!Yii::$app->user->isGuest) {
             return $this->goHome();
@@ -77,7 +60,7 @@ class SiteController extends Controller
 
         $model = new LoginForm();
         if ( $model->load(Yii::$app->request->post()) ) {            
-            if($model->login()){ // Si se logea con éxito                                  
+            if($model->login()){ // Si se logea con éxito                                 
                 return $this->redirect(['/site']);
             }        
             return $this->goBack();
@@ -88,6 +71,7 @@ class SiteController extends Controller
             'model' => $model,
         ]);
     }
+    
 
     /**
      * Logout action.
@@ -98,7 +82,7 @@ class SiteController extends Controller
     {
         Yii::$app->user->logout();
 
-        return $this->goHome();
+        return $this->redirect(Url::to(['/site/login']));
     }
 
     /**

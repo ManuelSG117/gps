@@ -166,8 +166,16 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 													<div class="products">
 														<img src="/images/user.jpg" class="avatar avatar-md" alt="">
 														<div>
-															<h6>Hanuman Prajapati</h6>
-															<span>Web Designer</span>	
+															<?php
+															if (!Yii::$app->user->isGuest) {
+																$usuario = Yii::$app->user->identity;
+																?>
+																<h6><?= htmlspecialchars($usuario->username) ?></h6>
+																<span><?= htmlspecialchars($usuario->correo_electronico) ?></span>
+																<?php 
+															} else { ?>
+																<h6>Invitado</h6>
+															<?php } ?>
 														</div>	
 													</div>
 												</div>
@@ -196,7 +204,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 
 														<span class="ms-2">Settings </span>
 													</a>
-													<a href="/site/login" class="dropdown-item ai-icon">
+													<a href="/index.php/site/logout" class="dropdown-item ai-icon">
 														<svg class="logout-svg" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
 														<span class="ms-2 text-danger">Logout </span>
 													</a>

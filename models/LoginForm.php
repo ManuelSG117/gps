@@ -8,7 +8,7 @@ use yii\base\Model;
 /**
  * LoginForm is the model behind the login form.
  *
- * @property-read User|null $user
+ * @property-read Usuario|null $user
  *
  */
 class LoginForm extends Model
@@ -60,9 +60,9 @@ class LoginForm extends Model
     public function login()
     {
         
-        $usuario = $this->getUser(); 
+        $usuario = $this->getUser(); // Se agrega esta linea
         if ($this->validate()) {
-            if($usuario){ 
+            if($usuario){ // Se agrega este if 
                 return Yii::$app->user->login($this->getUser(), $this->rememberMe ? 3600*24*30 : 0);
             }                                    
         }
@@ -70,7 +70,7 @@ class LoginForm extends Model
     }
 
     /**
-     * Finds user by [[username]]
+     * Finds user by [[email]]
      *
      * @return User|null
      */
