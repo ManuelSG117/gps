@@ -73,7 +73,8 @@ class UsuarioController extends Controller
 
             $hash =  Yii::$app->security->generatePasswordHash($model->password);
             // echo "hash:" . $hash;
-            $model->password = $hash;                                               
+            $model->password = $hash;  
+            $model->activo = 1;                                                                            
             if ($model->save()) {  
                 $auth = \Yii::$app->authManager;
                 $authorRole = $auth->getRole('Administrador');
@@ -124,6 +125,19 @@ class UsuarioController extends Controller
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+
+    /**
+     * Displays the current logged-in user's profile.
+     * @return string
+     * @throws NotFoundHttpException if the user model cannot be found
+     */
+    public function actionProfile()
+    {
+        $model = $this->findModel(Yii::$app->user->identity->id);
+        return $this->render('profile', [
+            'model' => $model,
+        ]);
     }
 
     /**

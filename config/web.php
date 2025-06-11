@@ -80,6 +80,9 @@ $config = [
                 'admin/*',
                 'gii/*',
                 'site/*',
+                'gpslocations/*',
+                'notificaciones/*',
+                'usuario/*'
  
         
             ]
