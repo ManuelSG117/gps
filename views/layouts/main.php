@@ -57,7 +57,9 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 </head>
 
 <body>
-  
+<?php
+if (!Yii::$app->user->isGuest) {
+?>
 
 <div id="main-wrapper">
   
@@ -396,12 +398,40 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
         </div>
 
 </div>
-
+<?php } else { ?>
+    <?= $content ?>
+<?php } ?>
 <?php $this->endBody() ?>
+
+
+
+</body>
+</html>
+<?php $this->endPage() ?>
+
+
+
+    <!-- Required vendors -->
+	<script src="/vendor/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/metismenu"></script>
+
+	<script>
+		jQuery(document).ready(function(){
+			setTimeout(function(){
+				dzSettingsOptions.version = 'light';
+				new dzSettings(dzSettingsOptions);
+
+				setCookie('version','light',365);
+			},)
+		});
+	</script>
+
+<!-- Notificaciones JS -->
+<!-- <script src="/js/notificaciones.js"></script> -->
 
 <!-- SweetAlert2 para alertas globales -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
+<!-- <script>
 let gpsQueueAlertActive = false;
 function checkGpsQueueAlert() {
     // Si el usuario eligió no volver a mostrar, no mostrar la alerta
@@ -435,33 +465,7 @@ function checkGpsQueueAlert() {
 }
 setInterval(checkGpsQueueAlert, 30000); // cada 30 segundos
 checkGpsQueueAlert();
-</script>
-
-<!-- Notificaciones JS -->
-<script src="/js/notificaciones.js"></script>
-
-</body>
-</html>
-<?php $this->endPage() ?>
-
-
-
-    <!-- Required vendors -->
-	<script src="/vendor/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/metismenu"></script>
-
-	<script>
-		jQuery(document).ready(function(){
-			setTimeout(function(){
-				dzSettingsOptions.version = 'light';
-				new dzSettings(dzSettingsOptions);
-
-				setCookie('version','light',365);
-			},)
-		});
-	</script>
-
-
+</script> -->
 
 <style>
 .deznav .metismenu  {

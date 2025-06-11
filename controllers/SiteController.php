@@ -57,16 +57,19 @@ class SiteController extends Controller
         if (!Yii::$app->user->isGuest) {
             return $this->goHome();
         }
+      
 
         $model = new LoginForm();
+
         if ( $model->load(Yii::$app->request->post()) ) {            
             if($model->login()){ // Si se logea con éxito                                 
-                return $this->redirect(['/site']);
+                return $this->redirect(['/site/login']);
             }        
             return $this->goBack();
         }
 
         $model->password = '';
+
         return $this->render('login', [
             'model' => $model,
         ]);
@@ -81,6 +84,7 @@ class SiteController extends Controller
     public function actionLogout()
     {
         Yii::$app->user->logout();
+
 
         return $this->redirect(Url::to(['/site/login']));
     }

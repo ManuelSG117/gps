@@ -57,7 +57,7 @@ class LoginForm extends Model
      * Logs in a user using the provided username and password.
      * @return bool whether the user is logged in successfully
      */
-    public function login()
+     public function login()
     {
         
         $usuario = $this->getUser(); // Se agrega esta linea
@@ -74,7 +74,7 @@ class LoginForm extends Model
      *
      * @return User|null
      */
-    public function getUser()
+        public function getUser()
     {
         if ($this->_user === false) {
            $this->_user = Usuario::findByUsername($this->username); // Cambiar por modelo de usuario creado

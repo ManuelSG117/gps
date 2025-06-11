@@ -26,12 +26,14 @@ class AppAsset extends AssetBundle
      
         'js/deznav-init.js',
         'js/settings.js',
+        
 
     ];
     
     public $depends = [
         'yii\web\YiiAsset',
         'yii\bootstrap5\BootstrapAsset',
+
     ];
     
 }
