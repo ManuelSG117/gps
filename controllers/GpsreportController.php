@@ -905,10 +905,17 @@ class GpsreportController extends Controller
 
     public function actionCombinedReport()
     {
-        $filter = Yii::$app->request->get('filter', 'today');
-        $gps = Yii::$app->request->get('gps', 'all');
+        $filter = Yii::$app->request->get('filter', null);
+        $gps = Yii::$app->request->get('gps', null);
         $startDate = Yii::$app->request->get('startDate', null);
         $endDate = Yii::$app->request->get('endDate', null);
+        $minStopDuration = Yii::$app->request->get('minStopDuration', 3); // en minutos
+        $minStopDurationSeconds = intval($minStopDuration) * 60;
+
+        // Si no hay filtro, renderiza la vista sin datos
+        if ($filter === null && $gps === null && $startDate === null && $endDate === null) {
+            return $this->render('combined_report');
+        }
 
         // Obtener ubicaciones (ruta)
         $query = GpsLocations::find();
@@ -973,12 +980,12 @@ class GpsreportController extends Controller
             } else {
                 if ($lastStop) {
                     $duration = strtotime($location->lastUpdate) - strtotime($lastStop['start_time']);
-                    if ($duration > 180) { // 3 minutos
+                    if ($duration >= $minStopDurationSeconds) {
                         $lastStop['end_time'] = $location->lastUpdate;
                         $lastStop['duration'] = $duration;
                         $stops[] = $lastStop;
-                        $lastStop = null;
                     }
+                    $lastStop = null;
                 }
             }
         }

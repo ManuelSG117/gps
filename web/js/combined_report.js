@@ -333,20 +333,31 @@ function setupFlatpickrRange() {
         rangeInput.type = 'text';
         rangeInput.className = 'form-control';
         rangeInput.id = 'rangeDate';
-        rangeInput.placeholder = 'Selecciona rango de fechas';
+        rangeInput.placeholder = 'Selecciona rango de fechas y horas';
         customDates.innerHTML = '';
         customDates.appendChild(rangeInput);
     }
     flatpickr('#rangeDate', {
         mode: 'range',
-        dateFormat: 'Y-m-d',
+        dateFormat: 'Y-m-d H:i',
+        enableTime: true,
+        time_24hr: true,
         locale: 'es',
         allowInput: true,
         onChange: function(selectedDates, dateStr) {
             if (selectedDates.length === 2) {
                 // Llenar los campos ocultos startDate y endDate
-                let start = selectedDates[0].toISOString().slice(0,10);
-                let end = selectedDates[1].toISOString().slice(0,10);
+                function pad(n) { return n < 10 ? '0' + n : n; }
+                function formatDateTime(date) {
+                    return date.getFullYear() + '-' +
+                        pad(date.getMonth() + 1) + '-' +
+                        pad(date.getDate()) + ' ' +
+                        pad(date.getHours()) + ':' +
+                        pad(date.getMinutes()) + ':' +
+                        pad(date.getSeconds());
+                }
+                let start = formatDateTime(selectedDates[0]);
+                let end = formatDateTime(selectedDates[1]);
                 let startInput = document.getElementById('startDate');
                 let endInput = document.getElementById('endDate');
                 if (!startInput) {
@@ -370,19 +381,30 @@ function setupFlatpickrRange() {
     });
 }
 
-// Inicializar flatpickr y eventos de filtro personalizados (igual que en otras vistas)
+// Inicializar flatpickr y eventos de filtro personalizados
 document.addEventListener('DOMContentLoaded', function() {
     const filter = document.getElementById('filter');
+    const customDates = document.querySelector('.custom-dates');
+    
     if (filter) {
         filter.addEventListener('change', function() {
             if (filter.value === 'custom') {
+                if (customDates) customDates.style.display = 'block';
                 setupFlatpickrRange();
+            } else {
+                if (customDates) customDates.style.display = 'none';
             }
         });
+        
+        // Inicializar al cargar la página
         if (filter.value === 'custom') {
+            if (customDates) customDates.style.display = 'block';
             setupFlatpickrRange();
+        } else {
+            if (customDates) customDates.style.display = 'none';
         }
     }
+    
     // Inicializar el mapa
     if (document.getElementById('combined-map')) {
         initCombinedMap();

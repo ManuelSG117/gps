@@ -80,29 +80,41 @@ if (isset($stops)) {
                 </div>
             </div>
             <div class="col-lg-2 col-md-4 col-12">
-                <?= Html::submitButton('Mostrar', ['class' => 'btn btn-primary w-100']) ?>
+                <div class="form-group">
+                    <label for="minStopDuration">Min. duración parada (min):</label>
+                    <input type="number" class="form-control" id="minStopDuration" name="minStopDuration"
+                           min="1" step="1"
+                           value="<?= Html::encode(Yii::$app->request->get('minStopDuration', 3)) ?>">
+                </div>
             </div>
-            <div class="col-lg-4 col-md-12 col-12 custom-dates" style="display: none;">
-                <!-- Aquí solo irá el input de rango generado por JS -->
+            <div class="col-lg-3 col-md-6 col-12 custom-dates" style="display: none;">
+                <!-- Aquí irá el input de rango generado por JS -->
+            </div>
+            <div class="col-lg-2 col-md-4 col-12">
+                <?= Html::submitButton('Mostrar', ['class' => 'btn btn-primary w-100']) ?>
             </div>
         </div>
     </div>
     <?php ActiveForm::end(); ?>
 </div>
-<br>
+
 <?php Pjax::begin(['id' => 'combined-map-pjax', 'timeout' => 10000]); ?>
-<div class="custom card-container">
-    <div class="custom-card-header">
-        <h4 class="custom-card-title">Mapa de Ruta y Paradas</h4>
-    </div>
-    <div class="custom-card-body">
-        <div class="form-check form-switch mb-2">
-            <input class="form-check-input" type="checkbox" id="showStopsOnMap">
-            <label class="form-check-label" for="showStopsOnMap">Mostrar paradas en el mapa</label>
+    <?php if (isset($locations) && !empty($locations)): ?>
+        <div class="custom card-container">
+            <div class="custom-card-header">
+                <h4 class="custom-card-title">Mapa de Ruta y Paradas</h4>
+            </div>
+            <div class="custom-card-body">
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="showStopsOnMap">
+                    <label class="form-check-label" for="showStopsOnMap">Mostrar paradas en el mapa</label>
+                </div>
+                <div id="combined-map" style="height: 500px; width: 100%; position: relative;"></div>
+            </div>
         </div>
-        <div id="combined-map" style="height: 500px; width: 100%; position: relative;"></div>
-    </div>
-</div>
+    <?php else: ?>
+        <div class="alert alert-info">Selecciona un filtro y presiona "Mostrar" para ver el mapa.</div>
+    <?php endif; ?>
 <?php Pjax::end(); ?>
 
 <style>
@@ -113,5 +125,9 @@ if (isset($stops)) {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     z-index: 1;
     position: relative;
+}
+
+.custom-dates .flatpickr-input {
+    width: 100%;
 }
 </style> 

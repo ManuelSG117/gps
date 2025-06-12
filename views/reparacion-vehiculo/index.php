@@ -49,7 +49,18 @@ $this->registerJsFile('@web/js/reparacion-vehiculo.js', [
             //'tecnico',
             //'notas:ntext',
             //'estatus',
-            'estado_servicio',
+            [
+                'attribute' => 'estado_servicio',
+                'value' => function ($model) {
+                    $estados = [
+                        1 => 'Pendiente',
+                        2 => 'En Proceso',
+                        3 => 'Pausado',
+                        4 => 'Completado',
+                    ];
+                    return $estados[$model->estado_servicio] ?? 'Desconocido';
+                },
+            ],
             //'motivo_pausa:ntext',
             //'requisitos_reanudar:ntext',
             //'fecha_finalizacion',
