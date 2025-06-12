@@ -56,8 +56,21 @@ class UsuarioController extends Controller
      */
     public function actionView($id)
     {
+        $model = $this->findModel($id);
+
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'success' => true,
+                'html' => $this->renderPartial('_modal', [
+                    'model' => $model,
+                    'action' => 'view',
+                ]),
+            ];
+        }
+
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
         ]);
     }
 
@@ -69,26 +82,44 @@ class UsuarioController extends Controller
     public function actionCreate() {
         $model = new Usuario();
 
-        if ($model->load(Yii::$app->request->post())) {
-
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
             $hash =  Yii::$app->security->generatePasswordHash($model->password);
-            // echo "hash:" . $hash;
-            $model->password = $hash;  
-            $model->activo = 1;                                                                            
-            if ($model->save()) {  
+            $model->password = $hash;
+            $model->activo = 1;
+            if ($model->save()) {
                 $auth = \Yii::$app->authManager;
                 $authorRole = $auth->getRole('Administrador');
                 $auth->assign($authorRole, $model->id);
-                //echo "<br>Se ha creado el permiso";
+                return [
+                    'success' => true,
+                    'message' => 'Usuario creado exitosamente.'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Error al guardar el usuario.',
+                    'errors' => $model->errors
+                ];
+            }
+        }
+
+        if ($model->load(Yii::$app->request->post())) {
+            $hash =  Yii::$app->security->generatePasswordHash($model->password);
+            $model->password = $hash;
+            $model->activo = 1;
+            if ($model->save()) {
+                $auth = \Yii::$app->authManager;
+                $authorRole = $auth->getRole('Administrador');
+                $auth->assign($authorRole, $model->id);
             } else {
                 die('Error al guardar');
             }
-
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
         return $this->render('create', [
-                    'model' => $model,
+            'model' => $model,
         ]);
     }
 
@@ -104,8 +135,25 @@ class UsuarioController extends Controller
     {
         $model = $this->findModel($id);
 
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post()) && $model->save()) {
+                return [
+                    'success' => true,
+                    'message' => 'Usuario actualizado correctamente.'
+                ];
+            }
+            return [
+                'success' => true,
+                'html' => $this->renderPartial('_modal', [
+                    'model' => $model,
+                    'action' => 'update',
+                ]),
+            ];
+        }
+
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            return $this->redirect(['index']);
         }
 
         return $this->render('update', [

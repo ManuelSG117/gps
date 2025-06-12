@@ -57,9 +57,7 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
 </head>
 
 <body>
-<?php
-if (!Yii::$app->user->isGuest) {
-?>
+  
 
 <div id="main-wrapper">
   
@@ -168,33 +166,25 @@ if (!Yii::$app->user->isGuest) {
 													<div class="products">
 														<img src="/images/user.jpg" class="avatar avatar-md" alt="">
 														<div>
-															<?php
-															if (!Yii::$app->user->isGuest) {
-																$usuario = Yii::$app->user->identity;
-																?>
-																<h6><?= htmlspecialchars($usuario->username) ?></h6>
-																<span><?= htmlspecialchars($usuario->correo_electronico) ?></span>
-																<?php 
-															} else { ?>
-																<h6>Invitado</h6>
-															<?php } ?>
+															<h6>Hanuman Prajapati</h6>
+															<span>Web Designer</span>	
 														</div>	
 													</div>
 												</div>
 												<div class="card-body px-0 py-2">
-													<a href="<?php echo Yii::$app->urlManager->createUrl(['usuario/profile']); ?>" class="dropdown-item ai-icon ">
+													<a href="app-profile-1.html" class="dropdown-item ai-icon ">
 														<svg  width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 														<path fill-rule="evenodd" clip-rule="evenodd" d="M11.9848 15.3462C8.11714 15.3462 4.81429 15.931 4.81429 18.2729C4.81429 20.6148 8.09619 21.2205 11.9848 21.2205C15.8524 21.2205 19.1543 20.6348 19.1543 18.2938C19.1543 15.9529 15.8733 15.3462 11.9848 15.3462Z" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 														<path fill-rule="evenodd" clip-rule="evenodd" d="M11.9848 12.0059C14.5229 12.0059 16.58 9.94779 16.58 7.40969C16.58 4.8716 14.5229 2.81445 11.9848 2.81445C9.44667 2.81445 7.38857 4.8716 7.38857 7.40969C7.38 9.93922 9.42381 11.9973 11.9524 12.0059H11.9848Z" stroke="var(--primary)" stroke-width="1.42857" stroke-linecap="round" stroke-linejoin="round"/>
 														</svg>
 
-														<span class="ms-2"> Mi Perfil </ </span>
+														<span class="ms-2">Profile </span>
 													</a>
-													<a href="/index.php/notificaciones/index" class="dropdown-item ai-icon ">
+													<a href="my-project.html" class="dropdown-item ai-icon ">
 														<svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-pie-chart"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
 
 													
-														<span class="ms-2">Notificaciones </span>
+														<span class="ms-2">Notification </span>
 													</a>
 												</div>
 												<div class="card-footer px-0 py-2">
@@ -206,7 +196,7 @@ if (!Yii::$app->user->isGuest) {
 
 														<span class="ms-2">Settings </span>
 													</a>
-													<a href="/index.php/site/logout" class="dropdown-item ai-icon">
+													<a href="/site/login" class="dropdown-item ai-icon">
 														<svg class="logout-svg" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
 														<span class="ms-2 text-danger">Logout </span>
 													</a>
@@ -398,40 +388,12 @@ if (!Yii::$app->user->isGuest) {
         </div>
 
 </div>
-<?php } else { ?>
-    <?= $content ?>
-<?php } ?>
+
 <?php $this->endBody() ?>
-
-
-
-</body>
-</html>
-<?php $this->endPage() ?>
-
-
-
-    <!-- Required vendors -->
-	<script src="/vendor/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/metismenu"></script>
-
-	<script>
-		jQuery(document).ready(function(){
-			setTimeout(function(){
-				dzSettingsOptions.version = 'light';
-				new dzSettings(dzSettingsOptions);
-
-				setCookie('version','light',365);
-			},)
-		});
-	</script>
-
-<!-- Notificaciones JS -->
-<!-- <script src="/js/notificaciones.js"></script> -->
 
 <!-- SweetAlert2 para alertas globales -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<!-- <script>
+<script>
 let gpsQueueAlertActive = false;
 function checkGpsQueueAlert() {
     // Si el usuario eligió no volver a mostrar, no mostrar la alerta
@@ -465,7 +427,33 @@ function checkGpsQueueAlert() {
 }
 setInterval(checkGpsQueueAlert, 30000); // cada 30 segundos
 checkGpsQueueAlert();
-</script> -->
+</script>
+
+<!-- Notificaciones JS -->
+<script src="/js/notificaciones.js"></script>
+
+</body>
+</html>
+<?php $this->endPage() ?>
+
+
+
+    <!-- Required vendors -->
+	<script src="/vendor/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/metismenu"></script>
+
+	<script>
+		jQuery(document).ready(function(){
+			setTimeout(function(){
+				dzSettingsOptions.version = 'light';
+				new dzSettings(dzSettingsOptions);
+
+				setCookie('version','light',365);
+			},)
+		});
+	</script>
+
+
 
 <style>
 .deznav .metismenu  {
