@@ -25,7 +25,7 @@ class WebserviceController extends Controller{
         return $inside;
     }
 
-private function getVehiculosCapasuData()
+    private function getVehiculosCapasuData()
     {
         $vehiculos = \app\models\Vehiculos::find()->with(['dispositivo', 'conductor'])->all();
         $vehiculosDentro = [];
@@ -188,6 +188,11 @@ private function getVehiculosCapasuData()
             //     continue; // Saltar vehículos sin ubicación
             // }
 
+            $direccion = $this->obtenerDireccionPorCoordenadas(
+                $ubicacion ? $ubicacion->latitude : null,
+                $ubicacion ? $ubicacion->longitude : null
+            );
+
             $resultados[] = [
                 'id' => $vehiculo->id,
                 'modelo' => $vehiculo->modelo_auto,
@@ -202,7 +207,8 @@ private function getVehiculosCapasuData()
                 'longitude' => $ubicacion ? $ubicacion->longitude : null,
                 'velocidad' => $ubicacion ? $ubicacion->speed : null,
                 'direccion' => $ubicacion ? $ubicacion->direction : null,
-                'ultima_actualizacion' => $ubicacion ? \Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s') : null
+                'ultima_actualizacion' => $ubicacion ? \Yii::$app->formatter->asDatetime($ubicacion->lastUpdate, 'php:Y-m-d H:i:s') : null,
+                'ubicacion_texto' => $direccion
             ];
         }
 
@@ -330,5 +336,24 @@ private function getVehiculosCapasuData()
         $d = acos($cosArgument) * $r;
 
         return $d;
+    }
+
+    private function obtenerDireccionPorCoordenadas($lat, $lon) {
+        if ($lat === null || $lon === null) {
+            return null;
+        }
+        $url = "https://nominatim.openstreetmap.org/reverse?format=json&lat={$lat}&lon={$lon}&zoom=16&addressdetails=1";
+        $opts = [
+            "http" => [
+                "header" => "User-Agent: gps-app/1.0\r\n"
+            ]
+        ];
+        $context = stream_context_create($opts);
+        $json = @file_get_contents($url, false, $context);
+        if ($json === false) {
+            return null;
+        }
+        $data = json_decode($json, true);
+        return $data['display_name'] ?? null;
     }
 }
