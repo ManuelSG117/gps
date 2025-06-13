@@ -962,6 +962,7 @@ class GpsreportController extends Controller
                 'longitude' => $loc->longitude,
                 'lastUpdate' => $loc->lastUpdate,
                 'speed' => $loc->speed,
+                'direction' => $loc->direction,
             ];
         }
 

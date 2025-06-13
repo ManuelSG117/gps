@@ -26,7 +26,7 @@ function initCombinedMap() {
 
     // --- Dibujar la ruta ---
     const routeLatLngs = locations.map(l => [parseFloat(l.latitude), parseFloat(l.longitude)]);
-    const routePolyline = L.polyline(routeLatLngs, { color: '#007bff', weight: 5, opacity: 0.8 }).addTo(map);
+    const routePolyline = L.polyline(routeLatLngs, { color: '#000000', weight: 5, opacity: 0.8 }).addTo(map);
 
     // Marcador de inicio y fin
     const startMarker = L.marker(routeLatLngs[0], {
@@ -182,10 +182,12 @@ function createAnimationControlsCombined(map, locations) {
         if (!animMarker) {
             animMarker = L.marker([locations[0].latitude, locations[0].longitude], {
                 icon: L.icon({
-                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/744/744465.png',
+                    iconUrl: '/ico.png',
                     iconSize: [38, 38],
                     iconAnchor: [19, 19]
-                })
+                }),
+                rotationAngle: cleanDirection(locations[0].direction),
+                rotationOrigin: 'center center'
             }).addTo(map);
             showInfoPopup(locations[0]);
         }
@@ -229,6 +231,12 @@ function createAnimationControlsCombined(map, locations) {
             if (pendingCoords.length > 1) {
                 pendingPolyline = L.polyline(pendingCoords, {color:'#bbb',weight:4,opacity:0.5,dashArray:'6,8'}).addTo(map);
             }
+            if (animMarker && typeof animMarker.setRotationAngle === 'function') {
+                const startDir = cleanDirection(locations[targetIndex].direction);
+                const endDir = cleanDirection(locations[targetIndex+1].direction);
+                const angle = lerpAngle(startDir, endDir, (targetIndex - animIndex) / (totalPoints - animIndex));
+                animMarker.setRotationAngle(angle);
+            }
         }
         progressContainer.addEventListener('click', handleProgressBarInteraction);
         let isDragging = false;
@@ -262,10 +270,12 @@ function createAnimationControlsCombined(map, locations) {
         if (!animMarker) {
             animMarker = L.marker([locations[0].latitude, locations[0].longitude], {
                 icon: L.icon({
-                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/744/744465.png',
+                    iconUrl: '/ico.png',
                     iconSize: [38, 38],
                     iconAnchor: [19, 19]
-                })
+                }),
+                rotationAngle: cleanDirection(locations[0].direction),
+                rotationOrigin: 'center center'
             }).addTo(map);
         } else {
             animMarker.setLatLng([locations[0].latitude, locations[0].longitude]);
@@ -309,6 +319,12 @@ function createAnimationControlsCombined(map, locations) {
             } else {
                 animIndex++;
                 animTimeout = setTimeout(stepAnim, 40/animSpeed);
+            }
+            if (animMarker && typeof animMarker.setRotationAngle === 'function') {
+                const startDir = cleanDirection(start.direction);
+                const endDir = cleanDirection(end.direction);
+                const angle = lerpAngle(startDir, endDir, step/steps);
+                animMarker.setRotationAngle(angle);
             }
         }
         interpolate();
@@ -564,4 +580,20 @@ function showStopsStatsCards() {
 const script = document.createElement('script');
 script.src = "https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs";
 script.type = "module";
-document.head.appendChild(script); 
+document.head.appendChild(script);
+
+function cleanDirection(dir) {
+    if (typeof dir === 'string') {
+        dir = dir.replace(';', '');
+    }
+    return parseFloat(dir) || 0;
+}
+
+// Interpolación lineal de dirección
+function lerpAngle(a, b, t) {
+    // Asegura la menor diferencia de ángulo (maneja el wrap-around de 360°)
+    let diff = b - a;
+    if (diff > 180) diff -= 360;
+    if (diff < -180) diff += 360;
+    return a + diff * t;
+} 
