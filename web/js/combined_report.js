@@ -408,6 +408,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar el mapa
     if (document.getElementById('combined-map')) {
         initCombinedMap();
+        showRouteStatsCards();
+        showStopsStatsCards();
     }
 });
 
@@ -415,5 +417,105 @@ document.addEventListener('DOMContentLoaded', function() {
 $(document).on('pjax:end', function(e) {
     if ($('#combined-map').length) {
         initCombinedMap();
+        showRouteStatsCards();
+        showStopsStatsCards();
     }
-}); 
+});
+
+function showRouteStatsCards() {
+    if (!Array.isArray(locations) || locations.length < 2) return;
+    // Distancia total
+    function haversine(lat1, lon1, lat2, lon2) {
+        const R = 6371; // km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+    let totalDistance = 0;
+    for (let i = 1; i < locations.length; i++) {
+        totalDistance += haversine(
+            parseFloat(locations[i-1].latitude),
+            parseFloat(locations[i-1].longitude),
+            parseFloat(locations[i].latitude),
+            parseFloat(locations[i].longitude)
+        );
+    }
+    // Velocidad promedio
+    let totalSpeed = 0, speedCount = 0;
+    locations.forEach(l => {
+        if (l.speed && !isNaN(l.speed)) {
+            totalSpeed += parseFloat(l.speed);
+            speedCount++;
+        }
+    });
+    let avgSpeed = speedCount > 0 ? totalSpeed / speedCount : 0;
+    // Duración total
+    let start = new Date(locations[0].lastUpdate);
+    let end = new Date(locations[locations.length-1].lastUpdate);
+    let durationSec = Math.floor((end - start) / 1000);
+    function formatDuration(sec) {
+        if (sec >= 3600) {
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = sec % 60;
+            return `${h}h ${m}m ${s}s`;
+        } else {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return `${m}m ${s}s`;
+        }
+    }
+    // Mostrar en cards
+    const statDistance = document.getElementById('stat-distance');
+    if (statDistance) statDistance.textContent = totalDistance.toFixed(2) + ' km';
+    const statAvgSpeed = document.getElementById('stat-avg-speed');
+    if (statAvgSpeed) statAvgSpeed.textContent = avgSpeed.toFixed(1) + ' km/h';
+    const statDuration = document.getElementById('stat-duration');
+    if (statDuration) statDuration.textContent = formatDuration(durationSec);
+    // Mostrar en consola
+    console.log('Distancia total:', totalDistance.toFixed(2), 'km');
+    console.log('Velocidad promedio:', avgSpeed.toFixed(1), 'km/h');
+    console.log('Duración total:', formatDuration(durationSec));
+    // Mostrar cards
+    const cards = document.getElementById('route-stats-cards');
+    if (cards) cards.style.display = '';
+}
+
+function showStopsStatsCards() {
+    if (!Array.isArray(stops) || stops.length === 0) return;
+    // Total de paradas
+    const totalStops = stops.length;
+    // Tiempo promedio de parada
+    let totalStopDuration = 0;
+    stops.forEach(s => {
+        if (s.duration && !isNaN(s.duration)) totalStopDuration += parseInt(s.duration);
+    });
+    let avgStopDuration = totalStops > 0 ? Math.floor(totalStopDuration / totalStops) : 0;
+    function formatDuration(sec) {
+        if (sec >= 3600) {
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = sec % 60;
+            return `${h}h ${m}m ${s}s`;
+        } else {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return `${m}m ${s}s`;
+        }
+    }
+    // Mostrar en cards
+    const statTotalStops = document.getElementById('stat-total-stops');
+    if (statTotalStops) statTotalStops.textContent = totalStops;
+    const statAvgStopDuration = document.getElementById('stat-avg-stop-duration');
+    if (statAvgStopDuration) statAvgStopDuration.textContent = formatDuration(avgStopDuration);
+    // Mostrar en consola
+    console.log('Total de paradas:', totalStops);
+    console.log('Tiempo promedio de parada:', formatDuration(avgStopDuration));
+    // Mostrar cards
+    const cards = document.getElementById('stops-stats-cards');
+    if (cards) cards.style.display = '';
+} 

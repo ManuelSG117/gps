@@ -72,21 +72,22 @@ $config = [
     ],
     
     'params' => $params,
-            //         'as access' => [
-            //     'class' => 'mdm\admin\components\AccessControl',
-            //     'allowActions' => [
-            //             'site/login',
-            //             'site/logout',
-            //         'admin/*',
-            //         'gii/*',
-            //         'site/*',
-            //         'gpslocations/*',
-            //         'notificaciones/*',
-            //         'usuario/*'
+                    'as access' => [
+                'class' => 'mdm\admin\components\AccessControl',
+                'allowActions' => [
+                        'site/login',
+                        'site/logout',
+                    'admin/*',
+                    'gii/*',
+                    'site/*',
+                    'gpslocations/*',
+                    'notificaciones/*',
+                    'usuario/*',
+                    'gpsreport/*'
     
             
-            //     ]
-            // ],    
+                ]
+            ],    
 
 ];
 
