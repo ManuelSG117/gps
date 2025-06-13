@@ -44,6 +44,7 @@ if (isset($stops)) {
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA73efm01Xa11C5aXzXBGFbWUjMtkad5HE"></script>
 <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
 <script src="/js/combined_report.js"></script>
+<script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
 
 <div class="gps-report-form">
     <?php $form = ActiveForm::begin([
@@ -100,41 +101,47 @@ if (isset($stops)) {
 
 <?php Pjax::begin(['id' => 'combined-map-pjax', 'timeout' => 10000]); ?>
     <?php if (isset($locations) && !empty($locations)): ?>
-        <div class="custom card-container">
-            <div class="custom-card-header">
-                <h4 class="custom-card-title">Mapa de Ruta y Paradas</h4>
-            </div>
-            <div class="custom-card-body">
-                <div class="form-check form-switch mb-2">
-                    <input class="form-check-input" type="checkbox" id="showStopsOnMap">
-                    <label class="form-check-label" for="showStopsOnMap">Mostrar paradas en el mapa</label>
+        <div id="cards-stats-wrapper">
+            <div class="custom card-container">
+                <div class="custom-card-header">
+                    <h4 class="custom-card-title">Mapa de Ruta y Paradas</h4>
                 </div>
-                <div id="combined-map" style="height: 500px; width: 100%; position: relative;"></div>
-            </div>
-        </div>
-        <br>
-        <!-- Cards de estadísticas de ruta -->
-        <?php echo $this->render('_route_stats_cards', ['locations' => $locations]); ?>
-        <!-- Cards de paradas y tiempo promedio de parada -->
-        <div id="stops-stats-cards" class="mb-3" style="display:none;">
-            <div class="row">
-                <div class="col-lg-6 col-md-6 col-12 mb-3">
-                    <div class="cards">
-                        <dotlottie-player src="https://lottie.host/06c57bb2-0963-4084-bcc9-05e6e5156d90/4U8QhsebpY.lottie" background="transparent" speed="1" style="width: 170px; height: 120px" loop autoplay></dotlottie-player>
-                        <div class="card__content">
-                            <p class="card__title">Total de Paradas</p>
-                            <p class="card__description stat-value" id="stat-total-stops">-</p>
-                            <p class="card__description">Cantidad de paradas detectadas en la ruta.</p>
-                        </div>
+                <div class="custom-card-body">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="showStopsOnMap">
+                        <label class="form-check-label" for="showStopsOnMap">Mostrar paradas en el mapa</label>
+                    </div>
+                    <div id="combined-map" style="height: 500px; width: 100%; position: relative;"></div>
+                    <div class="form-check form-switch mb-3 mt-3">
+                        <input class="form-check-input" type="checkbox" id="toggleCardsAlwaysOpen">
+                        <label class="form-check-label" for="toggleCardsAlwaysOpen">Mostrar siempre la información de las tarjetas sin animación</label>
                     </div>
                 </div>
-                <div class="col-lg-6 col-md-6 col-12 mb-3">
-                    <div class="cards">
-                        <dotlottie-player src="https://lottie.host/ed84083f-f28a-4a85-829b-b9c3e6d57d3d/9jQnEiULKi.lottie" background="transparent" speed="1" style="width: 170px; height: 120px" loop autoplay></dotlottie-player>
-                        <div class="card__content">
-                            <p class="card__title">Tiempo Promedio de Parada</p>
-                            <p class="card__description stat-value" id="stat-avg-stop-duration">-</p>
-                            <p class="card__description">Promedio de tiempo detenido por parada.</p>
+            </div>
+            <br>
+            <!-- Cards de estadísticas de ruta -->
+            <?php echo $this->render('_route_stats_cards', ['locations' => $locations]); ?>
+            <!-- Cards de paradas y tiempo promedio de parada -->
+            <div id="stops-stats-cards" class="mb-3" style="display:none;">
+                <div class="row">
+                    <div class="col-lg-6 col-md-6 col-12 mb-3">
+                        <div class="cards">
+                            <dotlottie-player src="https://lottie.host/06c57bb2-0963-4084-bcc9-05e6e5156d90/4U8QhsebpY.lottie" background="transparent" speed="1" style="width: 170px; height: 120px" loop autoplay></dotlottie-player>
+                            <div class="card__content">
+                                <p class="card__title">Total de Paradas</p>
+                                <p class="card__description stat-value" id="stat-total-stops">-</p>
+                                <p class="card__description">Cantidad de paradas detectadas en la ruta.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6 col-12 mb-3">
+                        <div class="cards">
+                            <dotlottie-player src="https://lottie.host/ed84083f-f28a-4a85-829b-b9c3e6d57d3d/9jQnEiULKi.lottie" background="transparent" speed="1" style="width: 170px; height: 120px" loop autoplay></dotlottie-player>
+                            <div class="card__content">
+                                <p class="card__title">Tiempo Promedio de Parada</p>
+                                <p class="card__description stat-value" id="stat-avg-stop-duration">-</p>
+                                <p class="card__description">Promedio de tiempo detenido por parada.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -144,6 +151,7 @@ if (isset($stops)) {
         <div class="alert alert-info">Selecciona un filtro y presiona "Mostrar" para ver el mapa.</div>
     <?php endif; ?>
 <?php Pjax::end(); ?>
+
 
 <style>
 #combined-map {

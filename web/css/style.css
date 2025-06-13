@@ -30602,6 +30602,25 @@ justify-content: center;
     color: #777;
     line-height: 1.4;
     }  
+/* Modo SIEMPRE visible: oculta lottie y muestra info */
+#cards-stats-wrapper.cards-always-open .cards dotlottie-player,
+#cards-stats-wrapper.cards-always-open .cards svg {
+    display: none !important;
+}
+#cards-stats-wrapper.cards-always-open .cards .card__content {
+    transform: rotateX(0deg) !important;
+}
+
+/* Modo ANIMADO: lottie visible, info solo en hover */
+#cards-stats-wrapper .cards dotlottie-player,
+#cards-stats-wrapper .cards svg {
+    display: block;
+    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#cards-stats-wrapper .cards:hover dotlottie-player,
+#cards-stats-wrapper .cards:hover svg {
+    display: none;
+}
 
     .label-check {
       display: none;

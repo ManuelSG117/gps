@@ -381,6 +381,36 @@ function setupFlatpickrRange() {
     });
 }
 
+// --- Control de animación de cards ---
+function logLottieStatus() {
+    const lotties = document.querySelectorAll('#cards-stats-wrapper .cards dotlottie-player');
+    console.log('Cantidad de dotlottie-player:', lotties.length);
+    lotties.forEach((lottie, idx) => {
+        console.log(`dotlottie-player[${idx}] display:`, getComputedStyle(lottie).display);
+    });
+}
+
+function setupCardsAlwaysOpenToggle() {
+    const toggle = document.getElementById('toggleCardsAlwaysOpen');
+    const wrapper = document.getElementById('cards-stats-wrapper');
+    if (!toggle || !wrapper) return;
+    // Estado inicial
+    if (toggle.checked) {
+        wrapper.classList.add('cards-always-open');
+    } else {
+        wrapper.classList.remove('cards-always-open');
+    }
+    logLottieStatus();
+    toggle.addEventListener('change', function() {
+        if (this.checked) {
+            wrapper.classList.add('cards-always-open');
+        } else {
+            wrapper.classList.remove('cards-always-open');
+        }
+        logLottieStatus();
+    });
+}
+
 // Inicializar flatpickr y eventos de filtro personalizados
 document.addEventListener('DOMContentLoaded', function() {
     const filter = document.getElementById('filter');
@@ -411,6 +441,8 @@ document.addEventListener('DOMContentLoaded', function() {
         showRouteStatsCards();
         showStopsStatsCards();
     }
+    // Inicializar el toggle de cards
+    setupCardsAlwaysOpenToggle();
 });
 
 // Soporte para PJAX: volver a inicializar el mapa tras recarga parcial
@@ -420,6 +452,8 @@ $(document).on('pjax:end', function(e) {
         showRouteStatsCards();
         showStopsStatsCards();
     }
+    // Re-inicializar el toggle de cards
+    setupCardsAlwaysOpenToggle();
 });
 
 function showRouteStatsCards() {
@@ -518,4 +552,9 @@ function showStopsStatsCards() {
     // Mostrar cards
     const cards = document.getElementById('stops-stats-cards');
     if (cards) cards.style.display = '';
-} 
+}
+
+const script = document.createElement('script');
+script.src = "https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs";
+script.type = "module";
+document.head.appendChild(script); 
