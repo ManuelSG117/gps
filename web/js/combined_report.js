@@ -40,7 +40,10 @@ function initCombinedMap() {
             shadowSize: [41, 41]
         })
     }).addTo(map);
-    startMarker.bindPopup(`<b>Punto de inicio</b><br>Fecha: ${locations[0].lastUpdate}`);
+    startMarker.bindPopup(
+        `<b>Punto de inicio</b><br>Fecha: ${locations[0].lastUpdate}<br>
+         <a href='https://www.google.com/maps?q=${locations[0].latitude},${locations[0].longitude}' target='_blank'>Ver en Google Maps</a>`
+    );
 
     const endMarker = L.marker(routeLatLngs[routeLatLngs.length - 1], {
         title: 'Fin',
@@ -53,7 +56,10 @@ function initCombinedMap() {
             shadowSize: [41, 41]
         })
     }).addTo(map);
-    endMarker.bindPopup(`<b>Punto final</b><br>Fecha: ${locations[locations.length - 1].lastUpdate}`);
+    endMarker.bindPopup(
+        `<b>Punto final</b><br>Fecha: ${locations[locations.length - 1].lastUpdate}<br>
+         <a href='https://www.google.com/maps?q=${locations[locations.length - 1].latitude},${locations[locations.length - 1].longitude}' target='_blank'>Ver en Google Maps</a>`
+    );
 
     // --- Paradas ---
     let stopMarkers = [];
@@ -85,7 +91,8 @@ function initCombinedMap() {
                 }
             }
             marker.bindPopup(
-                `<b>Parada #${idx + 1}</b><br>Inicio: ${stop.start_time}<br>Fin: ${stop.end_time || 'En curso'}<br>Duración: ${durationText}`
+                `<b>Parada #${idx + 1}</b><br>Inicio: ${stop.start_time}<br>Fin: ${stop.end_time || 'En curso'}<br>Duración: ${durationText}<br>
+                 <a href='https://www.google.com/maps?q=${stop.latitude},${stop.longitude}' target='_blank'>Ver en Google Maps</a>`
             );
             return marker;
         });
@@ -116,7 +123,7 @@ function initCombinedMap() {
     }
 
     // Leyenda
-    const legend = L.control({ position: 'bottomright' });
+    const legend = L.control({ position: 'topleft' });
     legend.onAdd = function() {
         const div = L.DomUtil.create('div', 'info legend');
         div.innerHTML = `
