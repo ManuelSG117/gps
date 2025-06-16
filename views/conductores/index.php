@@ -18,7 +18,7 @@ $this->title = 'Conductores';
 $this->params['breadcrumbs'][] = $this->title;
 $this->registerJsFile('@web/js/conductores.js',['depends' => [\yii\web\JqueryAsset::class]]
 );
-
+$createUrl = \yii\helpers\Url::to(['conductores/create']);
 
 ?>   
  <link href="/vendor/sweetalert2/sweetalert2.min.css" rel="stylesheet">

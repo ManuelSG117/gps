@@ -173,7 +173,7 @@ $(document).on('click', '.ajax-view', function (e) {
 // Restablecer el formulario al cerrar el modal
 $('#exampleModalCenter').on('hidden.bs.modal', function () {
     $('#create-conductores-form').find('input, select, textarea').prop('disabled', false).val('');
-    $('#create-conductores-form').attr('action', '<?= \yii\helpers\Url::to(["conductores/create"]) ?>');
+    $('#create-conductores-form').attr('action', $('#create-conductores-form').data('create-url'));
     $('#btn-guardar').show();  // Mostrar el botón "Guardar"
     $('#exampleModalCenterTitle').text('Crear Conductor');
     
