@@ -736,3 +736,53 @@ $(document).on('click', '#showLessGeofenceLogsBtn', function() {
     renderGeofenceLogsTable(window._geofenceLogs || []);
 });
 // --- FIN: Lógica para logs de geocercas ---
+
+function initFileInputsDispositivos() {
+    // Ajusta los IDs según tus campos
+    const imageInputs = [
+        '#dispositivo-vehiculo-imagen', // ejemplo, cambia por tus IDs reales
+        '#dispositivo-poliza-imagen'
+    ];
+    imageInputs.forEach(function(selector) {
+        if ($(selector).length) {
+            $(selector).fileinput({
+                theme: 'fa',
+                showUpload: false,
+                showCancel: false,
+                showRemove: true,
+                showPreview: true,
+                allowedFileExtensions: ['jpg', 'png', 'jpeg'],
+                maxFileSize: 2048,
+                initialPreviewAsData: true,
+                browseClass: 'btn btn-primary',
+                browseIcon: '<i class="fas fa-folder-open"></i> ',
+                browseLabel: 'Buscar imagen',
+                removeLabel: 'Eliminar',
+                removeIcon: '<i class="fas fa-trash"></i> ',
+                msgPlaceholder: 'Seleccionar imagen',
+                layoutTemplates: {
+                    main2: '{preview} {remove} {browse}'
+                },
+                validateInitial: true
+            });
+        }
+    });
+}
+
+// Inicializa al abrir el modal
+$('#exampleModalCenter').on('shown.bs.modal', function() {
+    initFileInputsDispositivos();
+});
+
+$('#exampleModalCenter').on('hidden.bs.modal', function () {
+    $('#create-dispositivos-form').find('input, select, textarea').prop('disabled', false).val('');
+    $('#create-dispositivos-form .btn-primary').show();
+    $('#exampleModalCenterTitle').text('Crear Dispositivo');
+    // Limpia los fileinputs
+    $('.file-input').fileinput('clear');
+});
+
+$('#create-dispositivos-form').on('submit', function (e) {
+    e.preventDefault();
+    // ...
+});

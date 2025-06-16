@@ -20,7 +20,7 @@ use yii\helpers\Url;
     'action' => ['dispositivos/create'],
     'method' => 'post',
     'enableClientValidation' => true,
-    'options' => ['enctype' => 'multipart/form-data', 'data-pjax' => false],
+    'options' => ['enctype' => 'multipart/form-data', 'data-pjax' => true],
 ]); ?>
 
 <div class="modal-body">
