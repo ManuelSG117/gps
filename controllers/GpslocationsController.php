@@ -12,7 +12,7 @@ use yii\helpers\Json;
 use Yii;
 use yii\web\BadRequestHttpException;
 use app\models\Vehiculos; // Asegúrate de importar el modelo de Vehiculo
-
+    
 
 /**
  * GpslocationsController implements the CRUD actions for Gpslocations model.
@@ -483,4 +483,66 @@ private function calculateDistance($lat1, $lon1, $lat2, $lon2)
             'coordenadas_revisadas' => $coordenadasRevisadas,
         ];
     }
+
+    public function actionCheckGpsNotifications()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        // Obtener todos los dispositivos registrados
+        $registeredImeis = (new \yii\db\Query())
+            ->select(['imei'])
+            ->from('dispositivos')
+            ->column();
+
+        $now = new \DateTime();
+        $notificacionesCreadas = 0;
+
+        foreach ($registeredImeis as $imei) {
+            // Obtener la última ubicación
+            $lastLocation = \app\models\Gpslocations::find()
+                ->where(['phoneNumber' => $imei])
+                ->orderBy(['lastUpdate' => SORT_DESC])
+                ->one();
+
+            if ($lastLocation) {
+                $lastUpdate = new \DateTime($lastLocation->lastUpdate);
+                $diff = $now->getTimestamp() - $lastUpdate->getTimestamp();
+
+                if ($diff > 24 * 3600) { // Más de 24 horas
+                    // Buscar vehículo asociado
+                    $vehiculo = \app\models\Vehiculos::find()
+                        ->joinWith('dispositivo')
+                        ->where(['dispositivos.imei' => $imei])
+                        ->one();
+
+                    $idVehiculo = $vehiculo ? $vehiculo->id : null;
+
+                    // Verificar si ya existe una notificación igual y sin leer
+                    $existe = \app\models\Notificaciones::find()
+                        ->where([
+                            'tipo' => 'vehiculo_inactivo',
+                            'id_vehiculo' => $idVehiculo,
+                            'leido' => 0,
+                        ])
+                        ->andWhere(['like', 'mensaje', $imei])
+                        ->exists();
+
+                    if (!$existe) {
+                        $notificacion = new \app\models\Notificaciones();
+                        $notificacion->tipo = 'vehiculo_inactivo';
+                        $notificacion->mensaje = "El Vehiculo " . $vehiculo->identificador . " lleva más de 24 horas sin transmitir.";
+                        $notificacion->id_vehiculo = $idVehiculo;
+                        $notificacion->fecha_creacion = date('Y-m-d H:i:s');
+                        $notificacion->leido = 0;
+                        $notificacion->save(false);
+                        $notificacionesCreadas++;
+                    }
+                }
+            }
+        }
+
+        return ['success' => true, 'notificacionesCreadas' => $notificacionesCreadas];
+    }
+
+    
 }

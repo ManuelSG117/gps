@@ -409,16 +409,7 @@ function toggleMarker(phoneNumber) {
             return;
         }
     
-        // Validar que se haya cambiado la selección de GPS
-        if (phoneNumber === lastSelectedGPS) {
-            Swal.fire({
-                icon: 'info',
-                title: 'Selección ya cargada',
-                text: 'Debes seleccionar un dispositivo diferente para cargar una nueva ruta.',
-                confirmButtonText: 'Aceptar'
-            });
-            return;
-        }
+       
     
         // Actualizar la última selección
         lastSelectedGPS = phoneNumber;
@@ -523,10 +514,16 @@ function toggleMarker(phoneNumber) {
             const startAddress = await getAddress(startPoint[0], startPoint[1]);
             const endAddress = await getAddress(endPoint[0], endPoint[1]);
     
+            // Limpiar los marcadores del primer y último punto si existen
+            startEndMarkers.forEach(marker => {
+                map.removeLayer(marker);
+            });
+            startEndMarkers = [];
+    
             // Agregar marcador para el primer punto (inicio de la ruta)
             const startMarker = L.marker([startPoint[0], startPoint[1]], {
                 icon: L.icon({
-                    iconUrl: 'https://img.icons8.com/?size=100&id=13802&format=png&color=000000', // Ícono verde para el inicio
+                    iconUrl: 'https://img.icons8.com/?size=100&id=65545&format=png&color=000000', // Ícono verde para el inicio
                     iconSize: [40, 40], // Ajustar el tamaño
                     iconAnchor: [20, 20], // Centrar el ícono
                     popupAnchor: [0, -20] // Ajustar el popup
@@ -549,7 +546,7 @@ function toggleMarker(phoneNumber) {
             // Agregar marcador para el último punto (fin de la ruta)
             const endMarker = L.marker([endPoint[0], endPoint[1]], {
                 icon: L.icon({
-                    iconUrl: 'https://img.icons8.com/?size=100&id=13796&format=png&color=000000', // Ícono rojo para el final
+                    iconUrl: 'https://img.icons8.com/?size=100&id=13802&format=png&color=000000', // Ícono rojo para el final
                     iconSize: [40, 40], // Ajustar el tamaño
                     iconAnchor: [20, 20], // Centrar el ícono
                     popupAnchor: [0, -20] // Ajustar el popup
