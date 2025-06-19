@@ -1,5 +1,5 @@
 function loadNotifications() {
-    $.get('/index.php/notificaciones/get-recent', function(data) {
+    $.get('/notificaciones/get-recent', function(data) {
         let html = '';
         let unreadCount = 0;
         if (data.length === 0) {
@@ -32,7 +32,7 @@ $(function(){
     // Consulta vencimientos de pólizas solo una vez por día
     var hoy = (new Date()).toISOString().slice(0,10);
     if (localStorage.getItem('polizaCheck') !== hoy) {
-        $.get('/index.php/poliza-seguro/check-vencimientos', function(resp){
+        $.get('/poliza-seguro/check-vencimientos', function(resp){
             if(resp.success && resp.notificaciones && resp.notificaciones.length > 0){
                 resp.notificaciones.forEach(function(n){
                     Swal.fire({
@@ -50,26 +50,26 @@ $(function(){
     setInterval(loadNotifications, 60000);
     $(document).on('click', '.mark-read-dot', function(){
         var id = $(this).data('id');
-        $.post('/index.php/notificaciones/mark-as-read?id='+id, function(resp){
+        $.post('/notificaciones/mark-as-read?id='+id, function(resp){
             if(resp.success) loadNotifications();
         });
     });
     $(document).on('click', '.delete-btn', function(){
         if(!confirm('¿Eliminar esta notificación?')) return;
         var id = $(this).data('id');
-        $.post('/index.php/notificaciones/delete?id='+id, function(resp){
+        $.post('/notificaciones/delete?id='+id, function(resp){
             if(resp.success) loadNotifications();
         });
     });
     $(document).on('click', '#mark-all-read-btn', function(){
-        $.post('/index.php/notificaciones/mark-all-as-read', function(resp){
+        $.post('/notificaciones/mark-all-as-read', function(resp){
             if(resp.success) loadNotifications();
         });
     });
 
     // Marcar todas las notificaciones como leídas
     $(document).on('click', '#mark-all-read-btn', function(){
-        $.post('/index.php/notificaciones/mark-all-as-read', function(resp){
+        $.post('/notificaciones/mark-all-as-read', function(resp){
             if(resp.success) loadNotifications();
         });
     });

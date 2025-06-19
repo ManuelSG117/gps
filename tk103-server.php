@@ -8,7 +8,7 @@ $ip_address = "192.168.1.169";
 $port = "7331";
 $log_file = "gps_log_" . date("Y-m-d") . ".log";
 $min_distance_meters = 1; // Distancia mínima para registrar nueva posición
-$max_speed_kmh = 180; // Velocidad máxima razonable
+$max_speed_kmh = 120; // Velocidad máxima razonable
 $connection_timeout = 600; // Tiempo en segundos para considerar una conexión inactiva (6 minutos)
 
 // --- Configuración de la cola persistente ---
@@ -479,6 +479,8 @@ function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, 
     global $min_distance_meters;
     $max_jump_speed_kmh = 200; // Umbral para saltos imposibles
     $min_time_diff_sec = 1; // Tiempo mínimo entre posiciones para evitar duplicados
+    $max_jump_distance_meters = 100; // Umbral de salto irreal en metros
+    $max_jump_time_sec = 30; // Si el tiempo entre puntos es menor a esto y la distancia es muy grande, es irreal
     // Verificar si el IMEI está registrado en la tabla dispositivos
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM dispositivos WHERE imei = :imei');
     $stmt->execute([':imei' => $imei]);
@@ -531,6 +533,12 @@ function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, 
         if (!$jump_detected && $distance < $min_distance_meters && $time_diff < $min_time_diff_sec) {
             log_message("Ubicación muy similar a la última insertada, no se insertará en la base de datos");
             $should_insert = false;
+        }
+        // Validación de salto de distancia irreal
+        if (!$jump_detected && $distance > $max_jump_distance_meters && $time_diff < $max_jump_time_sec) {
+            log_message("Salto de distancia irreal detectado: $distance metros en $time_diff segundos. No se insertará la ubicación.");
+            $should_insert = false;
+            $jump_detected = true;
         }
     }
     if ($should_insert) {

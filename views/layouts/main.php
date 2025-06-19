@@ -409,12 +409,13 @@ if (!Yii::$app->user->isGuest) {
 <script src ="/js/qeue_alert.js"></script>
 
 <!-- Notificaciones JS -->
-<script src="/js/notificaciones.js.js"></script>
-<script src="/js/check_lastgps.js"></script>
+<script src="/js/notificaciones.js"></script>
 <script>
-	console.log(localStorage.getItem('lastGpsCheck'))
+    loadNotifications();
+    setInterval(loadNotifications, 10000);
 </script>
-
+<script src="/js/check_lastgps.js"></script>
+<script src="/js/vehicle-tracker.js"></script>
 </body>
 </html>
 <?php $this->endPage() ?>
@@ -456,8 +457,7 @@ if (!Yii::$app->user->isGuest) {
     min-width: 20px;
     height: 20px;
     padding: 0 6px;
-    font-size: 14px;
-    font-weight: bold;
+    font-size: 12px;
     color: #fff;
     background: #e74c3c;
     border-radius: 50%;

@@ -259,56 +259,6 @@ private function calculateDistance($lat1, $lon1, $lat2, $lon2)
 
 
 
-
-// public function actionGetDistances()
-// {
-//     $date = '2024-12-23';
-//     $startDate = $date . ' 00:00:00';
-//     $endDate = $date . ' 23:59:59';
-
-//     $gpsLocations = Gpslocations::find()
-//         ->where(['between', 'lastUpdate', $startDate, $endDate])
-//         ->orderBy(['lastUpdate' => SORT_ASC])
-//         ->all();
-
-//     if (count($gpsLocations) < 2) {
-//         return $this->asJson(['error' => 'Not enough data points']);
-//     }
-
-//     $maxDistance = 0;
-//     $minDistance = PHP_INT_MAX;
-//     $maxPoints = [];
-//     $minPoints = [];
-
-//     for ($i = 0; $i < count($gpsLocations) - 1; $i++) {
-//         for ($j = $i + 1; $j < count($gpsLocations); $j++) {
-//             $distance = $this->calculateDistance(
-//                 $gpsLocations[$i]->latitude,
-//                 $gpsLocations[$i]->longitude,
-//                 $gpsLocations[$j]->latitude,
-//                 $gpsLocations[$j]->longitude
-//             );
-
-//             if ($distance > $maxDistance) {
-//                 $maxDistance = $distance;
-//                 $maxPoints = [$gpsLocations[$i], $gpsLocations[$j]];
-//             }
-
-//             if ($distance < $minDistance) {
-//                 $minDistance = $distance;
-//                 $minPoints = [$gpsLocations[$i], $gpsLocations[$j]];
-//             }
-//         }
-//     }
-
-//     return $this->asJson([
-//         'maxDistance' => $maxDistance,
-//         'maxPoints' => $maxPoints,
-//         'minDistance' => $minDistance,
-//         'minPoints' => $minPoints,
-//     ]);
-// }
-   
     /**
      * Displays a single Gpslocations model.
      * @param int $GPSLocationID Gps Location ID

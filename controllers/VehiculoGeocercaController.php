@@ -350,7 +350,6 @@ class VehiculoGeocercaController extends Controller
                     ->orderBy(['lastUpdate' => SORT_DESC])
                     ->one();
             }
-            // --- Lógica de notificación de salida de geocerca ---
             if ($ubicacion) {
                 // Obtener geocercas asignadas
                 $asignaciones = \app\models\VehiculoGeocerca::find()->where(['vehiculo_id' => $vehiculo->id, 'activo' => 1])->all();
@@ -363,9 +362,17 @@ class VehiculoGeocercaController extends Controller
                         }, explode('|', $geocerca->coordinates));
                         $isInside = self::pointInPolygon([$ubicacion->latitude, $ubicacion->longitude], $coords);
                         $stateKey = 'vehiculo_' . $vehiculo->id . '_geocerca_' . $geocerca->id . '_inside';
+                        $lastInsideKey = 'vehiculo_' . $vehiculo->id . '_geocerca_' . $geocerca->id . '_last_inside';
+                        $lastOutsideKey = 'vehiculo_' . $vehiculo->id . '_geocerca_' . $geocerca->id . '_last_outside';
                         $wasInside = \Yii::$app->cache->get($stateKey);
+                        $now = $ubicacion->lastUpdate;
+                        // Actualizar estado y timestamps en cache
                         if ($isInside !== $wasInside && $wasInside !== null) {
-                            // Hubo un cambio de estado: entrada o salida
+                            if ($isInside) {
+                                \Yii::$app->cache->set($lastInsideKey, $now, 30*24*3600);
+                            } else {
+                                \Yii::$app->cache->set($lastOutsideKey, $now, 30*24*3600);
+                            }
                             $not = new \app\models\Notificaciones();
                             $not->tipo = 'geocerca';
                             $not->mensaje = 'El vehículo ' . $vehiculo->identificador . ' ha ' . ($isInside ? 'entrado a' : 'salido de') . ' la geocerca ' . $geocerca->name;
@@ -382,29 +389,35 @@ class VehiculoGeocercaController extends Controller
                                 ]
                             ]);
                             $not->save();
-                            // Actualizar el estado en cache
-                            \Yii::$app->cache->set($stateKey, $isInside, 24*3600);
-                        } else {
-                            // Solo actualizar el estado si no hubo cambio
-                            \Yii::$app->cache->set($stateKey, $isInside, 24*3600);
                         }
+                        \Yii::$app->cache->set($stateKey, $isInside, 30*24*3600);
+                        if ($isInside && !\Yii::$app->cache->get($lastInsideKey)) {
+                            \Yii::$app->cache->set($lastInsideKey, $now, 30*24*3600);
+                        }
+                        if (!$isInside && !\Yii::$app->cache->get($lastOutsideKey)) {
+                            \Yii::$app->cache->set($lastOutsideKey, $now, 30*24*3600);
+                        }
+                        $result[] = [
+                            'id' => $vehiculo->id,
+                            'identificador' => $vehiculo->identificador,
+                            'modelo' => $vehiculo->modelo_auto,
+                            'marca' => $vehiculo->marca_auto,
+                            'placa' => $vehiculo->placa,
+                            'imei' => $imei,
+                            'latitude' => $ubicacion ? $ubicacion->latitude : null,
+                            'longitude' => $ubicacion ? $ubicacion->longitude : null,
+                            'lastUpdate' => $ubicacion ? $ubicacion->lastUpdate : null,
+                            'speed' => $ubicacion ? $ubicacion->speed : null,
+                            'direction' => $ubicacion ? $ubicacion->direction : null,
+                            'geocercas' => $geocerca->id,
+                            'nombre_geocerca' => $geocerca->name,
+                            'inside' => $isInside,
+                            'last_inside' => \Yii::$app->cache->get($lastInsideKey),
+                            'last_outside' => \Yii::$app->cache->get($lastOutsideKey),
+                        ];
                     }
                 }
             }
-            // --- Fin lógica notificación ---
-            $result[] = [
-                'id' => $vehiculo->id,
-                'identificador' => $vehiculo->identificador,
-                'modelo' => $vehiculo->modelo_auto,
-                'marca' => $vehiculo->marca_auto,
-                'placa' => $vehiculo->placa,
-                'imei' => $imei,
-                'latitude' => $ubicacion ? $ubicacion->latitude : null,
-                'longitude' => $ubicacion ? $ubicacion->longitude : null,
-                'lastUpdate' => $ubicacion ? $ubicacion->lastUpdate : null,
-                'speed' => $ubicacion ? $ubicacion->speed : null,
-                'direction' => $ubicacion ? $ubicacion->direction : null,
-            ];
         }
         return $result;
     }
