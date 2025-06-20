@@ -84,6 +84,32 @@
     })();
 
 
+    function initMap() {
+        map = L.map('map').setView([19.4202403, -102.0686549], 15);
+
+        const roadmapLayer = L.gridLayer.googleMutant({
+            type: 'roadmap'
+        });
+        roadmapLayer.addGoogleLayer("TrafficLayer");
+
+        const satelliteLayer = L.gridLayer.googleMutant({
+            type: 'hybrid' // Satélite con etiquetas
+        });
+
+        map.addLayer(roadmapLayer); // Añadir capa por defecto
+
+        const baseLayers = {
+            "Mapa": roadmapLayer,
+            "Satélite": satelliteLayer
+        };
+
+        L.control.layers(baseLayers).addTo(map);
+
+        loadGpsOptions();
+        loadRecentLocations();
+
+        recentLocationsInterval = setInterval(loadRecentLocations, 1000);
+    }
 
 
     async function loadRecentLocations() {
@@ -210,12 +236,25 @@
                             const div = document.createElement('div');
                             div.className = 'item-item';
 
+                            if (location) {
+                                div.style.cursor = 'pointer';
+                                div.onclick = () => {
+                                    map.flyTo([location.latitude, location.longitude], 18, {
+                                        animate: true,
+                                        duration: 1
+                                    });
+                                }
+                            }
+
                             // 1. Checkbox y nombre del vehículo
                             const checkbox = document.createElement('input');
                             checkbox.type = 'checkbox';
                             checkbox.id = gps.phoneNumber;
                             checkbox.checked = true;
                             checkbox.onchange = () => toggleMarker(gps.phoneNumber);
+                            checkbox.onclick = (event) => {
+                                event.stopPropagation();
+                            };
                             div.appendChild(checkbox);
 
                             // Nombre del vehículo

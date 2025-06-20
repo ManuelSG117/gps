@@ -7223,3 +7223,339 @@ Host: 177.244.33.22:7331
 [2025-06-20 15:42:59] Datos recibidos: imei:864035053288172,tracker,250620204259,100%,F,204259.000,A,1924.57973,N,10204.01701,W,0.49,112.46,,1,0,0.00%,,;
 [2025-06-20 15:42:59] Distancia desde última posición: 22.734260905762 metros
 [2025-06-20 15:42:59] Datos agregados a la cola persistente para IMEI: 864035053288172
+[2025-06-20 15:43:10] Datos recibidos: imei:864035053287661,tracker,250620204309,100%,F,204309.000,A,1925.26211,N,10204.63445,W,2.62,107.65,,1,0,0.00%,,;
+[2025-06-20 15:43:10] Distancia desde última posición: 171.77427810225 metros
+[2025-06-20 15:43:10] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:43:10] Batch insertado correctamente: 2 registros.
+[2025-06-20 15:43:15] Datos recibidos: imei:864035053287661,tracker,250620204314,100%,F,204314.000,A,1925.26018,N,10204.62610,W,3.98,73.26,,1,0,0.00%,,;
+[2025-06-20 15:43:15] Distancia desde última posición: 15.004662957941 metros
+[2025-06-20 15:43:15] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:43:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:43:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:43:30] Datos recibidos: imei:864035053287661,tracker,250620204329,100%,F,204329.000,A,1925.25268,N,10204.58072,W,9.32,120.97,,1,0,0.00%,,;
+[2025-06-20 15:43:30] Distancia desde última posición: 95.569786125959 metros
+[2025-06-20 15:43:30] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:43:31] Batch insertado correctamente: 2 registros.
+[2025-06-20 15:43:39] Datos recibidos: imei:868166052404811,tracker,250620204338,,F,204338.000,A,1924.54045,N,10203.97185,W,0.00,138.96;
+[2025-06-20 15:43:39] Distancia desde última posición: 0.24587837068891 metros
+[2025-06-20 15:43:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:43:41] Datos recibidos: imei:864035053287661,tracker,250620204340,100%,F,204340.000,A,1925.23720,N,10204.54871,W,6.56,133.08,,1,0,0.00%,,;
+[2025-06-20 15:43:41] Distancia desde última posición: 62.827069873692 metros
+[2025-06-20 15:43:41] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:43:41] Batch insertado correctamente: 2 registros.
+[2025-06-20 15:43:43] Datos recibidos: imei:864035053287661,tracker,250620204342,100%,F,204342.000,A,1925.23242,N,10204.54912,W,12.32,203.83,,1,0,0.00%,,;
+[2025-06-20 15:43:44] Distancia desde última posición: 8.9258313686234 metros
+[2025-06-20 15:43:44] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:43:50] Datos recibidos: imei:864035053287661,tracker,250620204349,100%,F,204349.000,A,1925.22580,N,10204.55239,W,0.00,215.25,,1,0,0.00%,,;
+[2025-06-20 15:43:50] Distancia desde última posición: 22.074257838059 metros
+[2025-06-20 15:43:50] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:43:54] Datos recibidos: imei:864035053287661,tracker,250620204353,100%,F,204353.000,A,1925.22363,N,10204.55349,W,3.66,191.00,,1,0,0.00%,,;
+[2025-06-20 15:43:54] Distancia desde última posición: 26.493447411108 metros
+[2025-06-20 15:43:54] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:43:55] Batch insertado correctamente: 3 registros.
+[2025-06-20 15:44:05] Datos recibidos: 864035053287661;
+[2025-06-20 15:44:05] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:44:10] Datos recibidos: imei:864035053287661,tracker,250620204409,100%,F,204409.000,A,1925.18530,N,10204.56274,W,0.00,188.27,,1,0,0.00%,,;
+[2025-06-20 15:44:10] Distancia desde última posición: 72.865788596503 metros
+[2025-06-20 15:44:10] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:44:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:44:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:44:19] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:44:26] Datos recibidos: imei:864035053287661,tracker,250620204425,100%,F,204425.000,A,1925.17842,N,10204.55926,W,2.73,104.23,,1,0,0.00%,,;
+[2025-06-20 15:44:26] Distancia desde última posición: 14.160280543483 metros
+[2025-06-20 15:44:26] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:44:30] Datos recibidos: imei:864035053287661,tracker,250620204429,100%,F,204429.000,A,1925.17418,N,10204.55279,W,9.28,120.02,,1,0,0.00%,,;
+[2025-06-20 15:44:30] Distancia desde última posición: 26.94838135075 metros
+[2025-06-20 15:44:30] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:44:30] Batch insertado correctamente: 2 registros.
+[2025-06-20 15:44:39] Datos recibidos: imei:868166052404811,tracker,250620204438,,F,204438.000,A,1924.54064,N,10203.97190,W,0.00,138.96;
+[2025-06-20 15:44:39] Distancia desde última posición: 0.33358477988154 metros
+[2025-06-20 15:44:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:44:50] Datos recibidos: imei:864035053287661,tracker,250620204449,100%,F,204449.000,A,1925.12959,N,10204.50702,W,10.46,116.50,,1,0,0.00%,,;
+[2025-06-20 15:44:50] Distancia desde última posición: 115.01363900795 metros
+[2025-06-20 15:44:50] Salto de distancia irreal detectado: 115.01363900795 metros en 20 segundos. No se insertará la ubicación.
+[2025-06-20 15:44:50] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:45:02] Datos recibidos: imei:864035053287661,tracker,250620204501,100%,F,204501.000,A,1925.12191,N,10204.48129,W,7.12,97.26,,1,0,0.00%,,;
+[2025-06-20 15:45:02] Distancia desde última posición: 158.13318901009 metros
+[2025-06-20 15:45:02] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:45:03] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:45:10] Datos recibidos: imei:864035053287661,tracker,250620204509,100%,F,204509.000,A,1925.11517,N,10204.44932,W,18.54,107.97,,1,0,0.00%,,;
+[2025-06-20 15:45:10] Distancia desde última posición: 57.290344295343 metros
+[2025-06-20 15:45:10] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:45:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:45:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:45:19] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:45:30] Datos recibidos: imei:864035053287661,tracker,250620204529,100%,F,204529.000,A,1925.09454,N,10204.37577,W,11.82,105.34,,1,0,0.00%,,;
+[2025-06-20 15:45:30] Distancia desde última posición: 134.03916313485 metros
+[2025-06-20 15:45:30] Salto de distancia irreal detectado: 134.03916313485 metros en 20 segundos. No se insertará la ubicación.
+[2025-06-20 15:45:34] Datos recibidos: imei:864035053287661,tracker,250620204533,100%,F,204533.000,A,1925.09170,N,10204.36380,W,6.82,122.66,,1,0,0.00%,,;
+[2025-06-20 15:45:35] Distancia desde última posición: 155.63542435202 metros
+[2025-06-20 15:45:35] Salto de distancia irreal detectado: 155.63542435202 metros en 24 segundos. No se insertará la ubicación.
+[2025-06-20 15:45:39] Datos recibidos: imei:868166052404811,tracker,250620204538,,F,204538.000,A,1924.54082,N,10203.97204,W,0.00,138.96;
+[2025-06-20 15:45:39] Distancia desde última posición: 0.45855112824723 metros
+[2025-06-20 15:45:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:45:44] Datos recibidos: 864035053288172;
+[2025-06-20 15:45:44] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:45:44] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:45:50] Datos recibidos: imei:864035053287661,tracker,250620204549,100%,F,204549.000,A,1925.07482,N,10204.32046,W,6.15,122.35,,1,0,0.00%,,;
+[2025-06-20 15:45:50] Distancia desde última posición: 237.23092347948 metros
+[2025-06-20 15:45:50] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:45:53] Datos recibidos: imei:864035053287661,tracker,250620204552,100%,F,204552.000,A,1925.07226,N,10204.31706,W,5.87,146.86,,1,0,0.00%,,;
+[2025-06-20 15:45:53] Distancia desde última posición: 244.42472400464 metros
+[2025-06-20 15:45:53] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:45:55] Datos recibidos: imei:864035053287661,tracker,250620204554,100%,F,204554.000,A,1925.06696,N,10204.31652,W,12.89,190.37,,1,0,0.00%,,;
+[2025-06-20 15:45:55] Distancia desde última posición: 248.66109427381 metros
+[2025-06-20 15:45:55] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:45:55] Batch insertado correctamente: 3 registros.
+[2025-06-20 15:46:10] Datos recibidos: imei:864035053287661,tracker,250620204609,100%,F,204609.000,A,1925.01968,N,10204.32800,W,2.23,193.29,,1,0,0.00%,,;
+[2025-06-20 15:46:10] Distancia desde última posición: 89.881898264642 metros
+[2025-06-20 15:46:10] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:46:11] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:46:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:46:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:46:25] Datos recibidos: imei:864035053287661,tracker,250620204624,100%,F,204624.000,A,1924.96394,N,10204.33731,W,13.43,176.84,,1,0,0.00%,,;
+[2025-06-20 15:46:25] Distancia desde última posición: 104.58753772151 metros
+[2025-06-20 15:46:25] Salto de distancia irreal detectado: 104.58753772151 metros en 15 segundos. No se insertará la ubicación.
+[2025-06-20 15:46:30] Datos recibidos: imei:864035053287661,tracker,250620204629,100%,F,204629.000,A,1924.94082,N,10204.33695,W,15.40,176.17,,1,0,0.00%,,;
+[2025-06-20 15:46:30] Distancia desde última posición: 147.06505516167 metros
+[2025-06-20 15:46:30] Salto de distancia irreal detectado: 147.06505516167 metros en 20 segundos. No se insertará la ubicación.
+[2025-06-20 15:46:39] Datos recibidos: imei:868166052404811,tracker,250620204638,,F,204638.000,A,1924.54083,N,10203.97181,W,0.00,138.96;
+[2025-06-20 15:46:39] Distancia desde última posición: 0.41950304946591 metros
+[2025-06-20 15:46:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:46:39] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:46:50] Datos recibidos: imei:864035053287661,tracker,250620204649,100%,F,204649.000,A,1924.89545,N,10204.32759,W,0.00,171.79,,1,0,0.00%,,;
+[2025-06-20 15:46:50] Distancia desde última posición: 230.28555272723 metros
+[2025-06-20 15:46:50] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:46:50] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:47:05] Datos recibidos: 864035053287661;
+[2025-06-20 15:47:05] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:47:10] Datos recibidos: imei:864035053287661,tracker,250620204709,100%,F,204709.000,A,1924.84500,N,10204.31430,W,7.35,170.09,,1,0,0.00%,,;
+[2025-06-20 15:47:10] Distancia desde última posición: 96.369482693795 metros
+[2025-06-20 15:47:10] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:47:10] Datos recibidos: imei:864035053287661,tracker,250620204709,100%,F,204709.000,A,1924.84500,N,10204.31430,W,7.35,170.09,,1,0,0.00%,,;
+[2025-06-20 15:47:10] Distancia desde última posición: 96.369482693795 metros
+[2025-06-20 15:47:10] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:47:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:47:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:47:19] Batch insertado correctamente: 2 registros.
+[2025-06-20 15:47:30] Datos recibidos: imei:864035053287661,tracker,250620204729,100%,F,204729.000,A,1924.78415,N,10204.29952,W,21.31,168.58,,1,0,0.00%,,;
+[2025-06-20 15:47:30] Distancia desde última posición: 115.66550683624 metros
+[2025-06-20 15:47:30] Salto de distancia irreal detectado: 115.66550683624 metros en 20 segundos. No se insertará la ubicación.
+[2025-06-20 15:47:39] Datos recibidos: imei:868166052404811,tracker,250620204738,,F,204738.000,A,1924.54082,N,10203.97169,W,0.00,138.96;
+[2025-06-20 15:47:39] Distancia desde última posición: 0.20975152547814 metros
+[2025-06-20 15:47:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:47:50] Datos recibidos: imei:864035053287661,tracker,250620204749,100%,F,204749.000,A,1924.66898,N,10204.26777,W,21.56,162.12,,1,0,0.00%,,;
+[2025-06-20 15:47:50] Distancia desde última posición: 336.10979218627 metros
+[2025-06-20 15:47:50] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:47:50] Batch insertado correctamente: 2 registros.
+[2025-06-20 15:48:05] Datos recibidos: imei:864035053287661,tracker,250620204804,100%,F,204804.000,A,1924.60311,N,10204.22632,W,14.62,107.20,,1,0,0.00%,,;
+[2025-06-20 15:48:05] Distancia desde última posición: 141.97936152634 metros
+[2025-06-20 15:48:05] Salto de distancia irreal detectado: 141.97936152634 metros en 15 segundos. No se insertará la ubicación.
+[2025-06-20 15:48:10] Datos recibidos: imei:864035053287661,tracker,250620204809,100%,F,204809.000,A,1924.59332,N,10204.19833,W,22.12,112.84,,1,0,0.00%,,;
+[2025-06-20 15:48:10] Distancia desde última posición: 185.4983604999 metros
+[2025-06-20 15:48:10] Salto de distancia irreal detectado: 185.4983604999 metros en 20 segundos. No se insertará la ubicación.
+[2025-06-20 15:48:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:48:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:48:30] Datos recibidos: imei:864035053287661,tracker,250620204829,100%,F,204829.000,A,1924.54718,N,10204.09124,W,8.13,114.95,,1,0,0.00%,,;
+[2025-06-20 15:48:30] Distancia desde última posición: 382.38097658575 metros
+[2025-06-20 15:48:30] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:48:30] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:48:39] Datos recibidos: imei:868166052404811,tracker,250620204838,,F,204838.000,A,1924.54093,N,10203.97164,W,0.00,138.96;
+[2025-06-20 15:48:39] Distancia desde última posición: 0.24587836884557 metros
+[2025-06-20 15:48:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:48:50] Datos recibidos: imei:864035053287661,tracker,250620204849,100%,F,204849.000,A,1924.51255,N,10204.01565,W,6.17,106.85,,1,0,0.00%,,;
+[2025-06-20 15:48:50] Distancia desde última posición: 146.80144723293 metros
+[2025-06-20 15:48:50] Salto de distancia irreal detectado: 146.80144723293 metros en 20 segundos. No se insertará la ubicación.
+[2025-06-20 15:48:50] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:48:50] Datos recibidos: 864035053288172;
+[2025-06-20 15:48:50] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:49:03] Datos recibidos: imei:864035053287661,tracker,250620204902,100%,F,204902.000,A,1924.50995,N,10204.00382,W,4.79,61.11,,1,0,0.00%,,;
+[2025-06-20 15:49:03] Distancia desde última posición: 167.68214656065 metros
+[2025-06-20 15:49:03] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:49:03] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:49:05] Datos recibidos: imei:864035053287661,tracker,250620204904,100%,F,204904.000,A,1924.51308,N,10204.00027,W,9.69,25.80,,1,0,0.00%,,;
+[2025-06-20 15:49:05] Distancia desde última posición: 8.4688009089621 metros
+[2025-06-20 15:49:05] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:49:10] Datos recibidos: imei:864035053287661,tracker,250620204909,100%,F,204909.000,A,1924.52460,N,10203.99720,W,0.41,13.70,,1,0,0.00%,,;
+[2025-06-20 15:49:10] Distancia desde última posición: 29.482355808235 metros
+[2025-06-20 15:49:10] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:49:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:49:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:49:19] Batch insertado correctamente: 2 registros.
+[2025-06-20 15:49:30] Datos recibidos: imei:864035053287661,tracker,250620204929,100%,F,204929.000,A,1924.53152,N,10203.99376,W,3.48,44.49,,1,0,0.00%,,;
+[2025-06-20 15:49:30] Distancia desde última posición: 14.216531960229 metros
+[2025-06-20 15:49:30] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:49:30] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:49:30] Datos recibidos: imei:864035053287661,tracker,250620204929,100%,F,204929.000,A,1924.53152,N,10203.99376,W,3.48,44.49,,1,0,0.00%,,;
+[2025-06-20 15:49:30] Distancia desde última posición: 0 metros
+[2025-06-20 15:49:30] Ubicación muy similar a la última insertada, no se insertará en la base de datos
+[2025-06-20 15:49:32] Datos recibidos: imei:864035053287661,tracker,250620204931,100%,F,204931.000,A,1924.53212,N,10203.99118,W,5.07,94.16,,1,0,0.00%,,;
+[2025-06-20 15:49:32] Distancia desde última posición: 4.6447262524753 metros
+[2025-06-20 15:49:32] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:49:39] Datos recibidos: imei:868166052404811,tracker,250620204938,,F,204938.000,A,1924.54087,N,10203.97155,W,0.00,138.96;
+[2025-06-20 15:49:39] Distancia desde última posición: 0.15285037450984 metros
+[2025-06-20 15:49:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:49:41] Datos recibidos: imei:864035053287661,tracker,250620204940,100%,F,204940.000,A,1924.52904,N,10203.97459,W,7.48,71.34,,1,0,0.00%,,;
+[2025-06-20 15:49:41] Distancia desde última posición: 33.88366945831 metros
+[2025-06-20 15:49:41] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:49:41] Batch insertado correctamente: 3 registros.
+[2025-06-20 15:49:43] Datos recibidos: imei:864035053287661,tracker,250620204942,100%,F,204942.000,A,1924.53186,N,10203.97156,W,7.33,23.58,,1,0,0.00%,,;
+[2025-06-20 15:49:43] Distancia desde última posición: 7.4033868616089 metros
+[2025-06-20 15:49:43] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:49:50] Datos recibidos: imei:864035053287661,tracker,250620204949,100%,F,204949.000,A,1924.53890,N,10203.96849,W,1.64,33.52,,1,0,0.00%,,;
+[2025-06-20 15:49:50] Distancia desde última posición: 21.185338880428 metros
+[2025-06-20 15:49:50] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:49:54] Datos recibidos: imei:864035053287661,tracker,250620204953,100%,F,204953.000,A,1924.54144,N,10203.96614,W,3.26,61.67,,1,0,0.00%,,;
+[2025-06-20 15:49:54] Distancia desde última posición: 27.358148366192 metros
+[2025-06-20 15:49:54] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:49:54] Batch insertado correctamente: 3 registros.
+[2025-06-20 15:50:06] Datos recibidos: 864035053287661;
+[2025-06-20 15:50:06] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:50:10] Datos recibidos: imei:864035053287661,tracker,250620205009,100%,F,205009.000,A,1924.54076,N,10203.95566,W,0.00,116.22,,1,0,0.00%,,;
+[2025-06-20 15:50:10] Distancia desde última posición: 18.289328364154 metros
+[2025-06-20 15:50:10] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:50:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:50:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:50:19] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:50:30] Datos recibidos: imei:864035053287661,tracker,250620205029,100%,F,205029.000,A,1924.54454,N,10203.95696,W,0.81,286.26,,1,0,0.00%,,;
+[2025-06-20 15:50:30] Distancia desde última posición: 7.3433287758704 metros
+[2025-06-20 15:50:30] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:50:30] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:50:39] Datos recibidos: imei:868166052404811,tracker,250620205038,,F,205038.000,A,1924.54080,N,10203.97156,W,0.00,138.96;
+[2025-06-20 15:50:39] Distancia desde última posición: 0.22238985312268 metros
+[2025-06-20 15:50:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:50:50] Datos recibidos: imei:864035053287661,tracker,250620205049,100%,F,205049.000,A,1924.54378,N,10203.95652,W,0.00,286.26,,1,0,0.00%,,;
+[2025-06-20 15:50:50] Distancia desde última posición: 1.6212697679655 metros
+[2025-06-20 15:50:50] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:50:50] Batch insertado correctamente: 2 registros.
+[2025-06-20 15:51:10] Datos recibidos: imei:864035053287661,tracker,250620205109,100%,F,205109.000,A,1924.54395,N,10203.95608,W,0.00,286.26,,1,0,0.00%,,;
+[2025-06-20 15:51:10] Distancia desde última posición: 0.80636581168133 metros
+[2025-06-20 15:51:10] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:51:10] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:51:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:51:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:51:30] Datos recibidos: imei:864035053287661,tracker,250620205129,100%,F,205129.000,A,1924.54399,N,10203.95637,W,0.00,286.26,,1,0,0.00%,,;
+[2025-06-20 15:51:30] Distancia desde última posición: 0.53603849870997 metros
+[2025-06-20 15:51:30] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:51:30] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:51:39] Datos recibidos: imei:868166052404811,tracker,250620205138,,F,205138.000,A,1924.54080,N,10203.97145,W,0.00,138.96;
+[2025-06-20 15:51:39] Distancia desde última posición: 0.20975152527761 metros
+[2025-06-20 15:51:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:51:50] Datos recibidos: imei:864035053287661,tracker,250620205149,100%,F,205149.000,A,1924.54412,N,10203.95651,W,0.00,286.26,,1,0,0.00%,,;
+[2025-06-20 15:51:50] Distancia desde última posición: 0.30570070329228 metros
+[2025-06-20 15:51:50] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:51:50] Batch insertado correctamente: 2 registros.
+[2025-06-20 15:51:56] Datos recibidos: 864035053288172;
+[2025-06-20 15:51:56] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:52:10] Datos recibidos: imei:864035053287661,tracker,250620205209,100%,F,205209.000,A,1924.54396,N,10203.95671,W,0.00,286.26,,1,0,0.00%,,;
+[2025-06-20 15:52:10] Distancia desde última posición: 0.45855105421196 metros
+[2025-06-20 15:52:10] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:52:10] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:52:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:52:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:52:30] Datos recibidos: imei:864035053287661,tracker,250620205229,100%,F,205229.000,A,1924.54415,N,10203.95661,W,0.00,286.26,,1,0,0.00%,,;
+[2025-06-20 15:52:30] Distancia desde última posición: 0.34968231809074 metros
+[2025-06-20 15:52:30] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:52:30] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:52:39] Datos recibidos: imei:868166052404811,tracker,250620205238,,F,205238.000,A,1924.54084,N,10203.97126,W,0.00,138.96;
+[2025-06-20 15:52:39] Distancia desde última posición: 0.33369843014283 metros
+[2025-06-20 15:52:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:52:50] Datos recibidos: imei:864035053287661,tracker,250620205249,100%,F,205249.000,A,1924.54440,N,10203.95659,W,0.00,286.26,,1,0,0.00%,,;
+[2025-06-20 15:52:50] Distancia desde última posición: 0.456976919748 metros
+[2025-06-20 15:52:50] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:52:50] Batch insertado correctamente: 2 registros.
+[2025-06-20 15:53:00] Datos recibidos: imei:864035053288172,tracker,250620205259,100%,F,205259.000,A,1924.57662,N,10204.03419,W,0.00,112.46,,1,0,0.00%,,;
+[2025-06-20 15:53:00] Distancia desde última posición: 30.64957852167 metros
+[2025-06-20 15:53:07] Datos recibidos: 864035053287661;
+[2025-06-20 15:53:07] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:53:10] Datos recibidos: imei:864035053287661,tracker,250620205309,100%,F,205309.000,A,1924.54448,N,10203.95659,W,0.00,286.26,,1,0,0.00%,,;
+[2025-06-20 15:53:10] Distancia desde última posición: 0.22238985351772 metros
+[2025-06-20 15:53:10] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:53:10] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:53:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:53:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:53:30] Datos recibidos: imei:864035053287661,tracker,250620205329,100%,F,205329.000,A,1924.54445,N,10203.95683,W,0.00,286.26,,1,0,0.00%,,;
+[2025-06-20 15:53:30] Distancia desde última posición: 0.43398961744897 metros
+[2025-06-20 15:53:30] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:53:30] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:53:39] Datos recibidos: imei:868166052404811,tracker,250620205338,,F,205338.000,A,1924.54090,N,10203.97132,W,0.00,138.96;
+[2025-06-20 15:53:39] Distancia desde última posición: 0.15285037495234 metros
+[2025-06-20 15:53:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:53:50] Datos recibidos: imei:864035053287661,tracker,250620205349,100%,F,205349.000,A,1924.54446,N,10203.95685,W,0.00,286.26,,1,0,0.00%,,;
+[2025-06-20 15:53:50] Distancia desde última posición: 0.10487572478906 metros
+[2025-06-20 15:53:50] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:53:50] Batch insertado correctamente: 2 registros.
+[2025-06-20 15:54:10] Datos recibidos: imei:864035053287661,tracker,250620205409,100%,F,205409.000,A,1924.54435,N,10203.95693,W,0.00,286.26,,1,0,0.00%,,;
+[2025-06-20 15:54:10] Distancia desde última posición: 0.15285034884477 metros
+[2025-06-20 15:54:10] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:54:10] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:54:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:54:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:54:30] Datos recibidos: imei:864035053287661,tracker,250620205429,100%,F,205429.000,A,1924.54419,N,10203.95700,W,0.00,286.26,,1,0,0.00%,,;
+[2025-06-20 15:54:30] Distancia desde última posición: 0.34968231731705 metros
+[2025-06-20 15:54:30] Datos agregados a la cola persistente para IMEI: 864035053287661
+[2025-06-20 15:54:30] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:54:39] Datos recibidos: imei:868166052404811,tracker,250620205438,,F,205438.000,A,1924.54079,N,10203.97136,W,0.00,138.96;
+[2025-06-20 15:54:39] Distancia desde última posición: 0.22238985312268 metros
+[2025-06-20 15:54:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:55:02] Datos recibidos: 864035053288172;
+[2025-06-20 15:55:02] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:55:02] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:55:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:55:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:55:39] Datos recibidos: imei:868166052404811,tracker,250620205538,,F,205538.000,A,1924.54094,N,10203.97110,W,0.00,138.96;
+[2025-06-20 15:55:39] Distancia desde última posición: 0.53596792025941 metros
+[2025-06-20 15:55:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:55:39] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:56:07] Datos recibidos: 864035053287661;
+[2025-06-20 15:56:07] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:56:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:56:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:56:39] Datos recibidos: imei:868166052404811,tracker,250620205638,,F,205638.000,A,1924.54068,N,10203.97097,W,0.00,138.96;
+[2025-06-20 15:56:39] Distancia desde última posición: 0.59422512206604 metros
+[2025-06-20 15:56:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:56:39] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:57:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:57:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:57:39] Datos recibidos: imei:868166052404811,tracker,250620205738,,F,205738.000,A,1924.54064,N,10203.97073,W,0.00,138.96;
+[2025-06-20 15:57:39] Distancia desde última posición: 0.41950305571456 metros
+[2025-06-20 15:57:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:57:40] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:58:08] Datos recibidos: 864035053288172;
+[2025-06-20 15:58:08] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:58:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:58:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:58:39] Datos recibidos: imei:868166052404811,tracker,250620205838,,F,205838.000,A,1924.54076,N,10203.97052,W,0.00,138.96;
+[2025-06-20 15:58:39] Distancia desde última posición: 0.47480528618325 metros
+[2025-06-20 15:58:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:58:39] Batch insertado correctamente: 1 registros.
+[2025-06-20 15:59:13] Datos recibidos: 864035053287661;
+[2025-06-20 15:59:13] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:59:19] Datos recibidos: 868166052404811;
+[2025-06-20 15:59:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 15:59:39] Datos recibidos: imei:868166052404811,tracker,250620205938,,F,205938.000,A,1924.54079,N,10203.97042,W,0.00,138.96;
+[2025-06-20 15:59:39] Distancia desde última posición: 0.1048757626388 metros
+[2025-06-20 15:59:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 15:59:39] Batch insertado correctamente: 1 registros.
+[2025-06-20 16:00:19] Datos recibidos: 868166052404811;
+[2025-06-20 16:00:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 16:00:39] Datos recibidos: imei:868166052404811,tracker,250620210038,,F,210038.000,A,1924.54088,N,10203.97033,W,0.00,138.96;
+[2025-06-20 16:00:39] Distancia desde última posición: 0.30570075108239 metros
+[2025-06-20 16:00:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 16:00:39] Batch insertado correctamente: 1 registros.
+[2025-06-20 16:01:14] Datos recibidos: 864035053288172;
+[2025-06-20 16:01:14] Enviado ON al cliente (heartbeat)
+[2025-06-20 16:01:19] Datos recibidos: 868166052404811;
+[2025-06-20 16:01:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 16:01:39] Datos recibidos: imei:868166052404811,tracker,250620210138,,F,210138.000,A,1924.54056,N,10203.97023,W,0.00,138.96;
+[2025-06-20 16:01:39] Distancia desde última posición: 0.67536223406318 metros
+[2025-06-20 16:01:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 16:01:39] Batch insertado correctamente: 1 registros.
+[2025-06-20 16:02:19] Datos recibidos: 868166052404811;
+[2025-06-20 16:02:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 16:02:19] Datos recibidos: 864035053287661;
+[2025-06-20 16:02:19] Enviado ON al cliente (heartbeat)
+[2025-06-20 16:02:39] Datos recibidos: imei:868166052404811,tracker,250620210238,,F,210238.000,A,1924.54071,N,10203.97040,W,0.00,138.96;
+[2025-06-20 16:02:39] Distancia desde última posición: 0.39404886715082 metros
+[2025-06-20 16:02:39] Datos agregados a la cola persistente para IMEI: 868166052404811
+[2025-06-20 16:02:39] Batch insertado correctamente: 1 registros.
