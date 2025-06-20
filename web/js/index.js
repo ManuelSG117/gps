@@ -84,25 +84,6 @@
     })();
 
 
-    function initMap() {
-        map = L.map('map').setView([19.4202403, -102.0686549], 15);
-
-        const googleLayer = L.gridLayer.googleMutant({
-            type: 'roadmap' 
-        });
-        map.addLayer(googleLayer);
-
-        const trafficMutant = L.gridLayer.googleMutant({
-            type: 'roadmap'
-        });
-        trafficMutant.addGoogleLayer("TrafficLayer");
-        map.addLayer(trafficMutant);
-
-        loadGpsOptions();
-        loadRecentLocations();
-
-        recentLocationsInterval = setInterval(loadRecentLocations, 1000); 
-    }
 
 
     async function loadRecentLocations() {

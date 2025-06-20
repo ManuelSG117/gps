@@ -402,20 +402,20 @@ if (!Yii::$app->user->isGuest) {
 <?php } else { ?>
     <?= $content ?>
 <?php } ?>
-<?php $this->endBody() ?>
 
+<?php if (!Yii::$app->user->isGuest): ?>
 <!-- SweetAlert2 para alertas globales -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src ="/js/qeue_alert.js"></script>
+<script src="/js/qeue_alert.js"></script>
 
 <!-- Notificaciones JS -->
 <script src="/js/notificaciones.js"></script>
-<script>
-    loadNotifications();
-    setInterval(loadNotifications, 10000);
-</script>
-<script src="/js/check_lastgps.js"></script>
 <script src="/js/vehicle-tracker.js"></script>
+<?php endif; ?>
+
+<?php $this->endBody() ?>
+
+
 </body>
 </html>
 <?php $this->endPage() ?>
@@ -457,7 +457,7 @@ if (!Yii::$app->user->isGuest) {
     min-width: 20px;
     height: 20px;
     padding: 0 6px;
-    font-size: 12px;
+    font-size: 12	px;
     color: #fff;
     background: #e74c3c;
     border-radius: 50%;

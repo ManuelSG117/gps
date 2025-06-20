@@ -24,11 +24,16 @@ if (!file_exists($gps_queue_file)) {
 }
 
 // Iniciar registro
-function log_message($message) {
+function log_message($message, $imei = null) {
     global $log_file;
     $timestamp = date("Y-m-d H:i:s");
     file_put_contents($log_file, "[$timestamp] $message" . PHP_EOL, FILE_APPEND);
     echo "$message\n";
+    // Log especial para IMEI 864035053288172
+    if ($imei === '864035053288172') {
+        $special_log_file = "gps_log_864035053288172_" . date("Y-m-d") . ".log";
+        file_put_contents($special_log_file, "[$timestamp] $message" . PHP_EOL, FILE_APPEND);
+    }
 }
 
 log_message("Iniciando servidor GPS en $ip_address:$port");
@@ -270,13 +275,13 @@ while (true) {
                             $result = insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_kmh, $bearing);
                             if ($result === 'IMEI_NOT_REGISTERED') {
                                 $response = "IMEI_NOT_REGISTERED";
-                                log_message("IMEI $imei no está registrado en la tabla dispositivos. No se insertará la ubicación.");
+                                log_message("IMEI $imei no está registrado en la tabla dispositivos. No se insertará la ubicación.", $imei);
                             }
                         } else {
-                            log_message("Datos GPS inválidos, no se insertarán en la base de datos");
+                            log_message("Datos GPS inválidos, no se insertarán en la base de datos", $imei);
                         }
                     } catch (Exception $e) {
-                        log_message("ERROR al procesar datos GPS: " . $e->getMessage());
+                        log_message("ERROR al procesar datos GPS: " . $e->getMessage(), $imei);
                     }
                     break;
                 case 19: // formato antiguo con 19 elementos
@@ -302,18 +307,18 @@ while (true) {
                             $result = insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, $speed_in_kmh, $bearing);
                             if ($result === 'IMEI_NOT_REGISTERED') {
                                 $response = "IMEI_NOT_REGISTERED";
-                                log_message("IMEI $imei no está registrado en la tabla dispositivos. No se insertará la ubicación.");
+                                log_message("IMEI $imei no está registrado en la tabla dispositivos. No se insertará la ubicación.", $imei);
                             }
                         } else {
-                            log_message("Datos GPS inválidos, no se insertarán en la base de datos");
+                            log_message("Datos GPS inválidos, no se insertarán en la base de datos", $imei);
                         }
      
                         if ($alarm == "help me") {
                             $response = "**,imei:" . $imei . ",E;";
-                            log_message("Alarma de ayuda recibida del dispositivo $imei");
+                            log_message("Alarma de ayuda recibida del dispositivo $imei", $imei);
                         }
                     } catch (Exception $e) {
-                        log_message("ERROR al procesar datos GPS: " . $e->getMessage());
+                        log_message("ERROR al procesar datos GPS: " . $e->getMessage(), $imei);
                     }
                     break;
             }
@@ -337,16 +342,16 @@ while (true) {
         if ($queue_count >= $queue_alert_threshold) {
             if (!file_exists($gps_queue_alert_flag)) {
                 file_put_contents($gps_queue_alert_flag, 'ALERT');
-                log_message("ALERTA: La cola de GPS ha superado el umbral de $queue_alert_threshold registros.");
+                log_message("ALERTA: La cola de GPS ha superado el umbral de $queue_alert_threshold registros.", null);
             }
         } else {
             if (file_exists($gps_queue_alert_flag)) {
                 unlink($gps_queue_alert_flag);
-                log_message("ALERTA: La cola de GPS ha vuelto a un nivel seguro (<$queue_alert_threshold). Se elimina la alerta.");
+                log_message("ALERTA: La cola de GPS ha vuelto a un nivel seguro (<$queue_alert_threshold). Se elimina la alerta.", null);
             }
         }
     } catch (Exception $e) {
-        log_message("ERROR en el bucle principal: " . $e->getMessage());
+        log_message("ERROR en el bucle principal: " . $e->getMessage(), null);
         // Esperar un poco antes de continuar
         sleep(5);
     }
@@ -365,13 +370,13 @@ function handle_client_disconnect($socket) {
         $ip = $device_info['ip'];
         
         if ($imei) {
-            log_message("Dispositivo con IMEI $imei desconectado desde IP $ip");
+            log_message("Dispositivo con IMEI $imei desconectado desde IP $ip", $imei);
             // Eliminar del mapeo IMEI a socket
             if (isset($imei_to_socket[$imei]) && $imei_to_socket[$imei] == $socket_id) {
                 unset($imei_to_socket[$imei]);
             }
         } else {
-            log_message("Cliente desconectado desde IP $ip (sin IMEI identificado)");
+            log_message("Cliente desconectado desde IP $ip (sin IMEI identificado)", $imei);
         }
         
         // Eliminar de la lista de dispositivos conectados
@@ -381,7 +386,7 @@ function handle_client_disconnect($socket) {
     // Eliminar de la lista de sockets
     unset($client_sockets[array_search($socket, $client_sockets)]);
     @fclose($socket);
-    log_message("Total clientes: " . count($client_sockets));
+    log_message("Total clientes: " . count($client_sockets), $imei);
 }
 
 // Función para actualizar la información del dispositivo
@@ -395,7 +400,7 @@ function update_device_info($socket, $imei) {
         $old_socket_id = $imei_to_socket[$imei];
         if (isset($connected_devices[$old_socket_id])) {
             $old_ip = $connected_devices[$old_socket_id]['ip'];
-            log_message("Reconexión detectada para IMEI $imei. Anterior: IP $old_ip, Nuevo: IP {$connected_devices[$socket_id]['ip']}");
+            log_message("Reconexión detectada para IMEI $imei. Anterior: IP $old_ip, Nuevo: IP {$connected_devices[$socket_id]['ip']}", $imei);
         }
     }
     
@@ -433,7 +438,7 @@ function cleanup_inactive_connections() {
             
             log_message("Cerrando conexión inactiva: " . 
                         ($imei ? "IMEI $imei" : "Sin IMEI") . 
-                        " desde IP $ip (inactivo por $inactive_time segundos)");
+                        " desde IP $ip (inactivo por $inactive_time segundos)", $imei);
             
             // Buscar el socket real para cerrarlo
             foreach ($client_sockets as $index => $socket) {
@@ -453,7 +458,7 @@ function cleanup_inactive_connections() {
     }
     
     if (count($inactive_sockets) > 0) {
-        log_message("Se cerraron " . count($inactive_sockets) . " conexiones inactivas. Total clientes: " . count($client_sockets));
+        log_message("Se cerraron " . count($inactive_sockets) . " conexiones inactivas. Total clientes: " . count($client_sockets), null);
     }
 }
 
@@ -486,12 +491,12 @@ function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, 
     $stmt->execute([':imei' => $imei]);
     $imei_exists = $stmt->fetchColumn();
     if (!$imei_exists) {
-        log_message("IMEI $imei no está registrado en la tabla dispositivos. No se insertará la ubicación.");
+        log_message("IMEI $imei no está registrado en la tabla dispositivos. No se insertará la ubicación.", $imei);
         return 'IMEI_NOT_REGISTERED';
     }
     // Verificar si la latitud comienza con "0.0"
     if (strpos($latitude, '0.0') === 0) {
-        log_message("Latitud inválida ($latitude), no se insertará en la base de datos");
+        log_message("Latitud inválida ($latitude), no se insertará en la base de datos", $imei);
         return;
     }
     // Obtener la última ubicación insertada
@@ -510,7 +515,7 @@ function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, 
         $last_speed = isset($last_location['speed']) ? floatval($last_location['speed']) : 0;
         // Calcular la distancia entre la última ubicación y la nueva ubicación
         $distance = haversine_distance($last_latitude, $last_longitude, $latitude, $longitude);
-        log_message("Distancia desde última posición: $distance metros");
+        log_message("Distancia desde última posición: $distance metros", $imei);
         // Calcular velocidad real entre puntos (en km/h)
         if ($time_diff > 0) {
             $real_speed_kmh = ($distance / $time_diff) * 3.6; // m/s a km/h
@@ -519,27 +524,32 @@ function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, 
         }
         // Validación de salto imposible por velocidad calculada
         if ($real_speed_kmh > $max_jump_speed_kmh) {
-            log_message("Salto imposible detectado: velocidad calculada $real_speed_kmh km/h entre posiciones. No se insertará la ubicación.");
+            log_message("Salto imposible detectado: velocidad calculada $real_speed_kmh km/h entre posiciones. No se insertará la ubicación.", $imei);
             $should_insert = false;
             $jump_detected = true;
         }
         // Validación de salto imposible por diferencia con velocidad reportada
         if (!$jump_detected && abs($real_speed_kmh - $speed_in_kmh) > 80 && $real_speed_kmh > 50) { // diferencia muy grande
-            log_message("Diferencia anómala entre velocidad GPS ($speed_in_kmh km/h) y calculada ($real_speed_kmh km/h). No se insertará la ubicación.");
+            log_message("Diferencia anómala entre velocidad GPS ($speed_in_kmh km/h) y calculada ($real_speed_kmh km/h). No se insertará la ubicación.", $imei);
             $should_insert = false;
             $jump_detected = true;
         }
         // Validación de distancia mínima y tiempo mínimo
         if (!$jump_detected && $distance < $min_distance_meters && $time_diff < $min_time_diff_sec) {
-            log_message("Ubicación muy similar a la última insertada, no se insertará en la base de datos");
+            log_message("Ubicación muy similar a la última insertada, no se insertará en la base de datos", $imei);
             $should_insert = false;
         }
         // Validación de salto de distancia irreal
         if (!$jump_detected && $distance > $max_jump_distance_meters && $time_diff < $max_jump_time_sec) {
-            log_message("Salto de distancia irreal detectado: $distance metros en $time_diff segundos. No se insertará la ubicación.");
+            log_message("Salto de distancia irreal detectado: $distance metros en $time_diff segundos. No se insertará la ubicación.", $imei);
             $should_insert = false;
             $jump_detected = true;
         }
+    }
+    // Validación especial: solo insertar si hay velocidad para el IMEI 864035053288172
+    if ($imei === '864035053288172' && floatval($speed_in_kmh) <= 0) {
+        // No insertar ni loggear si la velocidad es 0 o menor
+        return;
     }
     if ($should_insert) {
         // Asignar valores predeterminados si no se reciben
@@ -565,7 +575,7 @@ function insert_location_into_db($pdo, $imei, $gps_time, $latitude, $longitude, 
             ':eventType' => $eventType,
         ];
         queue_gps_location($params);
-        log_message("Datos agregados a la cola persistente para IMEI: $imei");
+        log_message("Datos agregados a la cola persistente para IMEI: $imei", $imei);
     }
 }
 
@@ -605,7 +615,7 @@ function degree_to_decimal($coordinates_in_degrees, $direction){
     // Limpiar memoria periódicamente
     if (time() % 3600 == 0) { // Cada hora
     gc_collect_cycles();
-    log_message("Limpieza de memoria realizada");
+    log_message("Limpieza de memoria realizada", null);
     // 9. Registro de estadísticas
     
 
@@ -614,7 +624,7 @@ function degree_to_decimal($coordinates_in_degrees, $direction){
     if (time() % 3600 < 10) { // Cada hora (con margen de 10 segundos)
     $total_devices = count($imei_to_socket);
     $total_connections = count($client_sockets);
-    log_message("Estadísticas: $total_devices dispositivos activos, $total_connections conexiones");
+    log_message("Estadísticas: $total_devices dispositivos activos, $total_connections conexiones", null);
     }
 }
 
@@ -647,7 +657,7 @@ function get_db_connection() {
             // Si llegamos aquí, la conexión fue exitosa
             $error_count = 0;
             $last_error_time = 0;
-            log_message("Conexión a la base de datos establecida correctamente");
+            log_message("Conexión a la base de datos establecida correctamente", null);
         }
         return $pdo;
     } catch (PDOException $e) {
@@ -656,7 +666,7 @@ function get_db_connection() {
         
         // Si es el tercer error o han pasado más de 5 minutos desde el último error
         if ($error_count >= 3 || ($current_time - $last_error_time) > 300) {
-            log_message("Error de conexión a la base de datos (intento $error_count): " . $e->getMessage());
+            log_message("Error de conexión a la base de datos (intento $error_count): " . $e->getMessage(), null);
             
             // Cerrar la conexión actual
             if ($pdo) {
